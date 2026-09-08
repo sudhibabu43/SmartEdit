@@ -1,0 +1,140 @@
+﻿####################### CMakeLists.txt (libsmartedit) #########################
+# @brief CMake build file for libsmartedit (used to generate Python SWIG bindings)
+# @author Jonathan Thomas <jonathan@smartedit.org>
+#
+# @section LICENSE
+#
+# Copyright (c) 2008-2019 SmartEdit Studios, LLC
+#
+# SPDX-License-Identifier: LGPL-3.0-or-later
+
+############### SWIG PYTHON BINDINGS ################
+find_package(SWIG 3.0 REQUIRED)
+include(${SWIG_USE_FILE})
+
+### Use modern SWIG target behavior when available
+if (POLICY CMP0078)
+  cmake_policy(SET CMP0078 NEW)
+endif()
+if (POLICY CMP0086)
+  cmake_policy(SET CMP0086 NEW)
+endif()
+
+if (POLICY CMP0148)
+  cmake_policy(SET CMP0148 OLD)
+endif()
+
+find_package(PythonInterp 3)
+find_package(PythonLibs 3)
+
+if (NOT PYTHONLIBS_FOUND OR NOT PYTHONINTERP_FOUND)
+  return()
+endif()
+
+### Include Python header files
+include_directories(${PYTHON_INCLUDE_PATH})
+
+if (CMAKE_VERSION VERSION_LESS 3.12)
+  ### Include project headers
+  include_directories(
+    "${PROJECT_SOURCE_DIR}/src"
+    "${PROJECT_BINARY_DIR}/src")
+endif()
+
+### Enable C++ in SWIG
+set_property(SOURCE smartedit.i PROPERTY CPLUSPLUS ON)
+set_property(SOURCE smartedit.i PROPERTY SWIG_MODULE_NAME smartedit)
+
+# Set the SWIG_FLAGS from the library target, IFF its
+# COMPILE_DEFINITIONS property is set (in practice, always true)
+if(CMAKE_VERSION VERSION_GREATER 3.15)
+  set(_defs
+    $<REMOVE_DUPLICATES:$<TARGET_PROPERTY:smartedit,COMPILE_DEFINITIONS>>)
+elseif(CMAKE_VERSION VERSION_GREATER 3.12)
+  set(_defs $<TARGET_PROPERTY:smartedit,COMPILE_DEFINITIONS>)
+endif()
+if(DEFINED _defs)
+  set_property(SOURCE smartedit.i PROPERTY
+    COMPILE_DEFINITIONS ${_defs})
+else()
+  get_property(_defs TARGET smartedit PROPERTY COMPILE_DEFINITIONS)
+  foreach(_d ${_defs})
+    list(APPEND _flags -D${_d})
+  endforeach()
+  set_property(SOURCE smartedit.i PROPERTY
+    SWIG_FLAGS ${_flags})
+endif()
+
+### Suppress a ton of warnings in the generated SWIG C++ code
+set(SWIG_CXX_FLAGS "-Wno-unused-variable -Wno-unused-function \
+  -Wno-deprecated-copy -Wno-class-memaccess -Wno-cast-function-type \
+  -Wno-unused-parameter -Wno-catch-value -Wno-sign-compare -Wno-ignored-qualifiers")
+separate_arguments(sw_flags UNIX_COMMAND ${SWIG_CXX_FLAGS})
+set_property(SOURCE smartedit.i PROPERTY GENERATED_COMPILE_OPTIONS ${sw_flags})
+
+### Take include dirs from target
+if(CMAKE_VERSION VERSION_GREATER 3.15)
+  set(_inc $<REMOVE_DUPLICATES:$<TARGET_PROPERTY:smartedit,INCLUDE_DIRECTORIES>>)
+elseif(CMAKE_VERSION VERSION_GREATER 3.12)
+  set(_inc $<TARGET_PROPERTY:smartedit,INCLUDE_DIRECTORIES>)
+endif()
+if (DEFINED _inc)
+  set_property(SOURCE smartedit.i PROPERTY INCLUDE_DIRECTORIES ${_inc})
+endif()
+
+### (FINALLY!)
+### Properly manage dependencies (regenerate bindings after changes)
+if (CMAKE_VERSION VERSION_GREATER 3.20)
+  set_property(SOURCE smartedit.i PROPERTY USE_SWIG_DEPENDENCIES TRUE)
+endif()
+
+### Add the SWIG interface file (which defines all the SWIG methods)
+swig_add_library(pysmartedit LANGUAGE python SOURCES smartedit.i)
+
+if (POLICY CMP0078)
+  set(_pysmartedit_target pysmartedit)
+else()
+  set(_pysmartedit_target ${SWIG_MODULE_pysmartedit_REAL_NAME})
+endif()
+
+### Set output name of target
+set_target_properties(${_pysmartedit_target} PROPERTIES
+  PREFIX "_" OUTPUT_NAME "smartedit")
+
+### Link the new python wrapper library with libsmartedit
+target_link_libraries(${_pysmartedit_target} PUBLIC
+  ${PYTHON_LIBRARIES} smartedit)
+
+######### INSTALL PATH ########
+if (NOT DEFINED PYTHON_MODULE_PATH AND DEFINED $ENV{PYTHON_MODULE_PATH})
+  set(PYTHON_MODULE_PATH $ENV{PYTHON_MODULE_PATH})
+endif()
+
+if (NOT DEFINED PYTHON_MODULE_PATH)
+  if (WIN32 OR APPLE)
+    set (PYTHON_MODULE_PATH "python")
+  endif()
+
+  if (UNIX AND NOT APPLE)
+    ### Check if the following Debian-friendly python module path exists
+    set(PYTHON_MODULE_PATH
+      "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/dist-packages")
+
+    if (NOT EXISTS "${CMAKE_INSTALL_PREFIX}/${PYTHON_MODULE_PATH}")
+      ### Calculate the python module path (prefer sysconfig, fallback to distutils for compatibility)
+      execute_process(
+              COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; p=sysconfig.get_path('platlib', scheme='posix_prefix'); p=p[5:] if p.startswith('/usr/') else p.lstrip('/'); print(p)"
+              OUTPUT_VARIABLE PYTHON_MODULE_PATH
+              OUTPUT_STRIP_TRAILING_WHITESPACE)
+    endif()
+  endif()
+endif()
+
+message(STATUS "PYTHON_MODULE_PATH: ${CMAKE_INSTALL_PREFIX}/${PYTHON_MODULE_PATH}")
+
+############### INSTALL HEADERS & LIBRARY ################
+### Install Python bindings
+install(TARGETS ${_pysmartedit_target}
+  DESTINATION ${PYTHON_MODULE_PATH} )
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/smartedit.py
+  DESTINATION ${PYTHON_MODULE_PATH} )

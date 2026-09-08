@@ -1,0 +1,28 @@
+# Build directories
+build/
+libsmartedit/build/
+libsmartedit-audio/build/
+CMakeFiles/
+CMakeCache.txt
+*.cmake_install.cmake
+*.o
+*.obj
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Large installers and backup artifacts
+*.exe
+!run_smartedit.bat
+legacy_dlls_backup/
+*.bak
+.git_backups/
+
+# IDE and tool configs
+.qtcreator/
+.qtc_clangd/
+.cache/
+

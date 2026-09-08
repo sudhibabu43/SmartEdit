@@ -1,0 +1,38 @@
+{
+    "configurations": [
+        {
+            "name": "Win32-UCRT64",
+            "includePath": [
+                "${workspaceFolder}/libsmartedit/include/**",
+                "${workspaceFolder}/libsmartedit/src/**",
+                "${workspaceFolder}/libsmartedit/build/src/**",
+                "${workspaceFolder}/libsmartedit-audio/include/**",
+                "${workspaceFolder}/libsmartedit-audio/JuceLibraryCode/**",
+                "${workspaceFolder}/libopenshot/include/**",
+                "${workspaceFolder}/libopenshot/src/**",
+                "${workspaceFolder}/libopenshot/build/src/**",
+                "${workspaceFolder}/libopenshot-audio/include/**",
+                "${workspaceFolder}/libopenshot-audio/JuceLibraryCode/**",
+                "C:/msys64/ucrt64/include/**",
+                "C:/msys64/ucrt64/include/qt5/**",
+                "C:/msys64/ucrt64/include/QtCore",
+                "C:/msys64/ucrt64/include/QtGui",
+                "C:/msys64/ucrt64/include/QtWidgets",
+                "C:/msys64/ucrt64/include/QtSvg"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "USE_HW_ACCEL=1",
+                "LIBAVCODEC_VERSION_MAJOR=61"
+            ],
+            "compilerPath": "C:/msys64/ucrt64/bin/g++.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-gcc-x64",
+            "compileCommands": "${workspaceFolder}/libopenshot/build/compile_commands.json"
+        }
+    ],
+    "version": 4
+}

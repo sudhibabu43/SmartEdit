@@ -1,0 +1,9 @@
+﻿<?xml version="1.0"?>
+<mime-info xmlns='http://www.freedesktop.org/standards/shared-mime-info'>
+  <mime-type type="application/vnd.smartedit-qt-project">
+    <comment>SmartEdit project</comment>
+    <glob pattern="*.osp"/>
+    <generic-icon name="smartedit-qt-doc"/>
+  </mime-type>
+</mime-info>
+

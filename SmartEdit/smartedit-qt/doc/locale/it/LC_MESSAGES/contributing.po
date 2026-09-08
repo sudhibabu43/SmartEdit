@@ -1,0 +1,176 @@
+﻿# SOME DESCRIPTIVE TITLE.
+# Copyright (C) SmartEdit Studios, LLC
+# This file is distributed under the same license as the SmartEdit Video Editor package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SmartEdit Video Editor 3.4\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-16 18:08-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:22
+msgid "Contributing"
+msgstr "Contribuire"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:24
+msgid ""
+"Want to help improve SmartEdit (*and make some friends in the process*)? "
+"Please consider joining our open-source team by filling out this quick "
+"`contributor form <https://forms.gle/CRqkS5tLMJE1V36V8>`_ and introduce "
+"yourself! All volunteers are welcome, regardless of skills or skill level. "
+"**Let's build something amazing!**"
+msgstr ""
+"Vuoi aiutare a migliorare SmartEdit (*e fare nuove amicizie nel processo*)? "
+"Per favore considera di unirti al nostro team open-source compilando questo "
+"rapido `modulo per contributori <https://forms.gle/CRqkS5tLMJE1V36V8>`_ e "
+"presentati! Tutti i volontari sono benvenuti, indipendentemente dalle "
+"competenze o dal livello di abilità. **Costruiamo qualcosa di straordinario!"
+"**"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:30
+msgid "How to Contribute"
+msgstr "Come Contribuire"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:32
+msgid "There are many different ways to help and support SmartEdit, including:"
+msgstr "Ci sono molti modi diversi per aiutare e supportare SmartEdit, tra cui:"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:34
+msgid "Testing"
+msgstr "Test"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:35
+msgid "`Translations <https://translations.launchpad.net/smartedit/2.0>`_"
+msgstr "`Traduzioni <https://translations.launchpad.net/smartedit/2.0>`_"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:36
+msgid ""
+"`Documentation <https://github.com/SmartEdit/smartedit-qt/tree/develop/doc>`_"
+msgstr ""
+"`Documentazione <https://github.com/SmartEdit/smartedit-qt/tree/develop/doc>`_"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:37
+msgid "Customer Service"
+msgstr "Assistenza Clienti"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:38
+msgid "Social Media / Marketing"
+msgstr "Social Media / Marketing"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:39
+msgid "`Software Development <https://github.com/SmartEdit>`_"
+msgstr "`Sviluppo Software <https://github.com/SmartEdit>`_"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:40
+msgid "Art / Design / UI"
+msgstr "Arte / Design / Interfaccia Utente"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:41
+msgid "`User Community <https://smartedit.org/forum>`_"
+msgstr "`Comunità Utenti <https://smartedit.org/forum>`_"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:42
+msgid "`Donations <https://smartedit.org/donate>`_"
+msgstr "`Donazioni <https://smartedit.org/donate>`_"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:44
+msgid ""
+"All of these areas are **equally important**, so we would love to know which "
+"ones appeal to you the most. Please take a moment and fill-out our quick "
+"`contributor form <https://forms.gle/CRqkS5tLMJE1V36V8>`_."
+msgstr ""
+"Tutte queste aree sono **ugualmente importanti**, quindi ci piacerebbe "
+"sapere quali ti interessano di più. Per favore, prenditi un momento e "
+"compila il nostro rapido `modulo per contributori <https://forms.gle/"
+"CRqkS5tLMJE1V36V8>`_."
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:48
+msgid "Did you find a bug?"
+msgstr "Hai trovato un bug?"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:50
+msgid ""
+"Please use our step-by-step bug reporting page: https://smartedit.org/issues/"
+"new/ to troubleshoot a potential new bug. This guide will instruct you on "
+"how to delete you log files, test with the latest daily build, and search "
+"for duplicate bug reports (in case someone else has already reported this "
+"same issue). At the end of the guide, it will help you create a detailed and "
+"useful bug report for our development team and volunteers."
+msgstr ""
+"Per favore usa la nostra pagina di segnalazione bug passo-passo: https://"
+"smartedit.org/issues/new/ per risolvere un potenziale nuovo bug. Questa guida "
+"ti spiegherà come eliminare i file di log, testare con l'ultima build "
+"giornaliera e cercare segnalazioni di bug duplicate (nel caso qualcuno abbia "
+"già segnalato lo stesso problema). Alla fine della guida, ti aiuterà a "
+"creare una segnalazione di bug dettagliata e utile per il nostro team di "
+"sviluppo e i volontari."
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:57
+msgid "Software Developers"
+msgstr "Sviluppatori Software"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:58
+msgid ""
+"SmartEdit uses GitHub to manage issues and source code: https://github.com/"
+"SmartEdit. Please read our guide on `Becoming a Developer <https://github.com/"
+"SmartEdit/smartedit-qt/wiki/Become-a-Developer>`_ for a step-by-step guide on "
+"compiling SmartEdit and making your first pull request on GitHub."
+msgstr ""
+"SmartEdit usa GitHub per gestire problemi e codice sorgente: https://github."
+"com/SmartEdit. Per favore leggi la nostra guida su `Come diventare "
+"sviluppatore <https://github.com/SmartEdit/smartedit-qt/wiki/Become-a-"
+"Developer>`_ per una guida passo-passo su come compilare SmartEdit e fare la "
+"tua prima pull request su GitHub."
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:63
+msgid "Made with Love"
+msgstr "Fatto con Amore"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:65
+msgid ""
+"SmartEdit Video Editor is a volunteer effort and a **labor of love**. Please "
+"be patient with any issues you find, and feel free to `get involved <https://"
+"forms.gle/CRqkS5tLMJE1V36V8>`_ and help us fix them!"
+msgstr ""
+"SmartEdit Video Editor è un progetto volontario e un **lavoro d'amore**. Per "
+"favore sii paziente con eventuali problemi che trovi, e sentiti libero di "
+"`partecipare <https://forms.gle/CRqkS5tLMJE1V36V8>`_ e aiutarci a risolverli!"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:69
+msgid "Thank you for your support!"
+msgstr "Grazie per il tuo supporto!"
+
+# Translated with gpt-4.1-mini
+#: ../contributing.rst:70
+msgid "*-- SmartEdit Team*"
+msgstr "*-- Team SmartEdit*"

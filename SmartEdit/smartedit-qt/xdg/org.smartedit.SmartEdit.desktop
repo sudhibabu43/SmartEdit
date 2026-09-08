@@ -1,0 +1,12 @@
+﻿[Desktop Entry]
+Name=SmartEdit Video Editor
+GenericName=Video Editor
+X-GNOME-FullName=SmartEdit Video Editor
+Comment=Create and edit amazing videos and movies
+Exec=smartedit-qt %F
+Terminal=false
+Type=Application
+Icon=smartedit-qt
+Categories=GNOME;GTK;AudioVideo;Video;AudioVideoEditing;
+MimeType=application/vnd.smartedit-qt-project;
+X-AppInstall-Package=smartedit-qt

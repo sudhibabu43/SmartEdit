@@ -1,0 +1,21 @@
+{
+    "python.defaultInterpreterPath": "C:\\Python313\\python.exe",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/SmartEdit/smartedit-qt/src",
+        "${workspaceFolder}/SmartEdit/smartedit-qt/src/classes",
+        "${workspaceFolder}/SmartEdit/smartedit-qt/src/windows",
+        "${workspaceFolder}/OpenShot/smartedit-qt/src",
+        "${workspaceFolder}/OpenShot/smartedit-qt/src/classes",
+        "${workspaceFolder}/OpenShot/smartedit-qt/src/windows"
+    ],
+    "python.autoComplete.extraPaths": [
+        "${workspaceFolder}/SmartEdit/smartedit-qt/src",
+        "${workspaceFolder}/SmartEdit/smartedit-qt/src/classes",
+        "${workspaceFolder}/SmartEdit/smartedit-qt/src/windows",
+        "${workspaceFolder}/OpenShot/smartedit-qt/src",
+        "${workspaceFolder}/OpenShot/smartedit-qt/src/classes",
+        "${workspaceFolder}/OpenShot/smartedit-qt/src/windows"
+    ],
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/libsmartedit/build/compile_commands.json",
+    "C_Cpp.default.legacyBrowseDatabase.enable": true
+}
