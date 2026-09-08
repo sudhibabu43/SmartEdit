@@ -97,89 +97,51 @@ class EditingController:
         # -------------------------------------------------------------
         # 1. Shaky Footage Detection & Labeling
         # -------------------------------------------------------------
-        shaky_clips_found = []
+        shaky_regions_found = []
         if command.has_action(ActionType.DETECT_SHAKY) or command.has_action(ActionType.LABEL_SHAKY) or command.has_action(ActionType.DELETE_SHAKY):
-            target_clips = timeline_clips if timeline_clips else []
-            thresh_pct = self.shaky_service.get_threshold(command.parameters.get("shaky", {}).get("threshold"))
+            thresh_pct = self.shaky_service.get_threshold(command.parameters.get("shaky", {}).get("threshold") or command.parameters.get("delete_shaky", {}).get("threshold"))
+            
+            # Analyze exact discrete shaky regions across timeline clips
+            shaky_regions_found = self.shaky_service.analyze_timeline_shaky_regions(threshold=thresh_pct, clips=timeline_clips)
 
-            for clip in target_clips:
-                clip_data = clip.data if isinstance(clip.data, dict) else {}
-                if clip_data.get("ui", {}).get("ai_label") or str(clip_data.get("title", "")).startswith("SHAKY FOOTAGE"):
-                    continue
-
-                path = clip_data.get("reader", {}).get("path") or ""
-                if not path and clip_data.get("file_id"):
-                    f = File.get(id=clip_data.get("file_id"))
-                    if f:
-                        path = f.absolute_path()
-
-                has_video = clip_data.get("reader", {}).get("has_video")
-                if has_video is False:
-                    continue
-
-                clip_name = clip.title() or os.path.basename(path) or "Clip"
-                pos = float(clip_data.get("position", 0.0))
-                dur = float(clip_data.get("duration", 0.0) or (float(clip_data.get("end", 5.0)) - float(clip_data.get("start", 0.0))))
-                if dur <= 0.0:
-                    dur = 5.0
-
-                if path and os.path.isfile(path):
-                    analysis = self.video_analyzer.analyze_shaky_footage(path, threshold=thresh_pct)
-                else:
-                    analysis = self.video_analyzer._heuristic_analysis(clip_name, threshold=thresh_pct)
-
-                shake_pct = float(analysis.get("shake_percentage", 0.0))
-                if shake_pct == 0.0 and analysis.get("shake_score"):
-                    shake_pct = round(float(analysis.get("shake_score", 0.0)) * 100.0, 1)
-                classification = analysis.get("classification") or classify_shake(shake_pct)
-                is_shaky = bool(analysis.get("is_shaky", False)) or (shake_pct >= thresh_pct)
-
-                if is_shaky:
-                    shaky_clips_found.append({
-                        "clip_id": clip.id,
-                        "clip_name": clip_name,
-                        "path": path,
-                        "position": pos,
-                        "duration": dur,
-                        "shake_score": float(analysis.get("shake_score", 0.0)),
-                        "shake_percentage": shake_pct,
-                        "classification": classification,
-                        "segments": analysis.get("shaky_segments", []),
-                    })
-
-            if shaky_clips_found:
-                names_str = ", ".join(f'"{c["clip_name"]}" ({int(round(c["shake_percentage"]))}%)' for c in shaky_clips_found[:3])
-                if len(shaky_clips_found) > 3:
-                    names_str += f" and {len(shaky_clips_found) - 3} more"
+            if shaky_regions_found:
+                affected_clips_count = len(set(r.get("clip_id") for r in shaky_regions_found if r.get("clip_id")))
+                names = list(dict.fromkeys(r.get("clip_name", "Clip") for r in shaky_regions_found))
+                names_str = ", ".join(f'"{n}"' for n in names[:3])
+                if len(names) > 3:
+                    names_str += f" and {len(names) - 3} more"
 
                 plan_items.append(PlanItem(
                     action=ActionType.DETECT_SHAKY,
-                    description=f"Detected <b>{len(shaky_clips_found)} shaky clip(s)</b> ({names_str})",
+                    description=f"Detected <b>{len(shaky_regions_found)} shaky region(s)</b> across {affected_clips_count} clip(s) ({names_str})",
                     icon="✓",
-                    details={"clips": shaky_clips_found}
+                    details={"regions": shaky_regions_found, "clips": shaky_regions_found}
                 ))
 
                 if command.has_action(ActionType.DELETE_SHAKY):
                     plan_items.append(PlanItem(
                         action=ActionType.DELETE_SHAKY,
-                        description=f"Remove <b>{len(shaky_clips_found)}</b> detected shaky clip(s) from timeline",
-                        icon="⚠️",
-                        details={"clip_ids": [c["clip_id"] for c in shaky_clips_found]}
+                        description=f"Split clips at boundaries and remove <b>{len(shaky_regions_found)}</b> detected shaky segment(s); preserve stable portions & A/V sync",
+                        icon="✂",
+                        details={"regions": shaky_regions_found, "clip_ids": [r.get("clip_id") for r in shaky_regions_found]}
                     ))
                     operations.append({
                         "type": ActionType.DELETE_SHAKY,
-                        "clip_ids": [c["clip_id"] for c in shaky_clips_found]
+                        "regions": shaky_regions_found,
+                        "clips": shaky_regions_found,
+                        "clip_ids": [r.get("clip_id") for r in shaky_regions_found]
                     })
                 elif command.has_action(ActionType.LABEL_SHAKY) or command.has_action(ActionType.DETECT_SHAKY):
                     plan_items.append(PlanItem(
                         action=ActionType.LABEL_SHAKY,
-                        description=f"Find/create topmost unused layer and label <b>{len(shaky_clips_found)}</b> shaky clip(s) with <b>'SHAKY FOOTAGE – XX%'</b> warning indicators and timeline markers",
+                        description=f"Find/create topmost unused layer and mark <b>{len(shaky_regions_found)}</b> shaky region(s) with <b>'SHAKY FOOTAGE – XX%'</b> visual indicators and timeline markers",
                         icon="✓",
-                        details={"clips": shaky_clips_found}
+                        details={"regions": shaky_regions_found, "clips": shaky_regions_found}
                     ))
                     operations.append({
                         "type": ActionType.LABEL_SHAKY,
-                        "clips": shaky_clips_found
+                        "regions": shaky_regions_found,
+                        "clips": shaky_regions_found
                     })
             else:
                 plan_items.append(PlanItem(
@@ -324,22 +286,29 @@ class EditingController:
             for op in target_plan.operations:
                 op_type = op.get("type")
 
-                # A. Label Shaky Clips (Non-destructive: places labels on topmost unused layer)
+                # A. Label Shaky Clips/Regions (Non-destructive: places labels on topmost unused layer)
                 if op_type == ActionType.LABEL_SHAKY:
-                    shaky_items = op.get("clips", [])
+                    shaky_items = op.get("regions") or op.get("clips", [])
                     if shaky_items:
                         target_layer = self.shaky_service.find_or_create_top_unused_layer()
-                        created = self.shaky_service.label_shaky_clips(shaky_items, target_layer)
+                        created = self.shaky_service.label_shaky_regions(shaky_items, target_layer)
                         track_num = target_layer // 1000000
                         applied_details.append(f"Placed {len(created)} 'SHAKY FOOTAGE' label(s) on Track {track_num} (top unused layer)")
 
-                # B. Delete Shaky Clips (only if explicitly requested!)
+                # B. Remove Shaky Regions (Cut out shaky segments, keep stable portions, keep markers as [REMOVED])
                 elif op_type == ActionType.DELETE_SHAKY:
-                    for cid in op.get("clip_ids", []):
-                        clip = Clip.get(id=cid)
-                        if clip:
-                            clip.delete()
-                    applied_details.append(f"Removed {len(op.get('clip_ids', []))} shaky clip(s)")
+                    shaky_items = op.get("regions") or op.get("clips", [])
+                    if shaky_items:
+                        target_layer = self.shaky_service.find_or_create_top_unused_layer()
+                        self.shaky_service.label_shaky_regions(shaky_items, target_layer)
+                        res = self.shaky_service.remove_shaky_regions(shaky_items, close_gaps=False)
+                        applied_details.append(f"Removed {res.get('removed_count', len(shaky_items))} shaky segment(s); preserved stable portions on timeline")
+                    else:
+                        for cid in op.get("clip_ids", []):
+                            clip = Clip.get(id=cid)
+                            if clip:
+                                clip.delete()
+                        applied_details.append(f"Removed {len(op.get('clip_ids', []))} shaky clip(s)")
 
                 # C. Arrange Clips Sequentially
                 elif op_type == ActionType.ARRANGE_CLIPS:
@@ -349,7 +318,7 @@ class EditingController:
                         # Exclude AI label clips from clip rearrangement
                         clips = [
                             c for c in all_clips
-                            if not (c.data or {}).get("ui", {}).get("ai_label")
+                            if not ((c.data or {}).get("ui") or {}).get("ai_label")
                             and not str((c.data or {}).get("title", "")).startswith("SHAKY FOOTAGE")
                         ]
                         # Sort clips by existing position or file name
@@ -374,7 +343,7 @@ class EditingController:
                         all_files = File.filter()
                         files = [
                             f for f in all_files
-                            if not (f.data or {}).get("ui", {}).get("ai_label")
+                            if not ((f.data or {}).get("ui") or {}).get("ai_label")
                             and "ai_labels" not in str((f.data or {}).get("path", ""))
                         ]
                         current_pos = 0.0

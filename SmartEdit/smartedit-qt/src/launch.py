@@ -45,6 +45,29 @@ import os
 import argparse
 import json
 import logging
+import traceback
+import threading
+
+def _smartedit_excepthook(exctype, value, tb):
+    """Custom excepthook to log uncaught exceptions cleanly and prevent PyQt qFatal abort."""
+    if issubclass(exctype, KeyboardInterrupt):
+        sys.__excepthook__(exctype, value, tb)
+        return
+    formatted = "".join(traceback.format_exception(exctype, value, tb))
+    msg = f"\nUnhandled Exception:\n{formatted}\n"
+    try:
+        sys.__stderr__.write(msg)
+        sys.__stderr__.flush()
+    except Exception:
+        pass
+    try:
+        logging.getLogger("SmartEdit").error("Unhandled exception: %s", msg)
+    except Exception:
+        pass
+
+sys.excepthook = _smartedit_excepthook
+if hasattr(threading, "excepthook"):
+    threading.excepthook = lambda args: _smartedit_excepthook(args.exc_type, args.exc_value, args.exc_traceback)
 
 # Ensure the source directory is at the front of sys.path
 _src_dir = os.path.dirname(os.path.abspath(__file__))

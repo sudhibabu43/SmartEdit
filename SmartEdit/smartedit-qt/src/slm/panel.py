@@ -9,7 +9,7 @@ from typing import Optional
 from qt_api import (
     Qt, QDockWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QPlainTextEdit, QFrame, QScrollArea,
-    QProgressBar, QThread, pyqtSignal, pyqtSlot
+    QProgressBar, QThread, pyqtSignal, pyqtSlot, QSizePolicy, QEvent
 )
 
 from slm.prompt_parser import PromptParser
@@ -51,8 +51,25 @@ class PromptInputTextEdit(QPlainTextEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFocusPolicy(Qt.StrongFocus)
+        if self.viewport():
+            self.viewport().setFocusPolicy(Qt.StrongFocus)
+            self.viewport().setCursor(Qt.IBeamCursor)
         self.setTextInteractionFlags(Qt.TextEditorInteraction)
         self.setTabChangesFocus(True)
+
+    def mousePressEvent(self, event):
+        self.setFocus(Qt.MouseFocusReason)
+        super().mousePressEvent(event)
+        event.accept()
+
+    def mouseReleaseEvent(self, event):
+        self.setFocus(Qt.MouseFocusReason)
+        super().mouseReleaseEvent(event)
+
+    def viewportEvent(self, event):
+        if event.type() in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease):
+            self.setFocus(Qt.MouseFocusReason)
+        return super().viewportEvent(event)
 
     def keyPressEvent(self, event):
         # Enter (without Shift) runs AI
@@ -88,35 +105,40 @@ class SLMAssistantPanel(QDockWidget):
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setStyleSheet("QScrollArea { background-color: transparent; border: none; }")
 
         main_container = QWidget()
         scroll.setWidget(main_container)
         self.setWidget(scroll)
 
+        # Consistent panel padding (14px on all sides, standard 12-16px range)
         root_layout = QVBoxLayout(main_container)
-        root_layout.setContentsMargins(12, 12, 12, 12)
-        root_layout.setSpacing(10)
+        root_layout.setContentsMargins(14, 14, 14, 14)
+        root_layout.setSpacing(14)
 
         # -------------------------------------------------------------
         # 1. Header Banner
         # -------------------------------------------------------------
         header_frame = QFrame()
+        header_frame.setObjectName("slmHeaderFrame")
+        header_frame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         header_frame.setStyleSheet("""
-            QFrame {
+            QFrame#slmHeaderFrame {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1a2536, stop:1 #111823);
                 border: 1px solid #2a3d54;
                 border-radius: 6px;
-                padding: 6px;
             }
         """)
         header_layout = QVBoxLayout(header_frame)
-        header_layout.setContentsMargins(8, 6, 8, 6)
-        header_layout.setSpacing(2)
+        header_layout.setContentsMargins(10, 8, 10, 8)
+        header_layout.setSpacing(3)
 
+        # Section Header: slightly larger/bold as requested
         title_label = QLabel("🤖 SLM Video Editing Assistant")
-        title_label.setStyleSheet("font-size: 14px; font-weight: bold; color: #4da6ff;")
+        title_label.setStyleSheet("font-size: 13px; font-weight: bold; color: #4da6ff;")
+        # Body text: regular weight
         desc_label = QLabel("Describe editing changes in natural language. AI plans the edits for your review.")
-        desc_label.setStyleSheet("font-size: 11px; color: #9ab4d0;")
+        desc_label.setStyleSheet("font-size: 11px; font-weight: normal; color: #9ab4d0;")
         desc_label.setWordWrap(True)
 
         header_layout.addWidget(title_label)
@@ -127,39 +149,57 @@ class SLMAssistantPanel(QDockWidget):
         # 2. Natural Language Input Area
         # -------------------------------------------------------------
         input_box_frame = QFrame()
+        input_box_frame.setObjectName("slmInputFrame")
+        input_box_frame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         input_box_layout = QVBoxLayout(input_box_frame)
         input_box_layout.setContentsMargins(0, 0, 0, 0)
         input_box_layout.setSpacing(6)
 
+        # Label: regular weight as requested ("regular weight for body text and labels")
         input_title = QLabel("Type Natural Language Instruction:")
-        input_title.setStyleSheet("font-size: 12px; font-weight: bold; color: #e6e6e6;")
+        input_title.setStyleSheet("font-size: 11px; font-weight: normal; color: #b8c7d6;")
         input_box_layout.addWidget(input_title)
 
+        # Text input box: sits close (6px) to label, 6px rounded border, clear focus state
         self.prompt_input = PromptInputTextEdit()
         self.prompt_input.setPlaceholderText(
             "Type your instruction here (Press Enter to analyze)...\ne.g. 'Remove silence, arrange the clips, and label shaky footage'"
         )
-        self.prompt_input.setFixedHeight(72)
+        self.prompt_input.setFixedHeight(68)
         self.prompt_input.setStyleSheet("""
             QPlainTextEdit {
-                background-color: #171e28;
+                background-color: #151b24;
                 color: #ffffff;
-                border: 2px solid #36485e;
+                border: 1px solid #2d3e52;
                 border-radius: 6px;
                 padding: 8px;
                 font-size: 12px;
                 selection-background-color: #0084ff;
             }
             QPlainTextEdit:focus {
-                border: 2px solid #0099ff;
-                background-color: #1b2330;
+                border: 1.5px solid #0099ff;
+                background-color: #192230;
             }
         """)
         self.prompt_input.returnPressed.connect(self.on_run_ai)
         input_box_layout.addWidget(self.prompt_input)
 
-        # Quick Suggestion Chips
-        chips_layout = QHBoxLayout()
+        # Spacing before suggestion chips: 6px
+        input_box_layout.addSpacing(2)
+
+        # Quick Suggestion Chips (even spacing, consistent 26px height, no stretch or misalignment)
+        chips_scroll = QScrollArea()
+        chips_scroll.setWidgetResizable(True)
+        chips_scroll.setFixedHeight(28)
+        chips_scroll.setFrameShape(QFrame.NoFrame)
+        chips_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        chips_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        chips_scroll.setStyleSheet("QScrollArea { background: transparent; border: none; }")
+
+        chips_container = QWidget()
+        chips_container.setStyleSheet("background: transparent;")
+        chips_layout = QHBoxLayout(chips_container)
+        chips_layout.setContentsMargins(0, 0, 0, 0)
         chips_layout.setSpacing(6)
 
         chip_silence = QPushButton("⚡ Remove silence")
@@ -167,39 +207,45 @@ class SLMAssistantPanel(QDockWidget):
         chip_shaky = QPushButton("🔍 Find & label shaky")
         chip_all = QPushButton("🚀 Silence + Arrange + Shaky")
 
+        chip_style = """
+            QPushButton {
+                background-color: #1f2a38;
+                color: #b0c9e2;
+                border: 1px solid #2d3e52;
+                border-radius: 13px;
+                padding: 2px 10px;
+                font-size: 11px;
+                font-weight: normal;
+            }
+            QPushButton:hover {
+                background-color: #2a3a4f;
+                color: #ffffff;
+                border-color: #4d94ff;
+            }
+            QPushButton:pressed {
+                background-color: #182230;
+            }
+        """
+
         for chip in (chip_silence, chip_arrange, chip_shaky, chip_all):
-            chip.setStyleSheet("""
-                QPushButton {
-                    background-color: #212c3b;
-                    color: #bcd5ef;
-                    border: 1px solid #304257;
-                    border-radius: 10px;
-                    padding: 3px 8px;
-                    font-size: 10px;
-                }
-                QPushButton:hover {
-                    background-color: #2a3a4f;
-                    color: #ffffff;
-                    border-color: #4d94ff;
-                }
-            """)
+            chip.setFixedHeight(26)
+            chip.setStyleSheet(chip_style)
             chips_layout.addWidget(chip)
+
+        chips_layout.addStretch(1)
 
         chip_silence.clicked.connect(lambda: self._set_prompt("Remove silence"))
         chip_arrange.clicked.connect(lambda: self._set_prompt("Arrange the clips in the best order"))
         chip_shaky.clicked.connect(lambda: self._set_prompt("Find shaky footage and label it"))
         chip_all.clicked.connect(lambda: self._set_prompt("Remove silence, arrange the clips, and label shaky footage"))
 
-        chips_scroll = QScrollArea()
-        chips_scroll.setWidgetResizable(True)
-        chips_scroll.setFixedHeight(34)
-        chips_scroll.setFrameShape(QFrame.NoFrame)
-        chips_container = QWidget()
-        chips_container.setLayout(chips_layout)
         chips_scroll.setWidget(chips_container)
         input_box_layout.addWidget(chips_scroll)
 
-        # Run AI Button
+        # Spacing before Run button: 6px
+        input_box_layout.addSpacing(2)
+
+        # Run AI Button (consistent height 34px, modern primary action)
         self.btn_run_ai = QPushButton("⚡ Run AI / Analyze Plan")
         self.btn_run_ai.setFixedHeight(34)
         self.btn_run_ai.setStyleSheet("""
@@ -209,14 +255,19 @@ class SLMAssistantPanel(QDockWidget):
                 font-weight: bold;
                 font-size: 12px;
                 border: none;
-                border-radius: 5px;
+                border-radius: 6px;
+                padding: 4px 14px;
             }
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0077ee, stop:1 #1a94ff);
             }
+            QPushButton:pressed {
+                background: #0055aa;
+            }
             QPushButton:disabled {
-                background: #334455;
-                color: #778899;
+                background: #233140;
+                color: #5c7086;
+                border: 1px solid #1c2733;
             }
         """)
         self.btn_run_ai.clicked.connect(self.on_run_ai)
@@ -228,28 +279,30 @@ class SLMAssistantPanel(QDockWidget):
         # 3. Status Area
         # -------------------------------------------------------------
         self.status_bar_frame = QFrame()
+        self.status_bar_frame.setObjectName("slmStatusFrame")
+        self.status_bar_frame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.status_bar_frame.setStyleSheet("""
-            QFrame {
-                background-color: #1a222d;
-                border: 1px solid #2a3747;
-                border-radius: 4px;
-                padding: 4px;
+            QFrame#slmStatusFrame {
+                background-color: #141c26;
+                border: 1px solid #233142;
+                border-radius: 6px;
             }
         """)
         status_layout = QHBoxLayout(self.status_bar_frame)
-        status_layout.setContentsMargins(8, 4, 8, 4)
+        status_layout.setContentsMargins(10, 6, 10, 6)
+        status_layout.setSpacing(8)
 
         self.status_icon = QLabel("●")
         self.status_icon.setStyleSheet("color: #4da6ff; font-size: 14px;")
         self.status_label = QLabel("Ready. Type an instruction and click Run AI.")
-        self.status_label.setStyleSheet("color: #b0c7de; font-size: 11px;")
+        self.status_label.setStyleSheet("color: #b0c7de; font-size: 11px; font-weight: normal;")
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, 0)
-        self.progress_bar.setFixedHeight(10)
+        self.progress_bar.setFixedHeight(8)
         self.progress_bar.setStyleSheet("""
             QProgressBar {
-                background-color: #10161f;
-                border: 1px solid #2a3747;
+                background-color: #0d131a;
+                border: 1px solid #233142;
                 border-radius: 4px;
             }
             QProgressBar::chunk {
@@ -268,52 +321,67 @@ class SLMAssistantPanel(QDockWidget):
         # -------------------------------------------------------------
         # 4. Human-in-the-Loop Result & Suggestion Area
         # -------------------------------------------------------------
+        result_group_frame = QFrame()
+        result_group_frame.setObjectName("slmResultFrame")
+        result_group_frame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        result_group_layout = QVBoxLayout(result_group_frame)
+        result_group_layout.setContentsMargins(0, 0, 0, 0)
+        result_group_layout.setSpacing(6)
+
+        # Section Header: slightly larger/bold as requested
         result_title = QLabel("Proposed AI Plan & Suggestions:")
-        result_title.setStyleSheet("font-size: 12px; font-weight: bold; color: #e6e6e6;")
-        root_layout.addWidget(result_title)
+        result_title.setStyleSheet("font-size: 12px; font-weight: bold; color: #e1e9f2;")
+        result_group_layout.addWidget(result_title)
 
         # AI Plan Preview Box (Checklist)
         self.plan_preview = QLabel("No plan generated yet. Run AI to see proposed changes.")
         self.plan_preview.setStyleSheet("""
             QLabel {
-                background-color: #151b24;
-                color: #d1e2f2;
-                border: 1px solid #283749;
-                border-radius: 5px;
+                background-color: #141c26;
+                color: #c9daf0;
+                border: 1px solid #233142;
+                border-radius: 6px;
                 padding: 10px;
-                font-size: 12px;
+                font-size: 11px;
+                font-weight: normal;
             }
         """)
         self.plan_preview.setWordWrap(True)
         self.plan_preview.setTextFormat(Qt.RichText)
-        root_layout.addWidget(self.plan_preview)
+        result_group_layout.addWidget(self.plan_preview)
 
-        # Structured JSON Command Preview Box
+        # Spacing before JSON preview: 8px
+        result_group_layout.addSpacing(4)
+
+        # Structured JSON Command Preview Box (regular weight for label)
         json_title = QLabel("Structured Editing Command (SLM Output – Read Only):")
-        json_title.setStyleSheet("font-size: 11px; font-weight: bold; color: #8899aa;")
-        root_layout.addWidget(json_title)
+        json_title.setStyleSheet("font-size: 11px; font-weight: normal; color: #7f93a6;")
+        result_group_layout.addWidget(json_title)
 
         self.json_preview = QPlainTextEdit()
         self.json_preview.setReadOnly(True)
-        self.json_preview.setFixedHeight(75)
+        self.json_preview.setFixedHeight(72)
         self.json_preview.setStyleSheet("""
             QPlainTextEdit {
-                background-color: #0d1218;
+                background-color: #0b1016;
                 color: #55ff99;
                 font-family: Consolas, Monaco, monospace;
                 font-size: 11px;
-                border: 1px solid #222d3b;
-                border-radius: 4px;
-                padding: 4px;
+                border: 1px solid #1f2b3a;
+                border-radius: 6px;
+                padding: 6px 8px;
             }
         """)
         self.json_preview.setPlainText('{\n  "actions": []\n}')
-        root_layout.addWidget(self.json_preview)
+        result_group_layout.addWidget(self.json_preview)
+
+        root_layout.addWidget(result_group_frame)
 
         # -------------------------------------------------------------
         # 5. Action Control Buttons: [Apply Changes], [Reject], [Undo]
         # -------------------------------------------------------------
         btn_action_layout = QHBoxLayout()
+        btn_action_layout.setContentsMargins(0, 0, 0, 0)
         btn_action_layout.setSpacing(8)
 
         self.btn_apply = QPushButton("✓ Apply Changes")
@@ -321,20 +389,24 @@ class SLMAssistantPanel(QDockWidget):
         self.btn_apply.setEnabled(False)
         self.btn_apply.setStyleSheet("""
             QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1b8a47, stop:1 #22aa58);
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1a8745, stop:1 #22aa58);
                 color: #ffffff;
                 font-weight: bold;
                 font-size: 12px;
                 border: none;
-                border-radius: 5px;
+                border-radius: 6px;
                 padding: 4px 12px;
             }
             QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #209f52, stop:1 #28c064);
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1f9c50, stop:1 #28c064);
+            }
+            QPushButton:pressed {
+                background: #157339;
             }
             QPushButton:disabled {
-                background: #25332c;
-                color: #587565;
+                background: #1c2721;
+                color: #4a6353;
+                border: 1px solid #23332a;
             }
         """)
         self.btn_apply.clicked.connect(self.on_apply_changes)
@@ -344,22 +416,26 @@ class SLMAssistantPanel(QDockWidget):
         self.btn_reject.setEnabled(False)
         self.btn_reject.setStyleSheet("""
             QPushButton {
-                background-color: #382528;
+                background-color: #351f23;
                 color: #ff8888;
-                font-weight: bold;
+                font-weight: 500;
                 font-size: 12px;
-                border: 1px solid #5a3338;
-                border-radius: 5px;
+                border: 1px solid #5a2e33;
+                border-radius: 6px;
                 padding: 4px 12px;
             }
             QPushButton:hover {
-                background-color: #4a2f33;
-                color: #ffaaaa;
+                background-color: #44262b;
+                color: #ffa0a0;
+                border-color: #733b41;
+            }
+            QPushButton:pressed {
+                background-color: #2c191c;
             }
             QPushButton:disabled {
-                background: #281d1e;
-                color: #553e40;
-                border-color: #3a2628;
+                background: #201719;
+                color: #553e41;
+                border-color: #2d1f22;
             }
         """)
         self.btn_reject.clicked.connect(self.on_reject_plan)
@@ -368,17 +444,26 @@ class SLMAssistantPanel(QDockWidget):
         self.btn_undo.setFixedHeight(34)
         self.btn_undo.setStyleSheet("""
             QPushButton {
-                background-color: #252e3d;
+                background-color: #212936;
                 color: #9bb5d1;
-                font-weight: bold;
+                font-weight: 500;
                 font-size: 12px;
-                border: 1px solid #36485e;
-                border-radius: 5px;
+                border: 1px solid #314054;
+                border-radius: 6px;
                 padding: 4px 12px;
             }
             QPushButton:hover {
-                background-color: #2f3c4f;
+                background-color: #2a3545;
                 color: #c5dcf7;
+                border-color: #3e526d;
+            }
+            QPushButton:pressed {
+                background-color: #1b222d;
+            }
+            QPushButton:disabled {
+                background: #191f28;
+                color: #4e5e70;
+                border-color: #242c38;
             }
         """)
         self.btn_undo.clicked.connect(self.on_undo)
@@ -388,6 +473,9 @@ class SLMAssistantPanel(QDockWidget):
         btn_action_layout.addWidget(self.btn_undo, 1)
 
         root_layout.addLayout(btn_action_layout)
+
+        # Add expanding stretch at bottom so content is packed tightly without stretching widgets
+        root_layout.addStretch(1)
 
     def _set_prompt(self, text: str):
         from qt_api import QTextCursor
@@ -401,6 +489,8 @@ class SLMAssistantPanel(QDockWidget):
         prompt = self.prompt_input.toPlainText().strip()
         if not prompt:
             self._update_status("Please enter an instruction first.", state="error")
+            self.prompt_input.setEnabled(True)
+            self.prompt_input.setReadOnly(False)
             return
 
         self._update_status("Interpreting instruction and analyzing media...", state="busy")
@@ -409,17 +499,27 @@ class SLMAssistantPanel(QDockWidget):
         self.btn_reject.setEnabled(False)
         self.progress_bar.show()
 
-        # Run via background worker
-        self.worker = SLMAnalysisWorker(self.parser, self.controller, prompt)
-        self.worker.statusSignal.connect(lambda s: self._update_status(s, state="busy"))
-        self.worker.planReadySignal.connect(self._on_plan_ready)
-        self.worker.failedSignal.connect(self._on_analysis_failed)
-        self.worker.start()
+        try:
+            # Run via background worker
+            self.worker = SLMAnalysisWorker(self.parser, self.controller, prompt)
+            self.worker.statusSignal.connect(lambda s: self._update_status(s, state="busy"))
+            self.worker.planReadySignal.connect(self._on_plan_ready)
+            self.worker.failedSignal.connect(self._on_analysis_failed)
+            self.worker.start()
+        except Exception as ex:
+            log.error(f"Failed to start SLMAnalysisWorker: {ex}", exc_info=1)
+            self.btn_run_ai.setEnabled(True)
+            self.prompt_input.setEnabled(True)
+            self.prompt_input.setReadOnly(False)
+            self.progress_bar.hide()
+            self._update_status(f"Error starting analysis: {ex}", state="error")
 
     @pyqtSlot(object)
     def _on_plan_ready(self, plan: AIPlan):
         self.current_plan = plan
         self.btn_run_ai.setEnabled(True)
+        self.prompt_input.setEnabled(True)
+        self.prompt_input.setReadOnly(False)
         self.progress_bar.hide()
 
         # Update JSON Preview
@@ -440,6 +540,8 @@ class SLMAssistantPanel(QDockWidget):
     @pyqtSlot(str)
     def _on_analysis_failed(self, error_msg: str):
         self.btn_run_ai.setEnabled(True)
+        self.prompt_input.setEnabled(True)
+        self.prompt_input.setReadOnly(False)
         self.progress_bar.hide()
         self._update_status(f"Error: {error_msg}", state="error")
 
@@ -449,6 +551,9 @@ class SLMAssistantPanel(QDockWidget):
 
         self._update_status("Applying changes to timeline...", state="busy")
         result = self.controller.apply_plan(self.current_plan)
+
+        self.prompt_input.setEnabled(True)
+        self.prompt_input.setReadOnly(False)
 
         if result.get("success"):
             self.btn_apply.setEnabled(False)
@@ -467,6 +572,8 @@ class SLMAssistantPanel(QDockWidget):
         self.current_plan = None
         self.btn_apply.setEnabled(False)
         self.btn_reject.setEnabled(False)
+        self.prompt_input.setEnabled(True)
+        self.prompt_input.setReadOnly(False)
         self.plan_preview.setText("Proposed plan rejected. Timeline was not modified.")
         self.json_preview.setPlainText('{\n  "actions": []\n}')
         self._update_status("Plan rejected. Ready for a new instruction.", state="info")

@@ -907,12 +907,20 @@ class ClipPainter(BasePainter):
         shape_path = self._clip_fill_path(inner_rect, includes_start, includes_end)
 
         is_shaky_label = False
+        is_removed_shaky = False
         if clip:
             clip_data = clip.data if isinstance(getattr(clip, "data", None), dict) else {}
-            if clip_data.get("ui", {}).get("ai_label") or str(clip_data.get("title", "")).startswith("SHAKY FOOTAGE"):
+            title = str(clip_data.get("title", ""))
+            ui = clip_data.get("ui") if isinstance(clip_data.get("ui"), dict) else {}
+            if ui.get("removed") or title.startswith("[⚠ REMOVED"):
+                is_removed_shaky = True
+            elif ui.get("ai_label") or title.startswith("SHAKY FOOTAGE") or title.startswith("[⚠ SHAKY"):
                 is_shaky_label = True
 
-        if is_shaky_label:
+        if is_removed_shaky:
+            bg = QColor("#1e8449")
+            bg2 = QColor("#145a32")
+        elif is_shaky_label:
             bg = QColor("#c0392b")
             bg2 = QColor("#8e1e18")
         else:

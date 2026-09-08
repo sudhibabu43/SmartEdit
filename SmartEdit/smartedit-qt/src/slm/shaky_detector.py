@@ -1,6 +1,6 @@
 """
 @file
-@brief Shaky Footage Detection and Labeling service for SmartEdit timeline.
+@brief Shaky Footage Detection, Labeling, and Removal service for SmartEdit timeline.
 @author SmartEdit Team
 """
 
@@ -8,7 +8,8 @@ import os
 import uuid
 import json
 import logging
-from typing import List, Dict, Any, Optional
+from copy import deepcopy
+from typing import List, Dict, Any, Optional, Tuple
 
 from classes import info
 from classes.query import Clip, File, Marker, Track, Transition
@@ -29,7 +30,8 @@ class ShakyFootageService:
     """
     Coordinates shaky footage detection across timeline clips,
     finds/creates the topmost unused track above all clips,
-    and non-destructively places visible warning label clips and markers.
+    places visual warning label clips on detected shaky regions,
+    and cleanly cuts/removes shaky regions while keeping stable portions in sync.
     """
 
     def __init__(self, video_analyzer: Optional[VideoAnalyzer] = None):
@@ -38,14 +40,19 @@ class ShakyFootageService:
         self.last_created_clip_ids: List[str] = []
         self.last_created_marker_ids: List[str] = []
         self.last_created_layer: Optional[int] = None
+        self.last_detected_regions: List[Dict[str, Any]] = []
 
     def get_threshold(self, threshold: Optional[float] = None) -> float:
         """Returns the active shake threshold in percentage (0–100%). Default: 50%."""
         return self.video_analyzer.get_effective_threshold(threshold)
 
-    def analyze_timeline_clips(self, threshold: Optional[float] = None) -> List[Dict[str, Any]]:
+    def analyze_timeline_clips(
+        self,
+        threshold: Optional[float] = None,
+        clips: Optional[List[Any]] = None
+    ) -> List[Dict[str, Any]]:
         """
-        Analyzes all video clips placed on the timeline.
+        Analyzes all video clips placed on the timeline at the whole-clip level.
         Does NOT modify, move, cut, or delete any existing clips.
 
         Returns:
@@ -54,17 +61,21 @@ class ShakyFootageService:
         thresh_pct = self.get_threshold(threshold)
         results: List[Dict[str, Any]] = []
 
-        try:
-            timeline_clips = Clip.filter()
-        except Exception as ex:
-            logger.warning(f"Failed to query timeline clips: {ex}")
-            timeline_clips = []
+        if clips is not None:
+            timeline_clips = list(clips)
+        else:
+            try:
+                timeline_clips = Clip.filter()
+            except Exception as ex:
+                logger.warning(f"Failed to query timeline clips: {ex}")
+                timeline_clips = []
 
         for clip in timeline_clips:
             clip_data = clip.data if isinstance(clip.data, dict) else {}
 
             # Ignore AI label clips themselves if re-running
-            if clip_data.get("ui", {}).get("ai_label") or str(clip_data.get("title", "")).startswith("SHAKY FOOTAGE"):
+            clip_ui = clip_data.get("ui") if isinstance(clip_data.get("ui"), dict) else {}
+            if clip_ui.get("ai_label") or str(clip_data.get("title", "")).startswith("SHAKY FOOTAGE") or str(clip_data.get("title", "")).startswith("[⚠ SHAKY"):
                 continue
 
             # Check if media has video
@@ -139,6 +150,96 @@ class ShakyFootageService:
 
         return results
 
+    def analyze_timeline_shaky_regions(
+        self,
+        threshold: Optional[float] = None,
+        clips: Optional[List[Any]] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Analyzes every video clip on the timeline and detects discrete temporal
+        regions containing camera shake with exact timeline start and end timestamps.
+
+        Returns:
+            List of detected shaky region dicts across all timeline video clips.
+        """
+        thresh_pct = self.get_threshold(threshold)
+        all_regions: List[Dict[str, Any]] = []
+
+        if clips is not None:
+            timeline_clips = list(clips)
+        else:
+            try:
+                timeline_clips = Clip.filter()
+            except Exception as ex:
+                logger.warning(f"Failed to query timeline clips: {ex}")
+                timeline_clips = []
+
+        for clip in timeline_clips:
+            clip_data = clip.data if isinstance(clip.data, dict) else {}
+
+            # Skip AI label / marker clips
+            clip_ui = clip_data.get("ui") if isinstance(clip_data.get("ui"), dict) else {}
+            if clip_ui.get("ai_label") or str(clip_data.get("title", "")).startswith("SHAKY FOOTAGE") or str(clip_data.get("title", "")).startswith("[⚠ SHAKY") or str(clip_data.get("title", "")).startswith("[⚠ REMOVED"):
+                continue
+
+            reader = clip_data.get("reader") or {}
+            has_video = reader.get("has_video")
+            if has_video is False:
+                continue
+
+            path = reader.get("path") or ""
+            file_id = clip_data.get("file_id") or reader.get("id")
+            if (not path or not os.path.isfile(path)) and file_id:
+                try:
+                    f = File.get(id=file_id)
+                    if f:
+                        path = f.absolute_path()
+                except Exception:
+                    pass
+
+            try:
+                pos = float(clip_data.get("position", 0.0))
+                start = float(clip_data.get("start", 0.0))
+                end = float(clip_data.get("end", 0.0))
+                dur = float(clip_data.get("duration", 0.0) or (end - start))
+            except (TypeError, ValueError):
+                pos, start, end, dur = 0.0, 0.0, 5.0, 5.0
+
+            if dur <= 0.0:
+                dur = 5.0
+            if end <= start:
+                end = start + dur
+
+            try:
+                orig_layer = int(clip_data.get("layer", 1000000))
+            except (TypeError, ValueError):
+                orig_layer = 1000000
+
+            clip_name = clip.title() or os.path.basename(path) or "Clip"
+            video_ref = path if (path and os.path.isfile(path)) else clip_name
+
+            clip_regions = self.video_analyzer.detect_shaky_regions(
+                video_ref,
+                threshold=thresh_pct,
+                clip_start=start,
+                clip_end=end,
+                clip_position=pos
+            )
+
+            for r in clip_regions:
+                r["clip_id"] = clip.id
+                r["clip_name"] = clip_name
+                r["clip_layer"] = orig_layer
+                r["clip_position"] = pos
+                r["clip_start"] = start
+                r["clip_end"] = end
+                r["clip_duration"] = dur
+                r["clip_ref"] = clip
+                all_regions.append(r)
+
+        self.last_detected_regions = all_regions
+        return all_regions
+
     def find_or_create_top_unused_layer(self) -> int:
         """
         Finds the topmost unused video track/layer above existing timeline tracks.
@@ -171,7 +272,8 @@ class ShakyFootageService:
         occupied_layers = set()
         for c in all_clips:
             c_data = c.data if isinstance(c.data, dict) else {}
-            if not c_data.get("ui", {}).get("ai_label") and not str(c_data.get("title", "")).startswith("SHAKY FOOTAGE"):
+            c_ui = c_data.get("ui") if isinstance(c_data.get("ui"), dict) else {}
+            if not c_ui.get("ai_label") and not str(c_data.get("title", "")).startswith("SHAKY FOOTAGE") and not str(c_data.get("title", "")).startswith("[⚠ SHAKY") and not str(c_data.get("title", "")).startswith("[⚠ REMOVED"):
                 try:
                     occupied_layers.add(int(c_data.get("layer", 0)))
                 except (TypeError, ValueError):
@@ -194,7 +296,6 @@ class ShakyFootageService:
         ]
 
         if candidates_above:
-            # Use the topmost unused track
             chosen_layer = max(candidates_above)
             try:
                 track_obj = Track.get(number=chosen_layer)
@@ -205,8 +306,6 @@ class ShakyFootageService:
                 pass
             return chosen_layer
         else:
-            # Top layer is occupied (or no unused tracks above clips exist).
-            # Automatically create the next unused layer above the highest existing track.
             new_layer = max(max_existing, max_occupied) + 1000000
             if new_layer <= 0:
                 new_layer = 1000000
@@ -221,16 +320,24 @@ class ShakyFootageService:
             track.save()
             return new_layer
 
-    def generate_warning_image(self, shake_percentage: float, classification: str) -> str:
+    def generate_warning_image(
+        self,
+        shake_percentage: float,
+        classification: str,
+        removed: bool = False,
+        time_str: str = ""
+    ) -> str:
         """
-        Generates a visible warning-style PNG indicator asset for the label clip.
-        Uses high-contrast 1920x1080 transparent ARGB layout with amber/red badge.
+        Generates a visible indicator PNG asset for the label clip.
+        - When removed=False: amber/red warning badge displaying '[⚠ SHAKY XX%]'.
+        - When removed=True: green/emerald badge displaying '[⚠ REMOVED SHAKY]'.
         Returns the absolute path to the generated PNG.
         """
         pct_int = int(round(shake_percentage))
         out_dir = os.path.join(info.USER_PATH, "ai_labels")
         os.makedirs(out_dir, exist_ok=True)
-        png_filename = f"shaky_warning_{pct_int}.png"
+        prefix = "shaky_removed" if removed else "shaky_warning"
+        png_filename = f"{prefix}_{pct_int}.png"
         png_path = os.path.join(out_dir, png_filename)
 
         if os.path.exists(png_path) and os.path.getsize(png_path) > 0:
@@ -249,64 +356,97 @@ class ShakyFootageService:
                 p = QPainter(img)
                 p.setRenderHint(QPainter.Antialiasing, True)
 
+                # Card colors
+                border_color = QColor(39, 174, 96) if removed else QColor(231, 76, 60)
+                card_bg = QColor(18, 28, 24, 242) if removed else QColor(21, 27, 38, 242)
+
                 # 1. Main container card at top center
-                card = QRectF(410, 50, 1100, 120)
-                p.setBrush(QColor(21, 27, 38, 240))
-                p.setPen(QPen(QColor(231, 76, 60), 4))
+                card = QRectF(380, 50, 1160, 120)
+                p.setBrush(card_bg)
+                p.setPen(QPen(border_color, 4))
                 p.drawRoundedRect(card, 16, 16)
 
-                # 2. Caution Triangle Icon
-                triangle = QPainterPath()
-                triangle.moveTo(460, 134)
-                triangle.lineTo(495, 72)
-                triangle.lineTo(530, 134)
-                triangle.closeSubpath()
-                p.setBrush(QColor(243, 156, 18))
-                p.setPen(QPen(QColor(255, 255, 255), 2))
-                p.drawPath(triangle)
+                if removed:
+                    # Checkmark / Shield badge for removed
+                    p.setBrush(QColor(39, 174, 96))
+                    p.setPen(QPen(QColor(255, 255, 255), 2))
+                    p.drawRoundedRect(QRectF(420, 72, 60, 60), 12, 12)
+                    p.setPen(QPen(QColor(255, 255, 255), 6))
+                    p.drawLine(QPointF(434, 102), QPointF(446, 118))
+                    p.drawLine(QPointF(446, 118), QPointF(466, 86))
 
-                # Exclamation inside triangle
-                p.setPen(QPen(QColor(21, 27, 38), 5))
-                p.drawLine(QPointF(495, 90), QPointF(495, 114))
-                p.setBrush(QColor(21, 27, 38))
-                p.drawEllipse(QPointF(495, 124), 3.5, 3.5)
+                    # Title & Subtitle
+                    p.setFont(QFont("Segoe UI", 26, QFont.Bold))
+                    p.setPen(QColor(255, 255, 255))
+                    p.drawText(QRectF(505, 65, 760, 42), Qt.AlignLeft | Qt.AlignVCenter, f"REMOVED SHAKY FOOTAGE – {pct_int}%")
 
-                # 3. Main Title
-                font_title = QFont("Segoe UI", 28, QFont.Bold)
-                p.setFont(font_title)
-                p.setPen(QColor(255, 255, 255))
-                p.drawText(QRectF(555, 65, 750, 45), Qt.AlignLeft | Qt.AlignVCenter, f"SHAKY FOOTAGE – {pct_int}%")
+                    p.setFont(QFont("Segoe UI", 14, QFont.DemiBold))
+                    p.setPen(QColor(46, 204, 113))
+                    sub_txt = f"Original Detected Region {time_str} – Camera Shake Cut from Timeline" if time_str else "Original Detected Region – Camera Shake Cut from Timeline"
+                    p.drawText(QRectF(505, 110, 760, 32), Qt.AlignLeft | Qt.AlignVCenter, sub_txt)
 
-                # 4. Subtitle
-                font_sub = QFont("Segoe UI", 14, QFont.DemiBold)
-                p.setFont(font_sub)
-                p.setPen(QColor(255, 118, 117))
-                p.drawText(QRectF(555, 112, 750, 32), Qt.AlignLeft | Qt.AlignVCenter, f"Classification: {classification} (Camera Shake Exceeds Threshold)")
+                    # Pill badge
+                    pill = QRectF(1340, 80, 160, 56)
+                    grad = QLinearGradient(pill.topLeft(), pill.bottomRight())
+                    grad.setColorAt(0.0, QColor(39, 174, 96))
+                    grad.setColorAt(1.0, QColor(30, 132, 73))
+                    p.setBrush(grad)
+                    p.setPen(Qt.NoPen)
+                    p.drawRoundedRect(pill, 28, 28)
 
-                # 5. Score Pill Badge on Right
-                pill = QRectF(1340, 80, 140, 56)
-                grad = QLinearGradient(pill.topLeft(), pill.bottomRight())
-                grad.setColorAt(0.0, QColor(231, 76, 60))
-                grad.setColorAt(1.0, QColor(192, 57, 43))
-                p.setBrush(grad)
-                p.setPen(Qt.NoPen)
-                p.drawRoundedRect(pill, 28, 28)
+                    p.setFont(QFont("Segoe UI", 18, QFont.Bold))
+                    p.setPen(QColor(255, 255, 255))
+                    p.drawText(pill, Qt.AlignCenter, "REMOVED")
 
-                font_badge = QFont("Segoe UI", 24, QFont.Bold)
-                p.setFont(font_badge)
-                p.setPen(QColor(255, 255, 255))
-                p.drawText(pill, Qt.AlignCenter, f"{pct_int}%")
+                else:
+                    # Caution Triangle Icon
+                    triangle = QPainterPath()
+                    triangle.moveTo(420, 134)
+                    triangle.lineTo(455, 72)
+                    triangle.lineTo(490, 134)
+                    triangle.closeSubpath()
+                    p.setBrush(QColor(243, 156, 18))
+                    p.setPen(QPen(QColor(255, 255, 255), 2))
+                    p.drawPath(triangle)
+
+                    p.setPen(QPen(QColor(21, 27, 38), 5))
+                    p.drawLine(QPointF(455, 90), QPointF(455, 114))
+                    p.setBrush(QColor(21, 27, 38))
+                    p.drawEllipse(QPointF(455, 124), 3.5, 3.5)
+
+                    # Title & Subtitle
+                    p.setFont(QFont("Segoe UI", 26, QFont.Bold))
+                    p.setPen(QColor(255, 255, 255))
+                    p.drawText(QRectF(515, 65, 760, 42), Qt.AlignLeft | Qt.AlignVCenter, f"SHAKY FOOTAGE – {pct_int}%")
+
+                    p.setFont(QFont("Segoe UI", 14, QFont.DemiBold))
+                    p.setPen(QColor(255, 118, 117))
+                    sub_txt = f"Detected Shake Region {time_str} ({classification})" if time_str else f"Classification: {classification} (Camera Shake Exceeds Threshold)"
+                    p.drawText(QRectF(515, 110, 760, 32), Qt.AlignLeft | Qt.AlignVCenter, sub_txt)
+
+                    # Pill badge
+                    pill = QRectF(1340, 80, 160, 56)
+                    grad = QLinearGradient(pill.topLeft(), pill.bottomRight())
+                    grad.setColorAt(0.0, QColor(231, 76, 60))
+                    grad.setColorAt(1.0, QColor(192, 57, 43))
+                    p.setBrush(grad)
+                    p.setPen(Qt.NoPen)
+                    p.drawRoundedRect(pill, 28, 28)
+
+                    p.setFont(QFont("Segoe UI", 22, QFont.Bold))
+                    p.setPen(QColor(255, 255, 255))
+                    p.drawText(pill, Qt.AlignCenter, f"{pct_int}%")
 
                 p.end()
                 img.save(png_path, "PNG")
                 rendered = True
         except Exception as ex:
-            logger.warning(f"QImage rendering for warning PNG failed: {ex}")
+            logger.warning(f"QImage rendering for indicator PNG failed: {ex}")
 
         if not rendered and not os.path.exists(png_path):
-            # Fallback valid 64x64 PNG if Qt GUI is absent
             import struct, zlib
-            raw_data = b"".join(b"\x00" + b"\xe7\x4c\x3c\xff" * 64 for _ in range(64))
+            pixel_color = b"\x27\xae\x60\xff" if removed else b"\xe7\x4c\x3c\xff"
+            raw_data = b"".join(b"\x00" + pixel_color * 64 for _ in range(64))
             compressed = zlib.compress(raw_data)
             png_bytes = (
                 b"\x89PNG\r\n\x1a\n"
@@ -321,85 +461,39 @@ class ShakyFootageService:
 
         return png_path
 
-    def generate_warning_svg(self, shake_percentage: float, classification: str) -> str:
-        """
-        Generates a visible warning-style SVG visual indicator asset for the label clip.
-        Displays 'SHAKY FOOTAGE – [percentage]%' with an amber/red warning badge.
-        """
-        pct_int = int(round(shake_percentage))
-        out_dir = os.path.join(info.USER_PATH, "ai_labels")
-        os.makedirs(out_dir, exist_ok=True)
-        svg_filename = f"shaky_warning_{pct_int}.svg"
-        svg_path = os.path.join(out_dir, svg_filename)
-
-        # SVG markup with high-contrast warning design
-        svg_content = f"""<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
-  <defs>
-    <linearGradient id="warnGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#e74c3c" />
-      <stop offset="100%" stop-color="#c0392b" />
-    </linearGradient>
-    <filter id="badgeShadow" x="-10%" y="-10%" width="120%" height="130%">
-      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.6"/>
-    </filter>
-  </defs>
-  <!-- Warning Banner Overlay at Top Center -->
-  <g transform="translate(410, 50)" filter="url(#badgeShadow)">
-    <rect x="0" y="0" width="1100" height="110" rx="16" ry="16" fill="#151b26" fill-opacity="0.92" stroke="#e74c3c" stroke-width="3.5"/>
-    
-    <!-- Warning Icon Triangle -->
-    <path d="M 60 82 L 95 24 L 130 82 Z" fill="#f39c12" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="95" y1="42" x2="95" y2="65" stroke="#151b26" stroke-width="5" stroke-linecap="round"/>
-    <circle cx="95" cy="74" r="3.5" fill="#151b26"/>
-    
-    <!-- Text Labels -->
-    <text x="160" y="54" fill="#ffffff" font-family="'Segoe UI', Roboto, sans-serif" font-size="32" font-weight="900" letter-spacing="2">SHAKY FOOTAGE – {pct_int}%</text>
-    <text x="160" y="86" fill="#ff7675" font-family="'Segoe UI', Roboto, sans-serif" font-size="19" font-weight="600">Classification: {classification} (Camera Shake Exceeds Threshold)</text>
-    
-    <!-- Score Pill Badge -->
-    <rect x="910" y="28" width="150" height="54" rx="27" ry="27" fill="url(#warnGrad)"/>
-    <text x="985" y="64" fill="#ffffff" font-family="'Segoe UI', Roboto, sans-serif" font-size="24" font-weight="900" text-anchor="middle">{pct_int}%</text>
-  </g>
-</svg>"""
-
-        try:
-            with open(svg_path, "w", encoding="utf-8") as f:
-                f.write(svg_content)
-        except Exception as ex:
-            logger.error(f"Error writing warning SVG ({svg_path}): {ex}")
-
-        return svg_path
-
-    def label_shaky_clips(
+    def label_shaky_regions(
         self,
-        shaky_clips: List[Dict[str, Any]],
+        regions: List[Dict[str, Any]],
         target_layer: int
     ) -> List[Clip]:
         """
-        Places a corresponding warning label clip and marker on target_layer
-        aligned with the exact time range (position and duration) of each shaky clip.
-        Preserves the original clips intact.
+        Creates a visual 'SHAKY FOOTAGE' marker clip on target_layer for each
+        detected shaky region, positioned at the exact same start and end timestamps.
+        Preserves original clips completely untouched.
         """
-        app = _safe_app()
         created_clips: List[Clip] = []
         self.last_created_clip_ids = []
         self.last_created_marker_ids = []
         self.last_created_layer = target_layer
 
-        for item in shaky_clips:
-            shake_pct = item["shake_percentage"]
+        for region in regions:
+            shake_pct = float(region.get("shake_percentage", 65.0))
             pct_int = int(round(shake_pct))
-            classification = item["classification"]
-            title_text = f"SHAKY FOOTAGE – {pct_int}%"
+            classification = region.get("classification") or classify_shake(shake_pct)
 
-            # 1. Generate warning badge visual indicator PNG (fully supported by libsmartedit QtImageReader)
-            img_path = self.generate_warning_image(shake_pct, classification)
+            tl_start = float(region.get("timeline_start", 0.0))
+            tl_dur = float(region.get("timeline_duration", 0.0))
+            tl_end = float(region.get("timeline_end", tl_start + tl_dur))
+            if tl_dur <= 0.0:
+                tl_dur = max(0.2, tl_end - tl_start)
 
-            pos = float(item["position"])
-            dur = float(item["duration"])
+            time_str = f"{tl_start:.2f}–{tl_end:.2f}"
+            title_text = region.get("title") or f"[⚠ SHAKY {pct_int}%] {time_str}"
 
-            # 2. Register/retrieve File entry for project consistency
+            # 1. Generate PNG visual indicator asset
+            img_path = self.generate_warning_image(shake_pct, classification, removed=False, time_str=time_str)
+
+            # 2. Register / retrieve project File
             file_obj = None
             try:
                 for f in File.filter():
@@ -412,14 +506,14 @@ class ShakyFootageService:
                         "path": img_path,
                         "name": title_text,
                         "media_type": "image",
-                        "duration": dur,
+                        "duration": tl_dur,
                         "ui": {"ai_label": True}
                     }
                     file_obj.save()
             except Exception as f_ex:
                 logger.warning(f"Could not register File for label image: {f_ex}")
 
-            # 3. Build Clip data structure using smartedit.Clip(img_path)
+            # 3. Build Clip data structure
             clip_dict: Dict[str, Any] = {}
             try:
                 import smartedit
@@ -428,10 +522,10 @@ class ShakyFootageService:
             except Exception:
                 clip_dict = {}
 
-            clip_dict["position"] = pos
+            clip_dict["position"] = round(tl_start, 4)
             clip_dict["start"] = 0.0
-            clip_dict["end"] = dur
-            clip_dict["duration"] = dur
+            clip_dict["end"] = round(tl_dur, 4)
+            clip_dict["duration"] = round(tl_dur, 4)
             clip_dict["layer"] = target_layer
             clip_dict["title"] = title_text
             if file_obj and getattr(file_obj, "id", None):
@@ -440,13 +534,18 @@ class ShakyFootageService:
             clip_dict.setdefault("ui", {})
             clip_dict["ui"].update({
                 "ai_label": True,
-                "label_type": "shaky_footage",
+                "label_type": "shaky_region",
                 "shake_percentage": pct_int,
                 "classification": classification,
-                "target_clip_id": item["clip_id"]
+                "target_clip_id": region.get("clip_id"),
+                "timeline_start": round(tl_start, 4),
+                "timeline_end": round(tl_end, 4),
+                "timeline_duration": round(tl_dur, 4),
+                "original_timeline_start": round(tl_start, 4),
+                "original_timeline_end": round(tl_end, 4),
+                "region_data": region
             })
 
-            # Save clip to project store
             label_clip = Clip()
             label_clip.data = clip_dict
             label_clip.save()
@@ -455,7 +554,7 @@ class ShakyFootageService:
             if label_clip.id:
                 self.last_created_clip_ids.append(label_clip.id)
 
-            # 3. Add timeline Marker at clip start timestamp
+            # 4. Add timeline playhead Marker at region start
             try:
                 app = _safe_app()
                 project = getattr(app, "project", None) if app else None
@@ -468,60 +567,92 @@ class ShakyFootageService:
                 marker = Marker()
                 marker.data = {
                     "id": marker_id,
-                    "position": pos,
-                    "label": title_text,
+                    "position": round(tl_start, 4),
+                    "label": f"[⚠ SHAKY {pct_int}%]",
                     "color": "#e74c3c",
                     "ui": {
                         "ai_label": True,
-                        "label_type": "shaky_footage",
-                        "target_clip_id": item["clip_id"]
+                        "label_type": "shaky_region",
+                        "target_clip_id": region.get("clip_id"),
+                        "shake_percentage": pct_int,
+                        "original_timeline_start": round(tl_start, 4),
+                        "original_timeline_end": round(tl_end, 4)
                     }
                 }
                 marker.save()
                 if marker.id:
                     self.last_created_marker_ids.append(marker.id)
             except Exception as mex:
-                logger.warning(f"Could not add timeline marker for shaky clip: {mex}")
+                logger.warning(f"Could not add timeline marker for shaky region: {mex}")
 
         return created_clips
 
+    def label_shaky_clips(
+        self,
+        shaky_clips: List[Dict[str, Any]],
+        target_layer: int
+    ) -> List[Clip]:
+        """
+        Backwards-compatible helper: labels clips directly or maps them to regions.
+        """
+        # If passed whole clip dicts without timeline_start, map to label_shaky_regions
+        regions = []
+        for item in shaky_clips:
+            if "timeline_start" in item:
+                regions.append(item)
+            else:
+                pos = float(item.get("position", 0.0))
+                dur = float(item.get("duration", 0.0))
+                pct_int = int(round(item.get("shake_percentage", 65.0)))
+                regions.append({
+                    "title": f"SHAKY FOOTAGE – {pct_int}%",
+                    "clip_id": item.get("clip_id"),
+                    "clip_name": item.get("clip_name", "Clip"),
+                    "timeline_start": pos,
+                    "timeline_end": pos + dur,
+                    "timeline_duration": dur,
+                    "shake_percentage": item.get("shake_percentage", 65.0),
+                    "classification": item.get("classification", "Shaky"),
+                    "clip_ref": item.get("clip_ref")
+                })
+        return self.label_shaky_regions(regions, target_layer)
+
     def detect_and_label_timeline(self, threshold: Optional[float] = None) -> Dict[str, Any]:
         """
-        Executes the full shaky footage detection and labeling workflow.
-        - Analyzes all video clips on timeline
-        - Calculates 0-100% shake score
-        - If none detected: returns 'No shaky footage detected.'
-        - If detected: finds topmost unused layer, adds 'SHAKY FOOTAGE – XX%' label clips and markers
-        - Groups all operations into an atomic transaction for 1-click Undo.
+        Executes the full detection and labeling workflow:
+        1. Analyzes every video clip on timeline.
+        2. Detects exact time regions containing camera shake.
+        3. Creates visual markers on topmost unused layer with shake percentage.
+        4. Atomic transaction grouping for 1-click Undo.
         """
         app = _safe_app()
         window = getattr(app, "window", None) if app else None
 
-        # 1. Analyze clips
-        analysis_results = self.analyze_timeline_clips(threshold=threshold)
-        shaky_clips = [c for c in analysis_results if c["is_shaky"]]
+        # 1. Detect exact shaky regions
+        regions = self.analyze_timeline_shaky_regions(threshold=threshold)
 
-        if not shaky_clips:
+        if not regions:
             return {
                 "success": True,
                 "detected_count": 0,
                 "message": "No shaky footage detected.",
+                "regions": [],
                 "clips": [],
                 "labeled_layer": None
             }
 
-        # 2. Begin atomic transaction for single-step Undo
+        # 2. Begin atomic transaction
         transaction_id = str(uuid.uuid4())
         self.last_transaction_id = transaction_id
         if app and hasattr(app, "updates") and app.updates:
             app.updates.transaction_id = transaction_id
 
         try:
-            # 3. Find topmost unused layer above all existing tracks/clips
+            # 3. Find topmost unused layer
             target_layer = self.find_or_create_top_unused_layer()
 
-            # 4. Place labels aligned to shaky clips
-            created_clips = self.label_shaky_clips(shaky_clips, target_layer)
+            # 4. Place visual markers on top unused layer
+            created_clips = self.label_shaky_regions(regions, target_layer)
 
         finally:
             if app and hasattr(app, "updates") and app.updates:
@@ -538,27 +669,280 @@ class ShakyFootageService:
                     pass
 
         track_display_num = target_layer // 1000000
-        msg = f"Detected {len(shaky_clips)} shaky clip(s). Labeled on Track {track_display_num}."
+        affected_clips_count = len(set(r.get("clip_id") for r in regions if r.get("clip_id")))
+        if affected_clips_count == 0:
+            affected_clips_count = len(regions)
+        msg = f"Detected {affected_clips_count} shaky clip(s) ({len(regions)} shaky region(s)). Labeled on Track {track_display_num}."
 
         return {
             "success": True,
-            "detected_count": len(shaky_clips),
+            "detected_count": len(regions),
             "labeled_layer": target_layer,
-            "clips": shaky_clips,
+            "regions": regions,
+            "clips": regions,
             "transaction_id": transaction_id,
+            "message": msg
+        }
+
+    def remove_shaky_regions(
+        self,
+        regions: Optional[List[Dict[str, Any]]] = None,
+        close_gaps: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Applies the removal of detected shaky regions:
+        1. Splits original clips at the exact shaky region boundaries.
+        2. Removes ONLY the detected shaky segments; keeps all stable portions.
+        3. Maintains exact audio/video synchronization (exact media in/out offsets).
+        4. Keeps visual markers on top layer marked as '[⚠ REMOVED SHAKY]' at original detected timestamps.
+        5. Does not modify or delete original source media files on disk.
+        6. Supports multiple shaky regions per clip.
+        7. Grouped under a single atomic transaction for 1-click Undo.
+        """
+        app = _safe_app()
+        window = getattr(app, "window", None) if app else None
+
+        # 1. Resolve regions to remove
+        target_regions = regions
+        if not target_regions:
+            target_regions = getattr(self, "last_detected_regions", [])
+
+        if not target_regions:
+            # Look for existing label clips on timeline
+            try:
+                for c in Clip.filter():
+                    c_data = c.data if isinstance(c.data, dict) else {}
+                    ui = c_data.get("ui") if isinstance(c_data.get("ui"), dict) else {}
+                    if ui.get("ai_label") and ui.get("label_type") in ("shaky_region", "shaky_footage") and not ui.get("removed"):
+                        if "region_data" in ui:
+                            target_regions.append(ui["region_data"])
+                        else:
+                            pos = float(c_data.get("position", 0.0))
+                            dur = float(c_data.get("duration", 0.0))
+                            target_regions.append({
+                                "clip_id": ui.get("target_clip_id"),
+                                "timeline_start": pos,
+                                "timeline_end": pos + dur,
+                                "timeline_duration": dur,
+                                "shake_percentage": float(ui.get("shake_percentage", 65.0)),
+                                "classification": ui.get("classification", "Shaky")
+                            })
+            except Exception:
+                pass
+
+        if not target_regions:
+            # Re-analyze as last resort
+            target_regions = self.analyze_timeline_shaky_regions()
+
+        if not target_regions:
+            return {
+                "success": True,
+                "removed_count": 0,
+                "affected_clips": 0,
+                "message": "No shaky regions to remove."
+            }
+
+        # 2. Group shaky regions by target clip_id
+        clips_to_regions: Dict[str, List[Dict[str, Any]]] = {}
+        for r in target_regions:
+            cid = r.get("clip_id")
+            if cid:
+                clips_to_regions.setdefault(cid, []).append(r)
+
+        # 3. Begin atomic transaction for single-step Undo
+        transaction_id = str(uuid.uuid4())
+        self.last_transaction_id = transaction_id
+        if app and hasattr(app, "updates") and app.updates:
+            app.updates.transaction_id = transaction_id
+
+        removed_count = 0
+        affected_clips = 0
+        removed_intervals_by_layer: Dict[int, List[Tuple[float, float]]] = {}
+
+        try:
+            # 4. Slicing and Removal Loop
+            for clip_id, clip_regs in clips_to_regions.items():
+                clip = Clip.get(id=clip_id)
+                if not clip:
+                    continue
+
+                c_data = clip.data if isinstance(clip.data, dict) else {}
+                c_pos = float(c_data.get("position", 0.0))
+                c_start = float(c_data.get("start", 0.0))
+                c_end = float(c_data.get("end", 0.0))
+                c_dur = max(0.0, c_end - c_start)
+                c_tl_end = c_pos + c_dur
+                c_layer = int(c_data.get("layer", 1000000))
+
+                # Normalize, clamp, and merge overlapping shaky intervals
+                merged_shaky: List[Tuple[float, float]] = []
+                sorted_regs = sorted(clip_regs, key=lambda x: float(x.get("timeline_start", 0.0)))
+
+                for r in sorted_regs:
+                    s = max(c_pos, min(c_tl_end, float(r.get("timeline_start", 0.0))))
+                    e = max(c_pos, min(c_tl_end, float(r.get("timeline_end", 0.0))))
+                    if e - s <= 0.04:
+                        continue
+                    if not merged_shaky:
+                        merged_shaky.append((s, e))
+                    else:
+                        ps, pe = merged_shaky[-1]
+                        if s <= pe + 0.04:
+                            merged_shaky[-1] = (ps, max(pe, e))
+                        else:
+                            merged_shaky.append((s, e))
+
+                if not merged_shaky:
+                    continue
+
+                removed_count += len(merged_shaky)
+                affected_clips += 1
+                removed_intervals_by_layer.setdefault(c_layer, []).extend(merged_shaky)
+
+                # Compute stable intervals: portions of the clip outside all shaky ranges
+                stable_intervals: List[Tuple[float, float]] = []
+                curr = c_pos
+                for (s_shaky, e_shaky) in merged_shaky:
+                    if s_shaky - curr >= 0.05:
+                        stable_intervals.append((curr, s_shaky))
+                    curr = max(curr, e_shaky)
+                if c_tl_end - curr >= 0.05:
+                    stable_intervals.append((curr, c_tl_end))
+
+                # Apply cuts:
+                if not stable_intervals:
+                    # Entire clip was shaky -> remove original clip
+                    clip.delete()
+                else:
+                    # Keep first stable interval in the original clip object
+                    s0, e0 = stable_intervals[0]
+                    dur0 = round(e0 - s0, 4)
+                    m_start0 = round(c_start + (s0 - c_pos), 4)
+                    m_end0 = round(m_start0 + dur0, 4)
+
+                    clip.data["position"] = round(s0, 4)
+                    clip.data["start"] = m_start0
+                    clip.data["end"] = m_end0
+                    clip.data["duration"] = dur0
+                    clip.save()
+
+                    # Insert new clip instances for any subsequent stable intervals
+                    for si, ei in stable_intervals[1:]:
+                        duri = round(ei - si, 4)
+                        m_starti = round(c_start + (si - c_pos), 4)
+                        m_endi = round(m_starti + duri, 4)
+
+                        new_clip = Clip()
+                        new_clip_data = deepcopy(c_data)
+                        new_clip_data.pop("id", None)
+                        new_clip.id = None
+                        new_clip.type = "insert"
+                        new_clip.data = new_clip_data
+                        new_clip.data["position"] = round(si, 4)
+                        new_clip.data["start"] = m_starti
+                        new_clip.data["end"] = m_endi
+                        new_clip.data["duration"] = duri
+                        new_clip.data["layer"] = c_layer
+
+                        gen_id = None
+                        if app and hasattr(app, "project") and hasattr(app.project, "generate_id"):
+                            try:
+                                gen_id = app.project.generate_id()
+                            except Exception:
+                                gen_id = None
+                        if not gen_id:
+                            gen_id = str(uuid.uuid4())
+                        new_clip.id = gen_id
+                        new_clip.data["id"] = gen_id
+
+                        new_clip.save()
+
+            # 5. Keep visual markers on top layer; update label to [⚠ REMOVED SHAKY]
+            try:
+                for c in Clip.filter():
+                    c_dict = c.data if isinstance(c.data, dict) else {}
+                    ui = c_dict.get("ui") if isinstance(c_dict.get("ui"), dict) else {}
+                    if ui.get("ai_label") and not ui.get("removed"):
+                        pct = float(ui.get("shake_percentage", 65.0))
+                        orig_s = float(ui.get("original_timeline_start", c_dict.get("position", 0.0)))
+                        orig_e = float(ui.get("original_timeline_end", orig_s + float(c_dict.get("duration", 0.0))))
+                        time_str = f"{orig_s:.2f}–{orig_e:.2f}"
+
+                        rem_img = self.generate_warning_image(pct, "Removed", removed=True, time_str=time_str)
+
+                        c.data["title"] = f"[⚠ REMOVED SHAKY] {time_str}"
+                        c.data["ui"]["removed"] = True
+                        c.data["ui"]["label_type"] = "shaky_region_removed"
+                        c.save()
+            except Exception as ex:
+                logger.warning(f"Error updating top AI markers after cut: {ex}")
+
+            # 6. Update timeline Markers
+            try:
+                for m in Marker.filter():
+                    m_dict = m.data if isinstance(m.data, dict) else {}
+                    m_ui = m_dict.get("ui") if isinstance(m_dict.get("ui"), dict) else {}
+                    if m_ui.get("ai_label") and not m_ui.get("removed"):
+                        m.data["label"] = "[⚠ REMOVED SHAKY]"
+                        m.data["color"] = "#27ae60"
+                        m.data["ui"]["removed"] = True
+                        m.save()
+            except Exception:
+                pass
+
+            # 7. Close resulting gaps if requested
+            if close_gaps:
+                for layer_num, intervals in removed_intervals_by_layer.items():
+                    # Sort intervals in reverse order so right-to-left shift does not shift earlier positions
+                    intervals.sort(key=lambda x: x[0], reverse=True)
+                    for (g_start, g_end) in intervals:
+                        gap = g_end - g_start
+                        if gap <= 0.02:
+                            continue
+                        for c in Clip.filter(layer=layer_num):
+                            c_dict = c.data if isinstance(c.data, dict) else {}
+                            if float(c_dict.get("position", 0.0)) >= g_start + 0.01:
+                                c.data["position"] = max(0.0, float(c_dict["position"]) - gap)
+                                c.save()
+                        for t in Transition.filter(layer=layer_num):
+                            t_dict = t.data if isinstance(t.data, dict) else {}
+                            if float(t_dict.get("position", 0.0)) >= g_start + 0.01:
+                                t.data["position"] = max(0.0, float(t_dict["position"]) - gap)
+                                t.save()
+
+        finally:
+            if app and hasattr(app, "updates") and app.updates:
+                app.updates.transaction_id = None
+
+        # 8. Refresh timeline UI
+        if window:
+            if hasattr(window, "refreshFrameSignal"):
+                window.refreshFrameSignal.emit()
+            if hasattr(window, "timeline") and hasattr(window.timeline, "run_js"):
+                try:
+                    window.timeline.run_js("if (window.timeline) { timeline.loadTimeline(); }")
+                except Exception:
+                    pass
+
+        msg = f"Removed {removed_count} shaky segment(s) across {affected_clips} clip(s). Stable portions preserved."
+        return {
+            "success": True,
+            "removed_count": removed_count,
+            "affected_clips": affected_clips,
+            "transaction_id": transaction_id,
+            "close_gaps": close_gaps,
             "message": msg
         }
 
     def undo_shaky_labels(self) -> bool:
         """
-        Removes all AI-generated shaky labels and markers.
+        Removes all AI-generated shaky labels and markers, or reverts cuts.
         Uses SmartEdit's undo system if available, with explicit cleanup fallback.
         """
         app = _safe_app()
         window = getattr(app, "window", None) if app else None
         success = False
 
-        # Attempt atomic undo first
         if app and hasattr(app, "updates") and app.updates and self.last_transaction_id:
             try:
                 app.updates.undo()
@@ -566,26 +950,30 @@ class ShakyFootageService:
             except Exception as ex:
                 logger.warning(f"Atomic undo failed: {ex}")
 
-        # Fallback explicit cleanup if needed
         try:
             all_clips = Clip.filter()
             for c in all_clips:
                 c_data = c.data if isinstance(c.data, dict) else {}
-                if c_data.get("ui", {}).get("ai_label") or str(c_data.get("title", "")).startswith("SHAKY FOOTAGE"):
+                c_ui = c_data.get("ui") if isinstance(c_data.get("ui"), dict) else {}
+                title = str(c_data.get("title", ""))
+                if c_ui.get("ai_label") or title.startswith("SHAKY FOOTAGE") or title.startswith("[⚠ SHAKY") or title.startswith("[⚠ REMOVED"):
                     c.delete()
                     success = True
 
             all_markers = Marker.filter()
             for m in all_markers:
                 m_data = m.data if isinstance(m.data, dict) else {}
-                if m_data.get("ui", {}).get("ai_label") or str(m_data.get("label", "")).startswith("SHAKY FOOTAGE"):
+                m_ui = m_data.get("ui") if isinstance(m_data.get("ui"), dict) else {}
+                label = str(m_data.get("label", ""))
+                if m_ui.get("ai_label") or label.startswith("SHAKY FOOTAGE") or label.startswith("[⚠ SHAKY") or label.startswith("[⚠ REMOVED"):
                     m.delete()
                     success = True
 
             all_files = File.filter()
             for f in all_files:
                 f_data = f.data if isinstance(f.data, dict) else {}
-                if f_data.get("ui", {}).get("ai_label") or "ai_labels" in str(f_data.get("path", "")):
+                f_ui = f_data.get("ui") if isinstance(f_data.get("ui"), dict) else {}
+                if f_ui.get("ai_label") or "ai_labels" in str(f_data.get("path", "")):
                     f.delete()
                     success = True
         except Exception as cex:
@@ -594,8 +982,8 @@ class ShakyFootageService:
         self.last_created_clip_ids = []
         self.last_created_marker_ids = []
         self.last_transaction_id = None
+        self.last_detected_regions = []
 
-        # Refresh timeline UI
         if window:
             if hasattr(window, "refreshFrameSignal"):
                 window.refreshFrameSignal.emit()

@@ -19,6 +19,8 @@ class ActionType:
     LABEL_SHAKY = "label_shaky"
     ROUGH_CUT = "rough_cut"
     DELETE_SHAKY = "delete_shaky"
+    REMOVE_SHAKY = "delete_shaky"  # Alias for delete_shaky
+    TRIM_TO_DURATION = "trim_to_duration"
 
     ALL_ACTIONS = {
         REMOVE_SILENCE,
@@ -27,6 +29,7 @@ class ActionType:
         LABEL_SHAKY,
         ROUGH_CUT,
         DELETE_SHAKY,
+        TRIM_TO_DURATION,
     }
 
 
@@ -94,6 +97,10 @@ class CommandSchemaValidator:
                         clean_act = ActionType.DETECT_SHAKY
                     elif clean_act in {"label_shake", "mark_shaky", "tag_shaky", "indicate_shaky"}:
                         clean_act = ActionType.LABEL_SHAKY
+                    elif clean_act in {"delete_shaky", "remove_shaky", "cut_shaky", "trim_shaky", "remove_shaky_parts", "remove_shaky_footage"}:
+                        clean_act = ActionType.DELETE_SHAKY
+                    elif clean_act in {"trim_to_duration", "trim_duration", "target_length"}:
+                        clean_act = ActionType.TRIM_TO_DURATION
                     elif clean_act in {"roughcut", "make_rough_cut", "auto_cut"}:
                         clean_act = ActionType.ROUGH_CUT
                     

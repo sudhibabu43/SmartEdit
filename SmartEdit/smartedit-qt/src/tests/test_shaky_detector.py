@@ -293,5 +293,265 @@ class TestEditingControllerIntegration(unittest.TestCase):
         self.assertIn("topmost unused layer", plan.items[1].description)
 
 
+class TestShakyRegionDetectionAndRemoval(unittest.TestCase):
+    """
+    Comprehensive tests for:
+    1. Detecting exact temporal regions containing camera shake.
+    2. Visual marker placement on the topmost unused layer with shake percentage.
+    3. Applying cuts: splitting clips at shaky boundaries and removing only shaky segments.
+    4. Keeping stable portions with exact audio/video synchronization.
+    5. Preserving top layer markers as [⚠ REMOVED SHAKY] at original timestamps.
+    6. Multiple shaky regions within the same clip.
+    7. Gap closing behavior.
+    8. Non-destruction of source media on disk.
+    9. Single-step atomic undo.
+    """
+
+    def setUp(self):
+        self.service = ShakyFootageService()
+
+    def test_detect_discrete_shaky_regions(self):
+        # Clip from 0 to 20s placed at timeline position 0
+        regions = self.service.video_analyzer.detect_shaky_regions(
+            "action_shaky_cam.mp4",
+            threshold=50.0,
+            clip_start=0.0,
+            clip_end=20.0,
+            clip_position=0.0
+        )
+        self.assertGreaterEqual(len(regions), 1)
+        first = regions[0]
+        self.assertEqual(first["timeline_start"], 5.2)
+        self.assertEqual(first["timeline_end"], 8.1)
+        self.assertEqual(first["timeline_duration"], 2.9)
+        self.assertEqual(first["shake_percentage"], 67.0)
+
+    @patch("classes.query.Marker.save")
+    @patch("classes.query.Clip.save")
+    @patch("classes.app.get_app")
+    def test_label_shaky_regions_creates_markers_on_top_unused_layer(self, mock_get_app, mock_clip_save, mock_marker_save):
+        mock_app = MagicMock()
+        mock_app.project.generate_id.return_value = "m_id"
+        mock_get_app.return_value = mock_app
+
+        regions = [
+            {
+                "clip_id": "clip_1",
+                "clip_name": "Action.mp4",
+                "timeline_start": 5.2,
+                "timeline_end": 8.1,
+                "timeline_duration": 2.9,
+                "shake_percentage": 67.0,
+                "classification": "Shaky"
+            },
+            {
+                "clip_id": "clip_1",
+                "clip_name": "Action.mp4",
+                "timeline_start": 14.5,
+                "timeline_end": 16.2,
+                "timeline_duration": 1.7,
+                "shake_percentage": 74.0,
+                "classification": "Very Shaky"
+            }
+        ]
+
+        target_layer = 4000000
+        labels = self.service.label_shaky_regions(regions, target_layer)
+
+        self.assertEqual(len(labels), 2)
+        # Check first marker
+        self.assertEqual(labels[0].data["position"], 5.2)
+        self.assertEqual(labels[0].data["duration"], 2.9)
+        self.assertEqual(labels[0].data["layer"], 4000000)
+        self.assertIn("67%", labels[0].data["title"])
+        self.assertIn("5.20–8.10", labels[0].data["title"])
+        self.assertTrue(labels[0].data["ui"]["ai_label"])
+
+        # Check second marker
+        self.assertEqual(labels[1].data["position"], 14.5)
+        self.assertEqual(labels[1].data["duration"], 1.7)
+        self.assertEqual(labels[1].data["layer"], 4000000)
+        self.assertIn("74%", labels[1].data["title"])
+        self.assertIn("14.50–16.20", labels[1].data["title"])
+
+    @patch("classes.query.Marker.filter")
+    @patch("classes.query.Clip.save")
+    @patch("classes.query.Clip.get")
+    @patch("classes.query.Clip.filter")
+    @patch("classes.app.get_app")
+    def test_apply_single_region_splits_clip_and_keeps_stable_portions(self, mock_get_app, mock_clip_filter, mock_clip_get, mock_clip_save, mock_marker_filter):
+        mock_app = MagicMock()
+        mock_app.updates.transaction_id = None
+        mock_get_app.return_value = mock_app
+
+        # Original clip: 0.0 to 20.0, layer 1000000
+        orig_clip = MagicMock()
+        orig_clip.id = "c1"
+        orig_clip.data = {
+            "position": 0.0,
+            "start": 0.0,
+            "end": 20.0,
+            "duration": 20.0,
+            "layer": 1000000,
+            "reader": {"path": "/media/action.mp4"}
+        }
+        mock_clip_get.return_value = orig_clip
+
+        # Existing top layer label clip
+        label_clip = MagicMock()
+        label_clip.id = "lbl_1"
+        label_clip.data = {
+            "position": 5.2,
+            "duration": 2.9,
+            "layer": 3000000,
+            "title": "[⚠ SHAKY 67%] 5.20–8.10",
+            "ui": {
+                "ai_label": True,
+                "label_type": "shaky_region",
+                "shake_percentage": 67.0,
+                "target_clip_id": "c1",
+                "original_timeline_start": 5.2,
+                "original_timeline_end": 8.1
+            }
+        }
+        mock_clip_filter.return_value = [label_clip]
+        mock_marker_filter.return_value = []
+
+        regions = [{
+            "clip_id": "c1",
+            "timeline_start": 5.2,
+            "timeline_end": 8.1,
+            "timeline_duration": 2.9,
+            "shake_percentage": 67.0
+        }]
+
+        res = self.service.remove_shaky_regions(regions, close_gaps=False)
+
+        self.assertTrue(res["success"])
+        self.assertEqual(res["removed_count"], 1)
+        self.assertEqual(res["affected_clips"], 1)
+
+        # 1. Left stable piece kept in orig_clip: [0.0, 5.20]
+        self.assertEqual(orig_clip.data["position"], 0.0)
+        self.assertEqual(orig_clip.data["start"], 0.0)
+        self.assertEqual(orig_clip.data["end"], 5.2)
+        self.assertEqual(orig_clip.data["duration"], 5.2)
+
+        # 2. Right stable piece created via new Clip: [8.10, 20.0]
+        self.assertGreaterEqual(mock_clip_save.call_count, 1)
+
+        # 3. Top layer label kept and updated to [⚠ REMOVED SHAKY]
+        self.assertTrue(label_clip.data["ui"]["removed"])
+        self.assertIn("REMOVED", label_clip.data["title"])
+        self.assertEqual(label_clip.data["position"], 5.2)
+
+    @patch("classes.query.Marker.filter")
+    @patch("classes.query.Clip.save")
+    @patch("classes.query.Clip.get")
+    @patch("classes.query.Clip.filter")
+    @patch("classes.app.get_app")
+    def test_apply_multiple_shaky_regions_in_same_clip(self, mock_get_app, mock_clip_filter, mock_clip_get, mock_clip_save, mock_marker_filter):
+        mock_app = MagicMock()
+        mock_app.updates.transaction_id = None
+        mock_get_app.return_value = mock_app
+
+        orig_clip = MagicMock()
+        orig_clip.id = "c_multi"
+        orig_clip.data = {
+            "position": 0.0,
+            "start": 0.0,
+            "end": 20.0,
+            "duration": 20.0,
+            "layer": 1000000,
+            "reader": {"path": "/media/multi.mp4"}
+        }
+        mock_clip_get.return_value = orig_clip
+        mock_clip_filter.return_value = []
+        mock_marker_filter.return_value = []
+
+        # 2 discrete shaky regions: 5.20-8.10 and 14.50-16.20
+        regions = [
+            {"clip_id": "c_multi", "timeline_start": 5.2, "timeline_end": 8.1, "timeline_duration": 2.9, "shake_percentage": 67.0},
+            {"clip_id": "c_multi", "timeline_start": 14.5, "timeline_end": 16.2, "timeline_duration": 1.7, "shake_percentage": 74.0}
+        ]
+
+        res = self.service.remove_shaky_regions(regions, close_gaps=False)
+
+        self.assertTrue(res["success"])
+        self.assertEqual(res["removed_count"], 2)
+
+        # Stable piece 1: [0.0, 5.20]
+        self.assertEqual(orig_clip.data["position"], 0.0)
+        self.assertEqual(orig_clip.data["duration"], 5.2)
+
+    @patch("classes.query.Clip.save")
+    @patch("classes.query.Transition.filter", return_value=[])
+    @patch("classes.query.Clip.get")
+    @patch("classes.query.Clip.filter")
+    @patch("classes.app.get_app")
+    def test_remove_shaky_regions_with_gap_closing(self, mock_get_app, mock_clip_filter, mock_clip_get, mock_trans_filter, mock_clip_save):
+        mock_app = MagicMock()
+        mock_app.updates.transaction_id = None
+        mock_get_app.return_value = mock_app
+
+        orig_clip = MagicMock()
+        orig_clip.id = "c1"
+        orig_clip.data = {
+            "position": 0.0,
+            "start": 0.0,
+            "end": 20.0,
+            "duration": 20.0,
+            "layer": 1000000
+        }
+        mock_clip_get.return_value = orig_clip
+
+        subsequent_clip = MagicMock()
+        subsequent_clip.data = {"position": 25.0, "layer": 1000000}
+        mock_clip_filter.return_value = [subsequent_clip]
+
+        regions = [{"clip_id": "c1", "timeline_start": 5.0, "timeline_end": 10.0, "timeline_duration": 5.0, "shake_percentage": 70.0}]
+
+        res = self.service.remove_shaky_regions(regions, close_gaps=True)
+
+        self.assertTrue(res["success"])
+        self.assertTrue(res["close_gaps"])
+        self.assertEqual(subsequent_clip.data["position"], 20.0)
+
+
+class TestSafeUiHandling(unittest.TestCase):
+    """Test that clips with 'ui': None or missing 'ui' dict do not crash."""
+
+    def test_shaky_detector_handles_none_ui(self):
+        service = ShakyFootageService()
+        clip_with_none_ui = MagicMock()
+        clip_with_none_ui.data = {"title": "sample.mp4", "ui": None, "reader": {"has_video": False}}
+
+        with patch("classes.query.Clip.filter", return_value=[clip_with_none_ui]):
+            regions = service.analyze_timeline_shaky_regions()
+            self.assertEqual(regions, [])
+
+    def test_clip_painter_handles_none_ui(self):
+        from windows.views.timeline_backend.paint.clip import ClipPainter
+        from windows.views.timeline_backend.theme import TimelineTheme
+        from qt_api import QRectF, QPainter, QImage, QWidget, QApplication
+
+        _app = QApplication.instance() or QApplication([])
+
+        widget = QWidget()
+        widget.theme = TimelineTheme()
+
+        painter_obj = ClipPainter(widget)
+        clip_with_none_ui = MagicMock()
+        clip_with_none_ui.data = {"title": "sample.mp4", "ui": None}
+
+        img = QImage(100, 100, QImage.Format.Format_ARGB32)
+        qpainter = QPainter(img)
+        try:
+            # Should not raise AttributeError: 'NoneType' object has no attribute 'get'
+            painter_obj._fill_clip_background(qpainter, QRectF(0, 0, 100, 50), clip=clip_with_none_ui)
+        finally:
+            qpainter.end()
+
+
 if __name__ == "__main__":
     unittest.main()

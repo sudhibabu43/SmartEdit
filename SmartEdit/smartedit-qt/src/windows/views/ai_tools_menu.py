@@ -107,6 +107,11 @@ def add_ai_tools_menu(win, parent_menu, source_file=None):
             shaky_action.setIcon(_icon("tool-generate-sparkle.svg"))
             shaky_action.triggered.connect(win.actionDetectShakyFootage_trigger)
 
+            if hasattr(win, "actionRemoveShakyRegions_trigger"):
+                cut_shaky_action = ai_menu.addAction(_("Apply / Cut Shaky Regions"))
+                cut_shaky_action.setIcon(_icon("tool-razor.svg"))
+                cut_shaky_action.triggered.connect(win.actionRemoveShakyRegions_trigger)
+
         parent_menu.addMenu(ai_menu)
         created_menus.append(ai_menu)
 

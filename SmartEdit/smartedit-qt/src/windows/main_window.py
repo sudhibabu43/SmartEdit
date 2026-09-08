@@ -4629,6 +4629,12 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         self.actionDetectShakyFootage.setShortcutContext(Qt.ApplicationShortcut)
         self.actionDetectShakyFootage.triggered.connect(self.actionDetectShakyFootage_trigger)
 
+        self.actionRemoveShakyRegions = QAction(_("Apply / Cut Shaky Regions..."), self)
+        self.actionRemoveShakyRegions.setObjectName("actionRemoveShakyRegions")
+        self.actionRemoveShakyRegions.setShortcut(QKeySequence("Ctrl+Shift+Y"))
+        self.actionRemoveShakyRegions.setShortcutContext(Qt.ApplicationShortcut)
+        self.actionRemoveShakyRegions.triggered.connect(self.actionRemoveShakyRegions_trigger)
+
         self.actionUndoShakyLabels = QAction(_("Remove Shaky Footage Labels"), self)
         self.actionUndoShakyLabels.setObjectName("actionUndoShakyLabels")
         self.actionUndoShakyLabels.triggered.connect(self.actionUndoShakyLabels_trigger)
@@ -4638,6 +4644,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
             self.menuEdit.addSeparator()
             self.menuEdit.addAction(self.actionSlmAssistant)
             self.menuEdit.addAction(self.actionDetectShakyFootage)
+            self.menuEdit.addAction(self.actionRemoveShakyRegions)
             self.menuEdit.addAction(self.actionPromptInterpreter)
             self.menuEdit.addAction(self.actionSilenceRemover)
             self.menuEdit.addAction(self.actionUndoShakyLabels)
@@ -4645,6 +4652,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
             tools_menu = self.menuBar().addMenu(_("&AI Tools"))
             tools_menu.addAction(self.actionSlmAssistant)
             tools_menu.addAction(self.actionDetectShakyFootage)
+            tools_menu.addAction(self.actionRemoveShakyRegions)
             tools_menu.addAction(self.actionPromptInterpreter)
             tools_menu.addAction(self.actionSilenceRemover)
             tools_menu.addAction(self.actionUndoShakyLabels)
@@ -4654,11 +4662,12 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         if hasattr(self, "dockSlmAssistant") and self.dockSlmAssistant:
             self.dockSlmAssistant.show()
             self.dockSlmAssistant.raise_()
+            self.dockSlmAssistant.activateWindow()
             if hasattr(self.dockSlmAssistant, "prompt_input") and self.dockSlmAssistant.prompt_input:
                 self.dockSlmAssistant.prompt_input.setFocus()
 
     def actionDetectShakyFootage_trigger(self, checked=True):
-        """Detect camera shake across timeline clips and non-destructively label on top unused layer."""
+        """Detect camera shake across timeline clips, mark on top unused layer, and provide Apply removal."""
         from slm.shaky_detector import ShakyFootageService
         _ = get_app()._tr
 
@@ -4684,35 +4693,75 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
 
         layer = result.get("labeled_layer", 0)
         track_display_num = layer // 1000000 if layer else 0
-        clips = result.get("clips", [])
-        clip_summary = "\n".join(
-            f"• {c['clip_name']}: {int(round(c['shake_percentage']))}% ({c['classification']})"
-            for c in clips[:5]
-        )
-        if len(clips) > 5:
-            clip_summary += f"\n... and {len(clips) - 5} more."
+        regions = result.get("regions", []) or result.get("clips", [])
+        
+        region_lines = []
+        for r in regions[:6]:
+            s_t = float(r.get("timeline_start", 0.0))
+            e_t = float(r.get("timeline_end", s_t + float(r.get("timeline_duration", 0.0))))
+            pct = int(round(float(r.get("shake_percentage", 65.0))))
+            name = r.get("clip_name", "Clip")
+            region_lines.append(f"• {name} [{s_t:.2f}s – {e_t:.2f}s]: {pct}% ({r.get('classification', 'Shaky')})")
+        
+        if len(regions) > 6:
+            region_lines.append(f"... and {len(regions) - 6} more region(s).")
+        region_summary = "\n".join(region_lines)
 
         msg_box = QMessageBox(self)
         msg_box.setIcon(QMessageBox.Warning)
-        msg_box.setWindowTitle(_("Shaky Footage Detected"))
+        msg_box.setWindowTitle(_("Shaky Regions Detected – SmartEdit AI"))
         msg_box.setText(
-            _("Detected %d shaky clip(s) on the timeline.\n\n"
-              "Labeled on Track %d (top unused layer) with visible 'SHAKY FOOTAGE – XX%%' indicators.\n"
-              "Original clips remain untouched.\n\n"
-              "Clips:\n%s") % (count, track_display_num, clip_summary)
+            _("Detected %d camera shake region(s) on the timeline.\n\n"
+              "Visual markers placed on Track %d (top unused layer) showing exact detected time ranges and shake percentages.\n\n"
+              "Detected Regions:\n%s\n\n"
+              "Click 'Apply / Cut Shaky Regions' to automatically split the clips, remove only the shaky segments, and keep all stable portions.")
+            % (count, track_display_num, region_summary)
         )
-        keep_btn = msg_box.addButton(_("Keep Labels"), QMessageBox.AcceptRole)
-        undo_btn = msg_box.addButton(_("Undo / Remove Labels"), QMessageBox.RejectRole)
-        msg_box.setDefaultButton(keep_btn)
+        
+        apply_btn = msg_box.addButton(_("Apply / Cut Shaky Regions"), QMessageBox.AcceptRole)
+        keep_btn = msg_box.addButton(_("Keep Markers Only"), QMessageBox.ActionRole)
+        undo_btn = msg_box.addButton(_("Cancel / Undo"), QMessageBox.RejectRole)
+        
+        from qt_api import QCheckBox
+        cb_gap = QCheckBox(_("Close resulting gaps on timeline"), msg_box)
+        cb_gap.setChecked(False)
+        msg_box.setCheckBox(cb_gap)
+        msg_box.setDefaultButton(apply_btn)
         msg_box.exec_()
 
-        if msg_box.clickedButton() == undo_btn:
+        clicked = msg_box.clickedButton()
+        if clicked == apply_btn:
+            close_gaps = cb_gap.isChecked()
+            res = service.remove_shaky_regions(regions, close_gaps=close_gaps)
+            self.statusBar().showMessage(
+                _("Applied cuts: Removed %d shaky region(s). Stable portions preserved.") % res.get("removed_count", len(regions)),
+                5000
+            )
+        elif clicked == undo_btn:
             service.undo_shaky_labels()
-            self.statusBar().showMessage(_("Removed AI shaky footage labels."), 3000)
+            self.statusBar().showMessage(_("Removed AI shaky footage markers."), 3000)
         else:
             self.statusBar().showMessage(
-                _("Labeled %d shaky clip(s) on Track %d.") % (count, track_display_num),
+                _("Labeled %d shaky region(s) on Track %d.") % (count, track_display_num),
                 4000
+            )
+
+    def actionRemoveShakyRegions_trigger(self, checked=True):
+        """Directly apply removal of detected shaky regions (cuts out shaky segments, keeps stable portions)."""
+        from slm.shaky_detector import ShakyFootageService
+        _ = get_app()._tr
+        service = ShakyFootageService()
+        res = service.remove_shaky_regions()
+        if res.get("removed_count", 0) > 0:
+            self.statusBar().showMessage(
+                _("Successfully removed %d shaky segment(s). Stable footage preserved.") % res["removed_count"],
+                4000
+            )
+        else:
+            QMessageBox.information(
+                self,
+                _("Remove Shaky Regions"),
+                res.get("message") or _("No shaky regions found to remove.")
             )
 
     def actionUndoShakyLabels_trigger(self, checked=True):
@@ -5629,10 +5678,6 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         self.dockAudioRecording.setMinimumWidth(RECORDING_DOCK_MIN_WIDTH)
         self.dockAudioRecording.hide()
         self.addDockWidget(Qt.RightDockWidgetArea, self.dockAudioRecording)
-
-        # SLM Assistant Dock
-        self.dockSlmAssistant = SLMAssistantPanel(self)
-        self.addDockWidget(Qt.TopDockWidgetArea, self.dockSlmAssistant)
 
         # Add Docks submenu to View menu
         self.addViewDocksMenu()

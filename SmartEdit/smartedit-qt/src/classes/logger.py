@@ -1,4 +1,4 @@
-﻿"""
+"""
  @file
  @brief This file sets the default logging settings
  @author Noah Figg <eggmunkee@hotmail.com>
@@ -51,6 +51,11 @@ class StreamToLogger(object):
         if self.logbuf.rstrip():
             self.logger.log(self.log_level, self.logbuf.rstrip())
         self.logbuf = ''
+        if hasattr(self.parent, "flush") and callable(self.parent.flush):
+            try:
+                self.parent.flush()
+            except Exception:
+                pass
 
     def errors(self):
         pass
