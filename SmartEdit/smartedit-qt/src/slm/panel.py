@@ -35,7 +35,7 @@ class SLMAnalysisWorker(QThread):
             self.statusSignal.emit("Interpreting prompt with Small Language Model...")
             command = self.parser.parse(self.prompt)
             
-            self.statusSignal.emit("Analyzing audio silence & camera motion...")
+            self.statusSignal.emit("Analyzing camera motion...")
             plan = self.controller.generate_plan(command)
 
             self.planReadySignal.emit(plan)
@@ -204,7 +204,7 @@ class SLMAssistantPanel(QDockWidget):
 
         chip_silence = QPushButton("⚡ Remove silence")
         chip_arrange = QPushButton("🎬 Arrange clips")
-        chip_shaky = QPushButton("🔍 Find & label shaky")
+        chip_shaky = QPushButton("🔍 Remove shaky footage")
         chip_all = QPushButton("🚀 Silence + Arrange + Shaky")
 
         chip_style = """
@@ -236,7 +236,7 @@ class SLMAssistantPanel(QDockWidget):
 
         chip_silence.clicked.connect(lambda: self._set_prompt("Remove silence"))
         chip_arrange.clicked.connect(lambda: self._set_prompt("Arrange the clips in the best order"))
-        chip_shaky.clicked.connect(lambda: self._set_prompt("Find shaky footage and label it"))
+        chip_shaky.clicked.connect(lambda: self._set_prompt("Find shaky footage and trim "))
         chip_all.clicked.connect(lambda: self._set_prompt("Remove silence, arrange the clips, and label shaky footage"))
 
         chips_scroll.setWidget(chips_container)
@@ -507,7 +507,7 @@ class SLMAssistantPanel(QDockWidget):
             self.worker.failedSignal.connect(self._on_analysis_failed)
             self.worker.start()
         except Exception as ex:
-            log.error(f"Failed to start SLMAnalysisWorker: {ex}", exc_info=1)
+            log.error(f"Failed to start SLM AnalysisWorker: {ex}", exc_info=1)
             self.btn_run_ai.setEnabled(True)
             self.prompt_input.setEnabled(True)
             self.prompt_input.setReadOnly(False)
