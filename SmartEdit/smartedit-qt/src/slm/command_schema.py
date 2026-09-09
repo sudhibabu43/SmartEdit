@@ -112,9 +112,11 @@ class CommandSchemaValidator:
                     if action_name in ActionType.ALL_ACTIONS and action_name not in actions:
                         actions.append(action_name)
 
-        # Logical inference: If user wants to label shaky, they also need to detect shaky
+        # Logical inference: If user wants to label or delete shaky, they also need to detect shaky
         if ActionType.LABEL_SHAKY in actions and ActionType.DETECT_SHAKY not in actions:
             actions.insert(actions.index(ActionType.LABEL_SHAKY), ActionType.DETECT_SHAKY)
+        if ActionType.DELETE_SHAKY in actions and ActionType.DETECT_SHAKY not in actions:
+            actions.insert(actions.index(ActionType.DELETE_SHAKY), ActionType.DETECT_SHAKY)
 
         params = parsed.get("parameters", {})
         if not isinstance(params, dict):

@@ -96,26 +96,49 @@ class PromptParser:
             re.search(r"\b(add\s+(a\s+)?label)\b", t)
         )
 
-        # 5. Delete shaky (explicit only!)
-        # "delete shaky footage", "remove shaky clips"
+        # Check for explicit negation on labeling: "do not only label", "don't just label", "do not label", etc.
+        negate_label = bool(
+            re.search(r"\b(do\s+not|don'?t|not|never|without)\s+(only\s+|just\s+)?(label|mark|tag)(ing)?\b", t)
+        )
+        if negate_label:
+            label_shaky = False
+
+        # 5. Delete / Split & Remove shaky footage from timeline
+        # "delete shaky footage", "remove shaky clips", "actually split and remove those portions", "trim shaky footage"
         delete_shaky = bool(
-            re.search(r"\b(delete|remove|drop|cut)\s+(the\s+)?(shaky|jittery|unstable)\b", t)
+            re.search(r"\b(delete|remove|drop|cut|trim|eliminate|discard|clear)\s+.*?\b(shak(?:y|e|ing)?|jitter(?:y)?|unstable|wobbl(?:y|e)|those\s+portions|those\s+parts|those\s+segments)\b", t) or \
+            re.search(r"\b(split\s+and\s+(?:remove|delete|cut|drop))\b", t) or \
+            re.search(r"\b(actually\s+(?:split\s+and\s+)?(?:remove|delete|cut))\b", t) or \
+            re.search(r"\b(trim|cut\s*out)\s+(?:the\s+)?(shak(?:y|e)|jittery|unstable)\b", t) or \
+            re.search(r"\b(remove|delete|cut)\s+(?:the\s+)?(?:shaky|jittery|unstable|those\s+portions|those\s+parts|those\s+segments)\b", t)
         )
 
+        # Detect gap closing preference (e.g. ripple edit vs preserving timeline coordinates)
+        close_gaps = bool(re.search(r"\b(close\s+gaps?|ripple|pull\s+together|shift\s+left)\b", t))
+
         if delete_shaky:
+            if ActionType.DETECT_SHAKY not in actions:
+                actions.append(ActionType.DETECT_SHAKY)
             actions.append(ActionType.DELETE_SHAKY)
-            detect_shaky = True
+            if label_shaky and not negate_label:
+                actions.append(ActionType.LABEL_SHAKY)
         elif label_shaky:
             actions.append(ActionType.DETECT_SHAKY)
             actions.append(ActionType.LABEL_SHAKY)
         elif detect_shaky:
             actions.append(ActionType.DETECT_SHAKY)
 
+        if delete_shaky:
+            parameters["delete_shaky"] = {
+                "motion_threshold": 0.70,
+                "close_gaps": close_gaps
+            }
+
         if detect_shaky or label_shaky or delete_shaky:
             parameters["shaky"] = {
                 "motion_threshold": 0.70,
                 "label_text": "SHAKY FOOTAGE",
-                "add_marker": True
+                "add_marker": label_shaky and not negate_label
             }
 
         # 6. Rough cut intent
@@ -146,8 +169,9 @@ class PromptParser:
         system_instruction = (
             "You are an AI video editing assistant for SmartEdit. "
             "Convert user natural language instructions into a JSON object with 'actions'. "
-            "Supported actions: 'remove_silence', 'arrange_clips', 'detect_shaky', 'label_shaky', 'rough_cut'. "
+            "Supported actions: 'remove_silence', 'arrange_clips', 'detect_shaky', 'label_shaky', 'delete_shaky', 'rough_cut'. "
             "Example: User: 'Remove silence and identify shaky footage.' -> {\"actions\": [\"remove_silence\", \"detect_shaky\"]} "
+            "Example: User: 'Detect shaky portions and split and remove them. Do not only label.' -> {\"actions\": [\"detect_shaky\", \"delete_shaky\"]} "
             "Only return valid JSON."
         )
 

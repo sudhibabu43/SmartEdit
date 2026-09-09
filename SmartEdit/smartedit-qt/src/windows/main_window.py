@@ -4629,11 +4629,12 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         self.actionDetectShakyFootage.setShortcutContext(Qt.ApplicationShortcut)
         self.actionDetectShakyFootage.triggered.connect(self.actionDetectShakyFootage_trigger)
 
-        self.actionRemoveShakyRegions = QAction(_("Apply / Cut Shaky Regions..."), self)
-        self.actionRemoveShakyRegions.setObjectName("actionRemoveShakyRegions")
-        self.actionRemoveShakyRegions.setShortcut(QKeySequence("Ctrl+Shift+Y"))
-        self.actionRemoveShakyRegions.setShortcutContext(Qt.ApplicationShortcut)
-        self.actionRemoveShakyRegions.triggered.connect(self.actionRemoveShakyRegions_trigger)
+        self.actionTrimShakyFootage = QAction(_("Trim Shaky Footage"), self)
+        self.actionTrimShakyFootage.setObjectName("actionTrimShakyFootage")
+        self.actionTrimShakyFootage.setShortcut(QKeySequence("Ctrl+Shift+Y"))
+        self.actionTrimShakyFootage.setShortcutContext(Qt.ApplicationShortcut)
+        self.actionTrimShakyFootage.triggered.connect(self.actionTrimShakyFootage_trigger)
+        self.actionRemoveShakyRegions = self.actionTrimShakyFootage
 
         self.actionUndoShakyLabels = QAction(_("Remove Shaky Footage Labels"), self)
         self.actionUndoShakyLabels.setObjectName("actionUndoShakyLabels")
@@ -4644,7 +4645,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
             self.menuEdit.addSeparator()
             self.menuEdit.addAction(self.actionSlmAssistant)
             self.menuEdit.addAction(self.actionDetectShakyFootage)
-            self.menuEdit.addAction(self.actionRemoveShakyRegions)
+            self.menuEdit.addAction(self.actionTrimShakyFootage)
             self.menuEdit.addAction(self.actionPromptInterpreter)
             self.menuEdit.addAction(self.actionSilenceRemover)
             self.menuEdit.addAction(self.actionUndoShakyLabels)
@@ -4652,7 +4653,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
             tools_menu = self.menuBar().addMenu(_("&AI Tools"))
             tools_menu.addAction(self.actionSlmAssistant)
             tools_menu.addAction(self.actionDetectShakyFootage)
-            tools_menu.addAction(self.actionRemoveShakyRegions)
+            tools_menu.addAction(self.actionTrimShakyFootage)
             tools_menu.addAction(self.actionPromptInterpreter)
             tools_menu.addAction(self.actionSilenceRemover)
             tools_menu.addAction(self.actionUndoShakyLabels)
@@ -4718,13 +4719,13 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
             % (count, track_display_num, region_summary)
         )
         
-        apply_btn = msg_box.addButton(_("Apply / Cut Shaky Regions"), QMessageBox.AcceptRole)
+        apply_btn = msg_box.addButton(_("Trim Shaky Footage"), QMessageBox.AcceptRole)
         keep_btn = msg_box.addButton(_("Keep Markers Only"), QMessageBox.ActionRole)
         undo_btn = msg_box.addButton(_("Cancel / Undo"), QMessageBox.RejectRole)
         
         from qt_api import QCheckBox
         cb_gap = QCheckBox(_("Close resulting gaps on timeline"), msg_box)
-        cb_gap.setChecked(False)
+        cb_gap.setChecked(True)
         msg_box.setCheckBox(cb_gap)
         msg_box.setDefaultButton(apply_btn)
         msg_box.exec_()
@@ -4732,7 +4733,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         clicked = msg_box.clickedButton()
         if clicked == apply_btn:
             close_gaps = cb_gap.isChecked()
-            res = service.remove_shaky_regions(regions, close_gaps=close_gaps)
+            res = service.trim_shaky_footage(regions, close_gaps=close_gaps)
             self.statusBar().showMessage(
                 _("Applied cuts: Removed %d shaky region(s). Stable portions preserved.") % res.get("removed_count", len(regions)),
                 5000
@@ -4746,23 +4747,27 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
                 4000
             )
 
-    def actionRemoveShakyRegions_trigger(self, checked=True):
-        """Directly apply removal of detected shaky regions (cuts out shaky segments, keeps stable portions)."""
+    def actionTrimShakyFootage_trigger(self, checked=True):
+        """Directly trim shaky footage: detects shaky regions, splits clips, removes shaky segments, and repositions remaining clips."""
         from slm.shaky_detector import ShakyFootageService
         _ = get_app()._tr
         service = ShakyFootageService()
-        res = service.remove_shaky_regions()
+        res = service.trim_shaky_footage(close_gaps=True)
         if res.get("removed_count", 0) > 0:
             self.statusBar().showMessage(
-                _("Successfully removed %d shaky segment(s). Stable footage preserved.") % res["removed_count"],
+                _("Successfully trimmed %d shaky segment(s). Stable footage preserved.") % res["removed_count"],
                 4000
             )
         else:
             QMessageBox.information(
                 self,
-                _("Remove Shaky Regions"),
-                res.get("message") or _("No shaky regions found to remove.")
+                _("Trim Shaky Footage"),
+                res.get("message") or _("No shaky footage detected.")
             )
+
+    def actionRemoveShakyRegions_trigger(self, checked=True):
+        """Alias for actionTrimShakyFootage_trigger."""
+        return self.actionTrimShakyFootage_trigger(checked=checked)
 
     def actionUndoShakyLabels_trigger(self, checked=True):
         """Remove all AI-generated shaky footage labels from timeline."""

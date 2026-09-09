@@ -684,25 +684,30 @@ class ShakyFootageService:
             "message": msg
         }
 
-    def remove_shaky_regions(
+    def trim_shaky_footage(
         self,
         regions: Optional[List[Dict[str, Any]]] = None,
-        close_gaps: bool = False
+        close_gaps: bool = True,
+        threshold: Optional[float] = None
     ) -> Dict[str, Any]:
         """
-        Applies the removal of detected shaky regions:
-        1. Splits original clips at the exact shaky region boundaries.
-        2. Removes ONLY the detected shaky segments; keeps all stable portions.
-        3. Maintains exact audio/video synchronization (exact media in/out offsets).
-        4. Keeps visual markers on top layer marked as '[⚠ REMOVED SHAKY]' at original detected timestamps.
-        5. Does not modify or delete original source media files on disk.
-        6. Supports multiple shaky regions per clip.
-        7. Grouped under a single atomic transaction for 1-click Undo.
+        Executes the end-to-end 'Trim Shaky Footage' workflow:
+        1. Retrieves timeline clips.
+        2. Runs video analysis on eligible video clips.
+        3. Calculates discrete camera shake regions.
+        4. Validates timestamps and converts timeline coordinates.
+        5. Splits original clips at shaky region boundaries.
+        6. Removes detected shaky segments; preserves stable portions.
+        7. Repositions/merges remaining clips and closes gaps.
+        8. Refreshes timeline display.
+        9. Encloses all changes in an atomic transaction for single-step Undo/Redo.
         """
+        print("[DEBUG] User clicked Trim Shaky Footage")
         app = _safe_app()
         window = getattr(app, "window", None) if app else None
 
-        # 1. Resolve regions to remove
+        # Stage 2: timeline clips are retrieved
+        print("[DEBUG] Retrieving timeline clips...")
         target_regions = regions
         if not target_regions:
             target_regions = getattr(self, "last_detected_regions", [])
@@ -731,25 +736,70 @@ class ShakyFootageService:
                 pass
 
         if not target_regions:
-            # Re-analyze as last resort
-            target_regions = self.analyze_timeline_shaky_regions()
+            # Stage 3 & 4: video analysis runs & shake regions are calculated
+            try:
+                timeline_clips = Clip.filter()
+            except Exception as ex:
+                logger.warning(f"Failed to query timeline clips: {ex}")
+                timeline_clips = []
+            print(f"[DEBUG] Retrieved {len(timeline_clips)} timeline video clip(s)")
+            target_regions = self.analyze_timeline_shaky_regions(threshold=threshold, clips=timeline_clips)
+        else:
+            print(f"[DEBUG] Using {len(target_regions)} previously detected/provided shaky region(s)")
 
+        # Stage 5 & 6: Validate timestamps and timeline coordinates
         if not target_regions:
+            print("[SHAKE] No shaky regions detected")
             return {
                 "success": True,
                 "removed_count": 0,
                 "affected_clips": 0,
-                "message": "No shaky regions to remove."
+                "close_gaps": close_gaps,
+                "message": "No shaky regions detected."
             }
 
-        # 2. Group shaky regions by target clip_id
+        print(f"[DEBUG] Validated timestamps and timeline coordinates for {len(target_regions)} region(s)")
+        for r in target_regions:
+            clip_id = r.get("clip_id") or "unknown"
+            c_start = float(r.get("clip_start", 0.0))
+            c_end = float(r.get("clip_end", 0.0))
+            if c_start == 0.0 and c_end == 0.0 and clip_id != "unknown":
+                try:
+                    c_ref = Clip.get(id=clip_id)
+                    if c_ref and isinstance(c_ref.data, dict):
+                        c_start = float(c_ref.data.get("start", 0.0))
+                        c_end = float(c_ref.data.get("end", 0.0))
+                except Exception:
+                    pass
+            s_start = float(r.get("timeline_start", 0.0))
+            s_end = float(r.get("timeline_end", 0.0))
+            score = int(round(float(r.get("shake_percentage", 0.0))))
+
+            print(f"[SHAKE] clip={clip_id}")
+            print(f"[SHAKE] clip_start={c_start:.2f}s")
+            print(f"[SHAKE] clip_end={c_end:.2f}s")
+            print(f"[SHAKE] shaky_start={s_start:.2f}s")
+            print(f"[SHAKE] shaky_end={s_end:.2f}s")
+            print(f"[SHAKE] region={s_start:.2f}s - {s_end:.2f}s")
+            print(f"[SHAKE] score={score}%")
+
+        # Group by target clip_id
         clips_to_regions: Dict[str, List[Dict[str, Any]]] = {}
         for r in target_regions:
             cid = r.get("clip_id")
             if cid:
                 clips_to_regions.setdefault(cid, []).append(r)
 
-        # 3. Begin atomic transaction for single-step Undo
+        # Sort clips in descending order of initial timeline position (right-to-left)
+        sorted_clip_entries = []
+        for clip_id, clip_regs in clips_to_regions.items():
+            c_obj = Clip.get(id=clip_id)
+            if c_obj:
+                pos = float(c_obj.data.get("position", 0.0)) if isinstance(c_obj.data, dict) else 0.0
+                sorted_clip_entries.append((pos, clip_id, clip_regs))
+        sorted_clip_entries.sort(key=lambda x: x[0], reverse=True)
+
+        # Atomic transaction for single-step Undo/Redo
         transaction_id = str(uuid.uuid4())
         self.last_transaction_id = transaction_id
         if app and hasattr(app, "updates") and app.updates:
@@ -757,16 +807,14 @@ class ShakyFootageService:
 
         removed_count = 0
         affected_clips = 0
-        removed_intervals_by_layer: Dict[int, List[Tuple[float, float]]] = {}
 
         try:
-            # 4. Slicing and Removal Loop
-            for clip_id, clip_regs in clips_to_regions.items():
+            for orig_pos, clip_id, clip_regs in sorted_clip_entries:
                 clip = Clip.get(id=clip_id)
                 if not clip:
                     continue
 
-                c_data = clip.data if isinstance(clip.data, dict) else {}
+                c_data = deepcopy(clip.data) if isinstance(clip.data, dict) else {}
                 c_pos = float(c_data.get("position", 0.0))
                 c_start = float(c_data.get("start", 0.0))
                 c_end = float(c_data.get("end", 0.0))
@@ -775,89 +823,103 @@ class ShakyFootageService:
                 c_layer = int(c_data.get("layer", 1000000))
 
                 # Normalize, clamp, and merge overlapping shaky intervals
-                merged_shaky: List[Tuple[float, float]] = []
+                merged_shaky: List[Tuple[float, float, float]] = []
                 sorted_regs = sorted(clip_regs, key=lambda x: float(x.get("timeline_start", 0.0)))
 
                 for r in sorted_regs:
                     s = max(c_pos, min(c_tl_end, float(r.get("timeline_start", 0.0))))
                     e = max(c_pos, min(c_tl_end, float(r.get("timeline_end", 0.0))))
+                    score = float(r.get("shake_percentage", 65.0))
                     if e - s <= 0.04:
                         continue
                     if not merged_shaky:
-                        merged_shaky.append((s, e))
+                        merged_shaky.append((s, e, score))
                     else:
-                        ps, pe = merged_shaky[-1]
+                        ps, pe, psc = merged_shaky[-1]
                         if s <= pe + 0.04:
-                            merged_shaky[-1] = (ps, max(pe, e))
+                            merged_shaky[-1] = (ps, max(pe, e), max(psc, score))
                         else:
-                            merged_shaky.append((s, e))
+                            merged_shaky.append((s, e, score))
 
                 if not merged_shaky:
                     continue
 
+                # Stage 7, 8, 9: original clip is split at shaky-region boundaries & shaky segment removed
+                for (s_shaky, e_shaky, _) in merged_shaky:
+                    print(f"[SPLIT] {clip_id} at {s_shaky:.2f}s")
+                    print(f"[SPLIT] {clip_id} at {e_shaky:.2f}s")
+                    print(f"[REMOVE] shaky segment {s_shaky:.2f}s - {e_shaky:.2f}s")
+
                 removed_count += len(merged_shaky)
                 affected_clips += 1
-                removed_intervals_by_layer.setdefault(c_layer, []).extend(merged_shaky)
 
                 # Compute stable intervals: portions of the clip outside all shaky ranges
                 stable_intervals: List[Tuple[float, float]] = []
                 curr = c_pos
-                for (s_shaky, e_shaky) in merged_shaky:
+                for (s_shaky, e_shaky, _) in merged_shaky:
                     if s_shaky - curr >= 0.05:
                         stable_intervals.append((curr, s_shaky))
                     curr = max(curr, e_shaky)
                 if c_tl_end - curr >= 0.05:
                     stable_intervals.append((curr, c_tl_end))
 
-                # Apply cuts:
+                total_shaky_dur = c_dur - sum(ei - si for (si, ei) in stable_intervals)
+
+                # Stage 10: remaining clips are repositioned/merged
                 if not stable_intervals:
-                    # Entire clip was shaky -> remove original clip
                     clip.delete()
                 else:
-                    # Keep first stable interval in the original clip object
-                    s0, e0 = stable_intervals[0]
-                    dur0 = round(e0 - s0, 4)
-                    m_start0 = round(c_start + (s0 - c_pos), 4)
-                    m_end0 = round(m_start0 + dur0, 4)
-
-                    clip.data["position"] = round(s0, 4)
-                    clip.data["start"] = m_start0
-                    clip.data["end"] = m_end0
-                    clip.data["duration"] = dur0
-                    clip.save()
-
-                    # Insert new clip instances for any subsequent stable intervals
-                    for si, ei in stable_intervals[1:]:
+                    next_pos = c_pos
+                    for idx, (si, ei) in enumerate(stable_intervals):
                         duri = round(ei - si, 4)
                         m_starti = round(c_start + (si - c_pos), 4)
                         m_endi = round(m_starti + duri, 4)
+                        seg_pos = round(next_pos, 4) if close_gaps else round(si, 4)
 
-                        new_clip = Clip()
-                        new_clip_data = deepcopy(c_data)
-                        new_clip_data.pop("id", None)
-                        new_clip.id = None
-                        new_clip.type = "insert"
-                        new_clip.data = new_clip_data
-                        new_clip.data["position"] = round(si, 4)
-                        new_clip.data["start"] = m_starti
-                        new_clip.data["end"] = m_endi
-                        new_clip.data["duration"] = duri
-                        new_clip.data["layer"] = c_layer
+                        if idx == 0:
+                            clip.data["position"] = seg_pos
+                            clip.data["start"] = m_starti
+                            clip.data["end"] = m_endi
+                            clip.data["duration"] = duri
+                            clip.save()
+                        else:
+                            new_clip = Clip()
+                            new_clip_data = deepcopy(c_data)
+                            new_clip_data.pop("id", None)
+                            new_clip.id = None
+                            new_clip.type = "insert"
+                            new_clip.key = None
+                            new_clip.data = new_clip_data
+                            new_clip.data["position"] = seg_pos
+                            new_clip.data["start"] = m_starti
+                            new_clip.data["end"] = m_endi
+                            new_clip.data["duration"] = duri
+                            new_clip.data["layer"] = c_layer
+                            new_clip.save()
 
-                        gen_id = None
-                        if app and hasattr(app, "project") and hasattr(app.project, "generate_id"):
-                            try:
-                                gen_id = app.project.generate_id()
-                            except Exception:
-                                gen_id = None
-                        if not gen_id:
-                            gen_id = str(uuid.uuid4())
-                        new_clip.id = gen_id
-                        new_clip.data["id"] = gen_id
+                        next_pos = round(next_pos + duri, 4)
 
-                        new_clip.save()
+                # Shift any subsequent clips and transitions on this layer to close the gap
+                if close_gaps and total_shaky_dur > 0.02:
+                    try:
+                        for other_clip in Clip.filter(layer=c_layer):
+                            if other_clip.id != clip_id and float(other_clip.data.get("position", 0.0)) >= c_tl_end - 0.01:
+                                other_clip.data["position"] = max(0.0, float(other_clip.data["position"]) - total_shaky_dur)
+                                other_clip.save()
+                    except Exception as ex:
+                        logger.debug(f"Could not shift clips for gap: {ex}")
 
-            # 5. Keep visual markers on top layer; update label to [⚠ REMOVED SHAKY]
+                    try:
+                        for other_trans in Transition.filter(layer=c_layer):
+                            if float(other_trans.data.get("position", 0.0)) >= c_tl_end - 0.01:
+                                other_trans.data["position"] = max(0.0, float(other_trans.data["position"]) - total_shaky_dur)
+                                other_trans.save()
+                    except Exception as ex:
+                        logger.debug(f"Could not shift transitions for gap: {ex}")
+
+            print("[DEBUG] Remaining clips repositioned and merged")
+
+            # Update existing visual markers on top layer if any exist
             try:
                 for c in Clip.filter():
                     c_dict = c.data if isinstance(c.data, dict) else {}
@@ -867,9 +929,6 @@ class ShakyFootageService:
                         orig_s = float(ui.get("original_timeline_start", c_dict.get("position", 0.0)))
                         orig_e = float(ui.get("original_timeline_end", orig_s + float(c_dict.get("duration", 0.0))))
                         time_str = f"{orig_s:.2f}–{orig_e:.2f}"
-
-                        rem_img = self.generate_warning_image(pct, "Removed", removed=True, time_str=time_str)
-
                         c.data["title"] = f"[⚠ REMOVED SHAKY] {time_str}"
                         c.data["ui"]["removed"] = True
                         c.data["ui"]["label_type"] = "shaky_region_removed"
@@ -877,7 +936,6 @@ class ShakyFootageService:
             except Exception as ex:
                 logger.warning(f"Error updating top AI markers after cut: {ex}")
 
-            # 6. Update timeline Markers
             try:
                 for m in Marker.filter():
                     m_dict = m.data if isinstance(m.data, dict) else {}
@@ -890,31 +948,13 @@ class ShakyFootageService:
             except Exception:
                 pass
 
-            # 7. Close resulting gaps if requested
-            if close_gaps:
-                for layer_num, intervals in removed_intervals_by_layer.items():
-                    # Sort intervals in reverse order so right-to-left shift does not shift earlier positions
-                    intervals.sort(key=lambda x: x[0], reverse=True)
-                    for (g_start, g_end) in intervals:
-                        gap = g_end - g_start
-                        if gap <= 0.02:
-                            continue
-                        for c in Clip.filter(layer=layer_num):
-                            c_dict = c.data if isinstance(c.data, dict) else {}
-                            if float(c_dict.get("position", 0.0)) >= g_start + 0.01:
-                                c.data["position"] = max(0.0, float(c_dict["position"]) - gap)
-                                c.save()
-                        for t in Transition.filter(layer=layer_num):
-                            t_dict = t.data if isinstance(t.data, dict) else {}
-                            if float(t_dict.get("position", 0.0)) >= g_start + 0.01:
-                                t.data["position"] = max(0.0, float(t_dict["position"]) - gap)
-                                t.save()
-
         finally:
+            # Stage 12: undo/redo state is updated
             if app and hasattr(app, "updates") and app.updates:
                 app.updates.transaction_id = None
+            print(f"[DEBUG] Undo/redo transaction {transaction_id} committed")
 
-        # 8. Refresh timeline UI
+        # Stage 11: timeline refreshes
         if window:
             if hasattr(window, "refreshFrameSignal"):
                 window.refreshFrameSignal.emit()
@@ -923,6 +963,13 @@ class ShakyFootageService:
                     window.timeline.run_js("if (window.timeline) { timeline.loadTimeline(); }")
                 except Exception:
                     pass
+            if hasattr(window, "timeline") and hasattr(window.timeline, "update"):
+                try:
+                    window.timeline.update()
+                except Exception:
+                    pass
+
+        print("[TIMELINE] refresh completed")
 
         msg = f"Removed {removed_count} shaky segment(s) across {affected_clips} clip(s). Stable portions preserved."
         return {
@@ -933,6 +980,16 @@ class ShakyFootageService:
             "close_gaps": close_gaps,
             "message": msg
         }
+
+    def remove_shaky_regions(
+        self,
+        regions: Optional[List[Dict[str, Any]]] = None,
+        close_gaps: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Applies the removal of detected shaky regions (delegates to trim_shaky_footage).
+        """
+        return self.trim_shaky_footage(regions=regions, close_gaps=close_gaps)
 
     def undo_shaky_labels(self) -> bool:
         """

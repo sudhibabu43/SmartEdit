@@ -119,17 +119,20 @@ class EditingController:
                 ))
 
                 if command.has_action(ActionType.DELETE_SHAKY):
+                    close_gaps = command.parameters.get("delete_shaky", {}).get("close_gaps", False)
+                    gap_note = "closing gaps" if close_gaps else "preserving timeline coordinates (e.g. 0–5s and 8–20s)"
                     plan_items.append(PlanItem(
                         action=ActionType.DELETE_SHAKY,
-                        description=f"Split clips at boundaries and remove <b>{len(shaky_regions_found)}</b> detected shaky segment(s); preserve stable portions & A/V sync",
+                        description=f"Split clips at detected boundaries and remove <b>{len(shaky_regions_found)}</b> shaky segment(s) from timeline ({gap_note}); source video files untouched",
                         icon="✂",
-                        details={"regions": shaky_regions_found, "clip_ids": [r.get("clip_id") for r in shaky_regions_found]}
+                        details={"regions": shaky_regions_found, "clip_ids": [r.get("clip_id") for r in shaky_regions_found], "close_gaps": close_gaps}
                     ))
                     operations.append({
                         "type": ActionType.DELETE_SHAKY,
                         "regions": shaky_regions_found,
                         "clips": shaky_regions_found,
-                        "clip_ids": [r.get("clip_id") for r in shaky_regions_found]
+                        "clip_ids": [r.get("clip_id") for r in shaky_regions_found],
+                        "close_gaps": close_gaps
                     })
                 elif command.has_action(ActionType.LABEL_SHAKY) or command.has_action(ActionType.DETECT_SHAKY):
                     plan_items.append(PlanItem(
@@ -295,14 +298,13 @@ class EditingController:
                         track_num = target_layer // 1000000
                         applied_details.append(f"Placed {len(created)} 'SHAKY FOOTAGE' label(s) on Track {track_num} (top unused layer)")
 
-                # B. Remove Shaky Regions (Cut out shaky segments, keep stable portions, keep markers as [REMOVED])
+                # B. Remove Shaky Regions (Cut out shaky segments, keep stable portions, source video files untouched)
                 elif op_type == ActionType.DELETE_SHAKY:
                     shaky_items = op.get("regions") or op.get("clips", [])
                     if shaky_items:
-                        target_layer = self.shaky_service.find_or_create_top_unused_layer()
-                        self.shaky_service.label_shaky_regions(shaky_items, target_layer)
-                        res = self.shaky_service.remove_shaky_regions(shaky_items, close_gaps=False)
-                        applied_details.append(f"Removed {res.get('removed_count', len(shaky_items))} shaky segment(s); preserved stable portions on timeline")
+                        close_gaps = op.get("close_gaps", False)
+                        res = self.shaky_service.trim_shaky_footage(shaky_items, close_gaps=close_gaps)
+                        applied_details.append(f"Split and removed {res.get('removed_count', len(shaky_items))} shaky segment(s); preserved stable portions on timeline without modifying source files")
                     else:
                         for cid in op.get("clip_ids", []):
                             clip = Clip.get(id=cid)

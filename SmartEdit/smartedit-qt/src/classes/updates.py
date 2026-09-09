@@ -1,4 +1,4 @@
-﻿"""
+"""
  @file
  @brief This file contains the classes needed for tracking updates and distributing changes
  @author Noah Figg <eggmunkee@hotmail.com>
@@ -307,7 +307,7 @@ class UpdateManager:
             last_transactions = [self.actionHistory[i] for i in reversed(transaction_indexes)]
             remove_selection = any(a.type == "insert" for a in last_transactions)
 
-            if remove_selection:
+            if remove_selection and get_app().window:
                 # Remove selections for any items about to be deleted
                 for action in last_transactions:
                     if action.type == "insert":
@@ -385,7 +385,8 @@ class UpdateManager:
 
                 # Ignore updates to UI on all actions except last one
                 ignore_refresh = (index != len(last_transactions) - 1)
-                get_app().window.IgnoreUpdates.emit(ignore_refresh, True)
+                if get_app().window:
+                    get_app().window.IgnoreUpdates.emit(ignore_refresh, True)
 
                 # Perform next redo action
                 self.dispatch_action(next_action)

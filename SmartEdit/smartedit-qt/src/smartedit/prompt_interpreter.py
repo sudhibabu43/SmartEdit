@@ -222,8 +222,10 @@ class PromptInterpreter:
             return False
 
         patterns = [
-            r"\b(remove|cut|delete|filter|drop|discard|exclude)\s+.*?\b(shak(?:y|e|ing)?|jitter(?:y)?|unstable|wobbl(?:y|e)|unsteady)\b",
-            r"\b(shaky|unstable|jittery|wobbly|unsteady)\s+(clips?|footage|videos?|shots?|parts?)\b",
+            r"\b(remove|cut|delete|filter|drop|discard|exclude)\s+.*?\b(shak(?:y|e|ing)?|jitter(?:y)?|unstable|wobbl(?:y|e)|unsteady|those\s+portions|those\s+parts)\b",
+            r"\b(split\s+and\s+(?:remove|delete|cut))\b",
+            r"\b(actually\s+(?:split\s+and\s+)?(?:remove|delete|cut))\b",
+            r"\b(shaky|unstable|jittery|wobbly|unsteady)\s+(clips?|footage|videos?|shots?|parts?|portions?)\b",
             r"\b(stabiliz(e|ation)|smooth out camera|no shake)\b",
             r"\bshaky\b"
         ]

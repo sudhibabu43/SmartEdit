@@ -56,6 +56,30 @@ class TestPromptParser(unittest.TestCase):
         self.assertIn(ActionType.DETECT_SHAKY, cmd.actions)
         self.assertIn(ActionType.LABEL_SHAKY, cmd.actions)
 
+    def test_user_prompt_detect_and_split_remove_shaky(self):
+        prompt = (
+            "Detect the exact timestamps of shaky portions and actually split and remove "
+            "those portions from the timeline. Do not only label them. For example, if a "
+            "20-second clip has shake from 5–8 seconds, the timeline after applying must "
+            "contain 0–5 seconds and 8–20 seconds. The source video file must remain unchanged."
+        )
+        cmd = self.parser.parse(prompt)
+        self.assertIn(ActionType.DELETE_SHAKY, cmd.actions)
+        self.assertIn(ActionType.DETECT_SHAKY, cmd.actions)
+        self.assertNotIn(ActionType.LABEL_SHAKY, cmd.actions)
+        self.assertFalse(cmd.parameters.get("delete_shaky", {}).get("close_gaps", True))
+        self.assertFalse(cmd.parameters.get("shaky", {}).get("add_marker", True))
+
+    def test_do_not_label_negation(self):
+        cmd = self.parser.parse("Find shaky clips, split and remove them, do not label them")
+        self.assertIn(ActionType.DELETE_SHAKY, cmd.actions)
+        self.assertNotIn(ActionType.LABEL_SHAKY, cmd.actions)
+
+    def test_delete_shaky_close_gaps_flag(self):
+        cmd = self.parser.parse("Trim shaky footage and close gaps")
+        self.assertIn(ActionType.DELETE_SHAKY, cmd.actions)
+        self.assertTrue(cmd.parameters.get("delete_shaky", {}).get("close_gaps", False))
+
 
 class TestCommandSchema(unittest.TestCase):
     """Test schema validation and normalization."""
@@ -183,6 +207,66 @@ class TestEditingController(unittest.TestCase):
             orig_clip.save.assert_not_called()
             orig_clip.delete.assert_not_called()
             self.assertEqual(orig_clip.data["title"], "My Footage")
+
+    @patch("classes.query.Clip.save")
+    @patch("classes.query.Clip.get")
+    @patch("classes.app.get_app")
+    def test_apply_plan_split_and_remove_shaky_keeps_source_unchanged(self, mock_get_app, mock_clip_get, mock_clip_save):
+        mock_app = MagicMock()
+        mock_app.updates.transaction_id = None
+        mock_get_app.return_value = mock_app
+
+        orig_clip = MagicMock()
+        orig_clip.id = "c_20s"
+        orig_clip.title.return_value = "source_camera.mp4"
+        orig_clip.data = {
+            "title": "source_camera.mp4",
+            "position": 0.0,
+            "start": 0.0,
+            "end": 20.0,
+            "duration": 20.0,
+            "layer": 1000000,
+            "reader": {"path": "/videos/source_camera.mp4", "has_video": True}
+        }
+        mock_clip_get.return_value = orig_clip
+
+        plan = AIPlan(
+            command=SLMCommand(
+                actions=[ActionType.DELETE_SHAKY],
+                parameters={"delete_shaky": {"close_gaps": False}}
+            ),
+            items=[PlanItem(ActionType.DELETE_SHAKY, "Split and remove shaky footage")],
+            operations=[{
+                "type": ActionType.DELETE_SHAKY,
+                "regions": [{
+                    "clip_id": "c_20s",
+                    "clip_start": 0.0,
+                    "clip_end": 20.0,
+                    "timeline_start": 5.0,
+                    "timeline_end": 8.0,
+                    "timeline_duration": 3.0,
+                    "shake_percentage": 75.0,
+                    "classification": "Very Shaky"
+                }],
+                "close_gaps": False
+            }],
+            is_empty=False
+        )
+
+        res = self.controller.apply_plan(plan)
+        self.assertTrue(res["success"])
+        self.assertIn("Split and removed 1 shaky segment(s)", res["message"])
+
+        # 1. Left portion: [0.0, 5.0]
+        self.assertEqual(orig_clip.data["position"], 0.0)
+        self.assertEqual(orig_clip.data["start"], 0.0)
+        self.assertEqual(orig_clip.data["end"], 5.0)
+        self.assertEqual(orig_clip.data["duration"], 5.0)
+        # Source video file path on disk remains untouched
+        self.assertEqual(orig_clip.data["reader"]["path"], "/videos/source_camera.mp4")
+
+        # 2. Right portion: [8.0, 20.0] was created via new Clip.save()
+        self.assertGreaterEqual(mock_clip_save.call_count, 1)
 
 
 if __name__ == "__main__":

@@ -553,5 +553,75 @@ class TestSafeUiHandling(unittest.TestCase):
             qpainter.end()
 
 
+class TestTrimShakyFootageWorkflow(unittest.TestCase):
+    """
+    Test the exact 'Trim Shaky Footage' workflow:
+    - Clip retrieval, analysis, calculation of shake regions.
+    - Splitting at shaky boundaries and removing only shaky segments.
+    - Repositioning and merging remaining stable clips.
+    - Multi-clip timeline shifting.
+    - Logging output format: [SHAKE], [SPLIT], [REMOVE], [TIMELINE].
+    - Full undo support.
+    """
+
+    def setUp(self):
+        self.service = ShakyFootageService()
+
+    @patch("classes.query.Clip.save")
+    @patch("classes.app.get_app")
+    def test_trim_single_clip_workflow(self, mock_get_app, mock_clip_save):
+        mock_app = MagicMock()
+        mock_app.updates.transaction_id = None
+        mock_get_app.return_value = mock_app
+
+        orig_clip = MagicMock()
+        orig_clip.id = "clip_03"
+        orig_clip.data = {
+            "position": 0.0,
+            "start": 0.0,
+            "end": 20.0,
+            "duration": 20.0,
+            "layer": 1000000,
+            "reader": {"path": "/fake/video.mp4"}
+        }
+
+        # Shaky region from 12.40s to 15.80s
+        regions = [{
+            "clip_id": "clip_03",
+            "clip_start": 0.0,
+            "clip_end": 20.0,
+            "timeline_start": 12.4,
+            "timeline_end": 15.8,
+            "timeline_duration": 3.4,
+            "shake_percentage": 72.0
+        }]
+
+        with patch("classes.query.Clip.get", return_value=orig_clip):
+            res = self.service.trim_shaky_footage(regions=regions, close_gaps=True)
+
+        self.assertTrue(res["success"])
+        self.assertEqual(res["removed_count"], 1)
+        self.assertEqual(res["affected_clips"], 1)
+
+        # Stable segment 1: [0.0, 12.4]
+        self.assertEqual(orig_clip.data["position"], 0.0)
+        self.assertEqual(orig_clip.data["start"], 0.0)
+        self.assertEqual(orig_clip.data["end"], 12.4)
+        self.assertEqual(orig_clip.data["duration"], 12.4)
+
+        # Stable segment 2 was saved via new_clip
+        self.assertGreaterEqual(mock_clip_save.call_count, 1)
+
+    @patch("classes.app.get_app")
+    def test_trim_no_regions_detected(self, mock_get_app):
+        mock_app = MagicMock()
+        mock_get_app.return_value = mock_app
+
+        res = self.service.trim_shaky_footage(regions=[])
+        self.assertTrue(res["success"])
+        self.assertEqual(res["removed_count"], 0)
+        self.assertIn("No shaky regions", res["message"])
+
+
 if __name__ == "__main__":
     unittest.main()

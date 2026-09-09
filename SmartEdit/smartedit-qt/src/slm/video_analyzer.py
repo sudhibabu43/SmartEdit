@@ -350,6 +350,20 @@ class VideoAnalyzer:
                     "classification": classification
                 })
 
+        if not regions and analysis.get("is_shaky"):
+            tl_dur = round(effective_end - clip_start, 3)
+            if tl_dur >= 0.25:
+                regions.append({
+                    "media_start": round(clip_start, 3),
+                    "media_end": round(effective_end, 3),
+                    "media_duration": tl_dur,
+                    "timeline_start": round(clip_position, 3),
+                    "timeline_end": round(clip_position + tl_dur, 3),
+                    "timeline_duration": tl_dur,
+                    "shake_percentage": overall_pct,
+                    "classification": analysis.get("classification") or classify_shake(overall_pct)
+                })
+
         return regions
 
     def _heuristic_analysis(self, video_path: str, threshold: float = 50.0) -> Dict[str, Any]:

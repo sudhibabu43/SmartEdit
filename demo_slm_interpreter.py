@@ -116,10 +116,16 @@ def main():
 
     # Step 4: Show what Apply does
     print("\n4. Timeline Execution Result:")
-    print("   * Shaky clips marked with: '⚠️ [SHAKY FOOTAGE]' label + Timeline Marker.")
-    print("   * Shaky footage is NOT deleted (kept for human editing review).")
-    print("   * Silence trimmed at cut points.")
-    print("   * All clips aligned sequentially on primary track with 0 gaps.")
+    if command.has_action(ActionType.DELETE_SHAKY):
+        print("   * Shaky portions are split at boundaries and removed from timeline (source files untouched).")
+        print("   * Stable portions (e.g. 0–5s and 8–20s) are preserved.")
+    elif command.has_action(ActionType.LABEL_SHAKY):
+        print("   * Shaky clips marked with: '⚠️ [SHAKY FOOTAGE]' label + Timeline Marker.")
+        print("   * Shaky footage kept on timeline for human editing review.")
+    if command.has_action(ActionType.REMOVE_SILENCE):
+        print("   * Silence trimmed at cut points.")
+    if command.has_action(ActionType.ARRANGE_CLIPS):
+        print("   * All clips aligned sequentially on primary track with 0 gaps.")
     print("   * Operations bundled in an atomic undo transaction.")
     print("=" * 70)
 
