@@ -1410,7 +1410,7 @@ class PropertiesTableView(QTableView):
     def _show_scope_docks_if_hidden(self):
         """Show scope docks if currently hidden."""
         win = self.win
-        for attr in ("dockLumaWaveform", "dockHistogram", "dockVectorscope", "dockAudio"):
+        for attr in ("dockAudio",):
             dock = getattr(win, attr, None)
             if dock and not dock.isVisible():
                 dock.show()

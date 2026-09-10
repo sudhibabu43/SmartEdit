@@ -175,16 +175,7 @@
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionUpdate"/>
-    <addaction name="actionHelpContents"/>
-    <addaction name="actionTutorial"/>
-    <addaction name="separator"/>
-    <addaction name="actionReportBug"/>
-    <addaction name="actionAskQuestion"/>
-    <addaction name="actionDiscord"/>
-    <addaction name="actionTranslate"/>
-    <addaction name="separator"/>
-    <addaction name="actionDonate"/>
+
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menu_Edit"/>
@@ -236,35 +227,7 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="dockSmartEdit">
-   <property name="windowTitle">
-    <string>SmartEdit Assistant</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>1</number>
-   </attribute>
-   <widget class="QWidget" name="dockSmartEditContents">
-    <layout class="QVBoxLayout" name="verticalLayoutSmartEdit">
-     <item>
-      <widget class="QLabel" name="lblPrompt">
-       <property name="text">
-        <string>Enter your editing prompt:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QTextEdit" name="txtPrompt"/>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnGenerateRoughCut">
-       <property name="text">
-        <string>Generate Rough Cut</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-  </widget>
+
   <widget class="QDockWidget" name="dockVideo">
    <property name="sizePolicy">
     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">

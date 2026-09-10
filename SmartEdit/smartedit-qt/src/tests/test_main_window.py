@@ -1182,17 +1182,8 @@ class MainWindowTests(unittest.TestCase):
         fake_window.scopes_menu = QMenu(fake_window)
         fake_window.dockAudio = QDockWidget("Audio Levels", fake_window)
         fake_window.dockAudio.setObjectName("dockAudio")
-        fake_window.dockHistogram = QDockWidget("Histogram", fake_window)
-        fake_window.dockHistogram.setObjectName("dockHistogram")
-        fake_window.dockLumaWaveform = QDockWidget("Luma Waveform", fake_window)
-        fake_window.dockLumaWaveform.setObjectName("dockLumaWaveform")
-        fake_window.dockVectorscope = QDockWidget("Vectorscope", fake_window)
-        fake_window.dockVectorscope.setObjectName("dockVectorscope")
         for dock in [
-                fake_window.dockAudio,
-                fake_window.dockHistogram,
-                fake_window.dockLumaWaveform,
-                fake_window.dockVectorscope]:
+                fake_window.dockAudio]:
             fake_window.addDockWidget(Qt.RightDockWidgetArea, dock)
             dock.hide()
 

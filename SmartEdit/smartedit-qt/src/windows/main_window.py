@@ -96,7 +96,7 @@ from windows.views.timeline_backend.enums import MenuCopy, MenuSlice
 from windows.views.transitions_listview import TransitionsListView
 from windows.views.transitions_treeview import TransitionsTreeView
 from windows.views.tutorial import TutorialManager
-from windows.views.slm_assistant_panel import SLMAssistantPanel
+
 
 
 class MainWindow(updates.UpdateWatcher, QMainWindow):
@@ -1300,7 +1300,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         """Record the latest frame number and arm the debounce timer."""
         if not any(
             getattr(self, d, None) and getattr(self, d).isVisible()
-            for d in ("dockLumaWaveform", "dockHistogram", "dockVectorscope", "dockAudio")
+            for d in ("dockAudio",)
         ):
             return
         self._scope_pending_frame = frame_number
@@ -1347,10 +1347,6 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
             self._on_scope_region_toggled(False)
 
     def _any_video_scope_dock_open(self):
-        for dock_name in ("dockLumaWaveform", "dockHistogram", "dockVectorscope"):
-            dock = getattr(self, dock_name, None)
-            if dock and dock.toggleViewAction().isChecked():
-                return True
         return False
 
     def _on_video_scope_visibility_changed(self, _visible):
@@ -1369,27 +1365,14 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         frame_number = self._scope_pending_frame
         if frame_number is None:
             return
-        wf_vis   = getattr(self, "dockLumaWaveform", None) and self.dockLumaWaveform.isVisible()
-        hist_vis = getattr(self, "dockHistogram",    None) and self.dockHistogram.isVisible()
-        vec_vis  = getattr(self, "dockVectorscope",  None) and self.dockVectorscope.isVisible()
         aud_vis  = getattr(self, "dockAudio",        None) and self.dockAudio.isVisible()
-        need_video = bool(wf_vis or hist_vis or vec_vis)
-        need_audio = bool(aud_vis)
-        if not (need_video or need_audio):
+        if not aud_vis:
             return
-        self._scope_wf_vis   = wf_vis
-        self._scope_hist_vis = hist_vis
-        self._scope_vec_vis  = vec_vis
+        self._scope_wf_vis   = False
         self._scope_aud_vis  = aud_vis
-        waveform_render = None
-        if wf_vis and getattr(self, "waveform_content", None):
-            waveform_render = self.waveform_content.render_settings()
-        vectorscope_render = None
-        if vec_vis and getattr(self, "vectorscope_content", None):
-            vectorscope_render = self.vectorscope_content.render_settings()
         self.RunScopeSignal.emit(
-            frame_number, wf_vis, hist_vis, vec_vis, aud_vis,
-            self._scope_region_payload(), waveform_render, vectorscope_render)
+            frame_number, False, False, False, aud_vis,
+            self._scope_region_payload(), None, None)
 
     @pyqtSlot(int, dict, dict)
     def _on_scope_ready(self, frame_number, video, audio):
@@ -1397,12 +1380,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         current_frame = getattr(self, "_scope_pending_frame", None)
         if current_frame is not None and frame_number < current_frame:
             return
-        if video and getattr(self, "_scope_wf_vis", False):
-            self.waveform_content.update_data(video)
-        if video and getattr(self, "_scope_hist_vis", False):
-            self.histogram_content.update_data(video)
-        if video and getattr(self, "_scope_vec_vis", False):
-            self.vectorscope_content.update_data(video)
+
         if audio and getattr(self, "_scope_aud_vis", False):
             self.audio_meter.update_data(audio)
 
@@ -1421,7 +1399,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
 
     def _anchor_and_show_scope_dock(self, dock):
         """Ensure a scope dock lands in the bottom-right group (below Color Wheels)."""
-        scope_docks = [self.dockLumaWaveform, self.dockHistogram, self.dockVectorscope, self.dockAudio]
+        scope_docks = [self.dockAudio]
 
         if self.dockWidgetArea(dock) == Qt.NoDockWidgetArea:
             self.addDocks([dock], Qt.RightDockWidgetArea)
@@ -1443,10 +1421,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
 
     def show_scope_video_docks(self):
         """Show video scope docks, anchoring to right if needed."""
-        self._anchor_and_show_scope_dock(self.dockLumaWaveform)
-        self._anchor_and_show_scope_dock(self.dockHistogram)
-        self._anchor_and_show_scope_dock(self.dockVectorscope)
-        self.dockLumaWaveform.raise_()
+        pass
 
     def show_scope_audio_dock(self):
         """Show Audio Levels dock, anchoring to right if needed."""
@@ -1524,9 +1499,6 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         """Return docks that display video/audio scope data."""
         return [
             self.dockAudio,
-            self.dockHistogram,
-            self.dockLumaWaveform,
-            self.dockVectorscope,
         ]
 
     def _scope_dock_names(self):
@@ -3337,8 +3309,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
             self.dockEffects,
             self.dockEmojis,
         ]
-        if hasattr(self, "dockSlmAssistant") and self.dockSlmAssistant:
-            docks_to_add.append(self.dockSlmAssistant)
+
         docks_to_add.append(self.dockVideo)
         self.addDocks(docks_to_add, Qt.TopDockWidgetArea)
 
@@ -3346,8 +3317,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         self.tabifyDockWidget(self.dockFiles, self.dockTransitions)
         self.tabifyDockWidget(self.dockTransitions, self.dockEffects)
         self.tabifyDockWidget(self.dockEffects, self.dockEmojis)
-        if hasattr(self, "dockSlmAssistant") and self.dockSlmAssistant:
-            self.tabifyDockWidget(self.dockEmojis, self.dockSlmAssistant)
+
         self.showDocks(docks_to_add)
 
         # Set initial size of docks
@@ -4454,11 +4424,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         self.actionSilenceRemover.setShortcutContext(Qt.ApplicationShortcut)
         self.actionSilenceRemover.triggered.connect(self.actionSilenceRemover_trigger)
 
-        self.actionSlmAssistant = QAction(_("SLM Assistant Panel..."), self)
-        self.actionSlmAssistant.setObjectName("actionSlmAssistant")
-        self.actionSlmAssistant.setShortcut(QKeySequence("Ctrl+Shift+A"))
-        self.actionSlmAssistant.setShortcutContext(Qt.ApplicationShortcut)
-        self.actionSlmAssistant.triggered.connect(self.actionSlmAssistant_trigger)
+
 
         self.actionDetectShakyFootage = QAction(_("Detect & Label Shaky Footage..."), self)
         self.actionDetectShakyFootage.setObjectName("actionDetectShakyFootage")
@@ -4480,7 +4446,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         # Add to Edit menu or AI Tools menu
         if hasattr(self, "menuEdit") and self.menuEdit:
             self.menuEdit.addSeparator()
-            self.menuEdit.addAction(self.actionSlmAssistant)
+
             self.menuEdit.addAction(self.actionDetectShakyFootage)
             self.menuEdit.addAction(self.actionTrimShakyFootage)
             self.menuEdit.addAction(self.actionPromptInterpreter)
@@ -4488,21 +4454,13 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
             self.menuEdit.addAction(self.actionUndoShakyLabels)
         elif hasattr(self, "menuBar") and self.menuBar():
             tools_menu = self.menuBar().addMenu(_("&AI Tools"))
-            tools_menu.addAction(self.actionSlmAssistant)
+
             tools_menu.addAction(self.actionDetectShakyFootage)
             tools_menu.addAction(self.actionTrimShakyFootage)
             tools_menu.addAction(self.actionPromptInterpreter)
             tools_menu.addAction(self.actionSilenceRemover)
             tools_menu.addAction(self.actionUndoShakyLabels)
 
-    def actionSlmAssistant_trigger(self, checked=True):
-        """Show and raise the SLM Assistant Dock Widget."""
-        if hasattr(self, "dockSlmAssistant") and self.dockSlmAssistant:
-            self.dockSlmAssistant.show()
-            self.dockSlmAssistant.raise_()
-            self.dockSlmAssistant.activateWindow()
-            if hasattr(self.dockSlmAssistant, "prompt_input") and self.dockSlmAssistant.prompt_input:
-                self.dockSlmAssistant.prompt_input.setFocus()
 
     def actionDetectShakyFootage_trigger(self, checked=True):
         """Detect camera shake across timeline clips, mark on top unused layer, and provide Apply removal."""
@@ -5410,15 +5368,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         self._init_proxy_actions()
         self.refresh_comfy_availability_async()
 
-        # Initialize SLM Assistant Dock
-        try:
-            from slm.panel import SLMAssistantPanel
-            self.dockSlmAssistant = SLMAssistantPanel(self)
-            self.addDockWidget(Qt.RightDockWidgetArea, self.dockSlmAssistant)
-            self.dockSlmAssistant.hide()
-        except Exception as ex:
-            log.warning(f"Could not init dockSlmAssistant: {ex}")
-            self.dockSlmAssistant = None
+
 
         # Add window as watcher to receive undo/redo status updates
         app.updates.add_watcher(self)
@@ -5470,37 +5420,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         self.initModels()
 
         # Create individual scope docks (before addViewDocksMenu so they appear in Docks menu)
-        self.waveform_content = WaveformDockContent()
-        self.waveform_content.scopeRegionToggled.connect(self._on_scope_region_toggled)
-        self.waveform_content.renderSettingsChanged.connect(self._request_scope_refresh)
-        self.dockLumaWaveform = QDockWidget(_("Luma Waveform"), self)
-        self.dockLumaWaveform.setObjectName("dockLumaWaveform")
-        self.dockLumaWaveform.setProperty("_skip_auto_tab_order", True)
-        self.dockLumaWaveform.setFocusPolicy(Qt.NoFocus)
-        self.dockLumaWaveform.setWidget(self.waveform_content)
-        self.dockLumaWaveform.hide()
-        self.addDockWidget(Qt.RightDockWidgetArea, self.dockLumaWaveform)
 
-        self.histogram_content = HistogramDockContent()
-        self.histogram_content.scopeRegionToggled.connect(self._on_scope_region_toggled)
-        self.dockHistogram = QDockWidget(_("Histogram"), self)
-        self.dockHistogram.setObjectName("dockHistogram")
-        self.dockHistogram.setProperty("_skip_auto_tab_order", True)
-        self.dockHistogram.setFocusPolicy(Qt.NoFocus)
-        self.dockHistogram.setWidget(self.histogram_content)
-        self.dockHistogram.hide()
-        self.addDockWidget(Qt.RightDockWidgetArea, self.dockHistogram)
-
-        self.vectorscope_content = VectorscopeDockContent()
-        self.vectorscope_content.scopeRegionToggled.connect(self._on_scope_region_toggled)
-        self.vectorscope_content.renderSettingsChanged.connect(self._request_scope_refresh)
-        self.dockVectorscope = QDockWidget(_("Vectorscope"), self)
-        self.dockVectorscope.setObjectName("dockVectorscope")
-        self.dockVectorscope.setProperty("_skip_auto_tab_order", True)
-        self.dockVectorscope.setFocusPolicy(Qt.NoFocus)
-        self.dockVectorscope.setWidget(self.vectorscope_content)
-        self.dockVectorscope.hide()
-        self.addDockWidget(Qt.RightDockWidgetArea, self.dockVectorscope)
 
         self.audio_meter = AudioMeterWidget()
         self.dockAudio = QDockWidget(_("Audio Levels"), self)
@@ -5722,11 +5642,9 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
             dock_widget.visibilityChanged.connect(self._schedule_dock_style_update)
 
         # Re-anchor scope docks when manually enabled after a view switch removed them
-        for _dock in [self.dockLumaWaveform, self.dockHistogram, self.dockVectorscope, self.dockAudio]:
+        for _dock in [self.dockAudio]:
             _dock.toggleViewAction().triggered.connect(
                 functools.partial(self._on_scope_dock_toggled, dock=_dock))
-        for _dock in [self.dockLumaWaveform, self.dockHistogram, self.dockVectorscope]:
-            _dock.visibilityChanged.connect(self._on_video_scope_visibility_changed)
         self.dockProperties.toggleViewAction().triggered.connect(self._on_properties_dock_toggled)
         self.dockAudioRecording.visibilityChanged.connect(self._on_audio_recording_visibility_changed)
         if self.dockAudioRecording.isVisible():
