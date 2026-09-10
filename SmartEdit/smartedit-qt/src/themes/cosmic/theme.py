@@ -1,4 +1,4 @@
-﻿"""
+"""
  @file
  @brief This file contains a theme's colors and UI dimensions
  @author Jonathan Thomas <jonathan@smartedit.org>
@@ -539,10 +539,6 @@ QDoubleSpinBox {
     padding-right: 22px;
 }
 
-QDoubleSpinBox#colorGradeSpinBox {
-    padding-right: 14px;
-}
-
 QSpinBox::up-button,
 QDoubleSpinBox::up-button,
 QSpinBox::down-button,
@@ -938,10 +934,6 @@ QMessageBox QPushButton[dialogRole="destructive"] {{
             {"action": self.app.window.actionUpdate, "icon": "themes/cosmic/images/warning.svg", "visible": False, "style": Qt.ToolButtonTextBesideIcon, "stylesheet": "QToolButton {  background-color: #141923; color: #FABE0A; }"}
         ]
         self.set_toolbar_buttons(self.app.window.toolBar, icon_size=20, settings=toolbar_buttons)
-
-        self.app.window.actionColor_Grade_View.setIcon(
-            QIcon(os.path.join(PATH, "themes/cosmic/images/view-color.svg"))
-        )
 
         # Timeline toolbar buttons
         timeline_buttons = [

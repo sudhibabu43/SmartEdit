@@ -149,13 +149,6 @@
     "setting": "blender_command"
   },
   {
-    "value": "inkscape",
-    "title": "Advanced Title Editor (path)",
-    "type": "browse",
-    "category": "General",
-    "setting": "title_editor"
-  },
-  {
     "value": 50,
     "title": "Shaky Footage Threshold (%)",
     "category": "General",
@@ -836,14 +829,6 @@
   },
   {
     "category": "Keyboard",
-    "title": "Animated Title",
-    "restart": false,
-    "setting": "actionAnimatedTitle",
-    "value": "Ctrl+Shift+T",
-    "type": "text"
-  },
-  {
-    "category": "Keyboard",
     "title": "Choose Profile",
     "restart": false,
     "setting": "actionProfile",
@@ -952,14 +937,6 @@
     "restart": false,
     "setting": "actionThumbnailView",
     "value": "Ctrl+Page Down",
-    "type": "text"
-  },
-  {
-    "category": "Keyboard",
-    "title": "Title",
-    "restart": false,
-    "setting": "actionTitle",
-    "value": "Ctrl+T",
     "type": "text"
   },
   {
@@ -1260,14 +1237,6 @@
   },
   {
     "category": "Keyboard",
-    "title": "Edit Title",
-    "restart": false,
-    "setting": "actionEditTitle",
-    "value": "Alt+T",
-    "type": "text"
-  },
-  {
-    "category": "Keyboard",
     "title": "Preview File",
     "restart": false,
     "setting": "actionPreview_File",
@@ -1378,9 +1347,6 @@
     "value": "Q",
     "type": "text"
   },
-
-
-
   {
     "category": "Location",
     "title": "File Import",

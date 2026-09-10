@@ -1,4 +1,4 @@
-﻿"""
+"""
  @file
  @brief Scope dock panels: waveform, histogram, vectorscope, and audio meters.
  @author Jonathan Thomas <jonathan@smartedit.org>
@@ -36,7 +36,69 @@ from qt_api import (
 )
 from classes import info
 from classes.logger import log
-from windows.color_grade_editor import draw_broadcast_hue_ring
+BROADCAST_HUE_ANCHORS = [
+    (51.65, 300.0),
+    (108.65, 360.0),
+    (170.76, 420.0),
+    (231.65, 480.0),
+    (288.65, 540.0),
+    (350.76, 600.0),
+]
+
+
+def _wrap_angle(angle):
+    return (angle + 360.0) % 360.0
+
+
+def _display_hue_for_scope_angle(angle_deg):
+    wrapped = _wrap_angle(angle_deg)
+    if wrapped < BROADCAST_HUE_ANCHORS[0][0]:
+        wrapped += 360.0
+    extended = BROADCAST_HUE_ANCHORS + [(BROADCAST_HUE_ANCHORS[0][0] + 360.0, BROADCAST_HUE_ANCHORS[0][1] + 360.0)]
+    for index in range(len(BROADCAST_HUE_ANCHORS)):
+        a0, h0 = extended[index]
+        a1, h1 = extended[index + 1]
+        if a0 <= wrapped <= a1:
+            span = max(1e-6, a1 - a0)
+            t = (wrapped - a0) / span
+            return (h0 + ((h1 - h0) * t)) % 360.0
+    return BROADCAST_HUE_ANCHORS[0][1] % 360.0
+
+
+def scope_angle_for_display_hue(hue_deg):
+    display_hue = hue_deg % 360.0
+    if display_hue < 300.0:
+        display_hue += 360.0
+    anchors = [(display, angle) for angle, display in BROADCAST_HUE_ANCHORS]
+    extended = anchors + [(anchors[0][0] + 360.0, anchors[0][1] + 360.0)]
+    for index in range(len(anchors)):
+        h0, a0 = extended[index]
+        h1, a1 = extended[index + 1]
+        if h0 <= display_hue <= h1:
+            span = max(1e-6, h1 - h0)
+            t = (display_hue - h0) / span
+            return _wrap_angle(a0 + ((a1 - a0) * t))
+    return _wrap_angle(BROADCAST_HUE_ANCHORS[0][0])
+
+
+def draw_broadcast_hue_ring(painter, center, radius, ring_width, alpha=255):
+    painter.save()
+    pen = QPen(QColor(255, 255, 255, alpha), ring_width)
+    pen.setCapStyle(Qt.FlatCap)
+    painter.setPen(pen)
+    for step in range(720):
+        scope_angle = step * 0.5
+        color = QColor.fromHsv(int(_display_hue_for_scope_angle(scope_angle)) % 360, 255, 255, alpha)
+        pen.setColor(color)
+        painter.setPen(pen)
+        angle0 = math.radians(scope_angle)
+        angle1 = math.radians(scope_angle + 0.75)
+        x0 = center.x() + (math.cos(angle0) * radius)
+        y0 = center.y() - (math.sin(angle0) * radius)
+        x1 = center.x() + (math.cos(angle1) * radius)
+        y1 = center.y() - (math.sin(angle1) * radius)
+        painter.drawLine(QPointF(x0, y0), QPointF(x1, y1))
+    painter.restore()
 
 # ─── Persistent settings keys ────────────────────────────────────────────────
 _S_WAVE_MODE  = "scope-waveform-mode"     # luma|red|green|blue|rgb_overlay|rgb_parade

@@ -1,4 +1,4 @@
-﻿"""
+"""
  @file
  @brief This file listens to changes, and updates the primary project data
  @author Noah Figg <eggmunkee@hotmail.com>
@@ -382,18 +382,18 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
         # Loop through legacy profiles
         LEGACY_PROFILE_PATH = os.path.join(info.PROFILES_PATH, "legacy")
         legacy_profile = None
-        legacy_profile_match = None  # Find the equivalent match of this legacy (if any)
-        for legacy_filename in os.listdir(LEGACY_PROFILE_PATH):
-            legacy_profile_path = os.path.join(LEGACY_PROFILE_PATH, legacy_filename)
-            try:
-                # Load Profile and append description
-                temp_profile = smartedit.Profile(legacy_profile_path)
-                if profile_desc == temp_profile.info.description:
-                    legacy_profile = temp_profile
-                    break
-            except RuntimeError:
-                # Ignore legacy parsing errors
-                pass
+        if os.path.isdir(LEGACY_PROFILE_PATH):
+            for legacy_filename in os.listdir(LEGACY_PROFILE_PATH):
+                legacy_profile_path = os.path.join(LEGACY_PROFILE_PATH, legacy_filename)
+                try:
+                    # Load Profile and append description
+                    temp_profile = smartedit.Profile(legacy_profile_path)
+                    if profile_desc == temp_profile.info.description:
+                        legacy_profile = temp_profile
+                        break
+                except RuntimeError:
+                    # Ignore legacy parsing errors
+                    pass
 
         # Loop through profiles
         profile_dirs = [info.USER_PROFILES_PATH, info.PROFILES_PATH]

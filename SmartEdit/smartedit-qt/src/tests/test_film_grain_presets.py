@@ -72,7 +72,7 @@ class FilmGrainPresetTests(unittest.TestCase):
 
     def test_is_film_grain_effect(self):
         self.assertTrue(is_film_grain_effect({"class_name": "FilmGrain"}))
-        self.assertFalse(is_film_grain_effect({"class_name": "ColorGrade"}))
+        self.assertFalse(is_film_grain_effect({"class_name": "Blur"}))
         self.assertFalse(is_film_grain_effect(None))
 
 

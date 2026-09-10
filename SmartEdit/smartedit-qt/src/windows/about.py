@@ -1,4 +1,4 @@
-﻿"""
+"""
  @file
  @brief This file loads the About dialog (i.e about Smartedit Project)
  @author Jonathan Thomas <jonathan@smartedit.org>
@@ -199,7 +199,8 @@ class About(QDialog):
 
         # set events handlers
         self.btncredit.clicked.connect(self.load_credit)
-        self.btnlicense.clicked.connect(self.load_license)
+        if hasattr(self, "btnlicense"):
+            self.btnlicense.clicked.connect(self.load_license)
         self.btnchangelog.clicked.connect(self.load_changelog)
         self.btnCopyVersionInfo.clicked.connect(self.copy_version_info)
 

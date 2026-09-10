@@ -40,7 +40,6 @@ _EFFECT_COLORS: Dict[str, str] = {
     "Brightness":         "#5500ff",
     "Caption":            "#5e7911",
     "ChromaKey":          "#00ad2d",
-    "ColorGrade":         "#d4830a",
     "ColorMap":           "#4d945d",
     "ColorShift":         "#b39373",
     "Compressor":         "#A52A2A",

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
@@ -156,13 +156,6 @@
     <addaction name="separator"/>
     <addaction name="actionPreferences"/>
    </widget>
-   <widget class="QMenu" name="menuTitle">
-    <property name="title">
-     <string>Title</string>
-    </property>
-    <addaction name="actionTitle"/>
-    <addaction name="actionAnimatedTitle"/>
-   </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
      <string>View</string>
@@ -175,7 +168,6 @@
      <addaction name="actionFullscreen"/>
     </widget>
     <addaction name="actionSimple_View"/>
-    <addaction name="actionColor_Grade_View"/>
     <addaction name="separator"/>
     <addaction name="menuWindow"/>
    </widget>
@@ -193,11 +185,9 @@
     <addaction name="actionTranslate"/>
     <addaction name="separator"/>
     <addaction name="actionDonate"/>
-    <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menu_Edit"/>
-   <addaction name="menuTitle"/>
    <addaction name="menuView"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -1101,30 +1091,6 @@
     <string>Zoom Out</string>
    </property>
   </action>
-  <action name="actionTitle">
-   <property name="icon">
-    <iconset theme="font-x-generic" resource="../../../images/smartedit.qrc">
-     <normaloff>:/icons/Humanity/mimes/16/font-x-generic.svg</normaloff>:/icons/Humanity/mimes/16/font-x-generic.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Title</string>
-   </property>
-   <property name="toolTip">
-    <string>Title</string>
-   </property>
-  </action>
-  <action name="actionAnimatedTitle">
-   <property name="icon">
-    <iconset resource="../../../images/smartedit.qrc">
-     <normaloff>:/about/blender.svg</normaloff>:/about/blender.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Animated Title</string>
-   </property>
-   <property name="toolTip">
-    <string>Animated Title</string>
-   </property>
-  </action>
   <action name="actionFullscreen">
    <property name="checkable">
     <bool>false</bool>
@@ -1152,21 +1118,6 @@
    </property>
    <property name="toolTip">
     <string>View Toolbar</string>
-   </property>
-  </action>
-  <action name="actionAbout">
-   <property name="icon">
-    <iconset theme="gtk-info" resource="../../../images/smartedit.qrc">
-     <normaloff>:/icons/Humanity/actions/16/gtk-info.svg</normaloff>:/icons/Humanity/actions/16/gtk-info.svg</iconset>
-   </property>
-   <property name="text">
-    <string>About SmartEdit</string>
-   </property>
-   <property name="toolTip">
-    <string>About SmartEdit</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::AboutRole</enum>
    </property>
   </action>
   <action name="actionThumbnailView">
@@ -1257,14 +1208,6 @@
    </property>
    <property name="text">
     <string>Simple View</string>
-   </property>
-  </action>
-  <action name="actionColor_Grade_View">
-   <property name="text">
-    <string>Color View</string>
-   </property>
-   <property name="shortcut">
-    <string>Alt+Shift+2</string>
    </property>
   </action>
   <action name="actionRecoveryProjects">
@@ -1532,18 +1475,6 @@
    </property>
    <property name="toolTip">
     <string>Unlock Track</string>
-   </property>
-  </action>
-  <action name="actionEditTitle">
-   <property name="icon">
-    <iconset theme="gtk-edit" resource="../../../images/smartedit.qrc">
-     <normaloff>:/icons/Humanity/actions/16/gtk-edit.svg</normaloff>:/icons/Humanity/actions/16/gtk-edit.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Edit Title</string>
-   </property>
-   <property name="toolTip">
-    <string>Edit Title</string>
    </property>
   </action>
   <action name="actionClearAllCache">

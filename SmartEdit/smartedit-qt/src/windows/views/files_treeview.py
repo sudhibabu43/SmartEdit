@@ -236,7 +236,6 @@ class FilesTreeView(NameColumnKeyboardSearchMixin, QTreeView):
                 menu.popup(event.globalPos())
                 return
             if file and file.data.get("path").endswith(".svg"):
-                add_bound_action(menu, self.win, "actionEditTitle", _("Edit Title"), "actionEditTitle_trigger")
                 add_bound_action(menu, self.win, "actionDuplicate", _("Duplicate"), "actionDuplicate_trigger")
                 menu.addSeparator()
 

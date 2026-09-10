@@ -1,4 +1,4 @@
-﻿"""
+"""
  @file
  @brief This file loads the interactive timeline
  @author Jonathan Thomas <jonathan@smartedit.org>
@@ -44,16 +44,6 @@ from qt_api import QDialog
 
 from classes import info, updates
 from classes.app import get_app
-from classes.color_presets import (
-    COLOR_GRADE_CLASS_NAME,
-    COLOR_PRESET_AUTO_CONTRAST,
-    COLOR_PRESET_BOOST_COLOR,
-    COLOR_PRESET_LIFT_SHADOWS,
-    COLOR_PRESET_RESET,
-    COLOR_PRESET_WARM_UP,
-    apply_color_grade_preset,
-    is_color_grade_effect,
-)
 from classes.film_grain_presets import (
     FILM_GRAIN_CLASS_NAME,
     FILM_GRAIN_PRESET_16MM_CLASSIC,
@@ -71,7 +61,6 @@ LOOK_EFFECT_UI_MENU = "look"
 MOTION_EFFECT_UI_MENU = "motion"
 
 LOOK_RESET_EFFECT_CLASSES = {
-    COLOR_GRADE_CLASS_NAME,
     FILM_GRAIN_CLASS_NAME,
 }
 
@@ -1922,16 +1911,6 @@ class TimelineView(updates.UpdateInterface, ViewClass):
             Reset_Look.triggered.connect(partial(self.Reset_Look_Triggered, clip_ids))
             Look_Menu.addSeparator()
 
-            Color_Menu = StyledContextMenu(title=_("Color"), parent=self)
-            Auto_Contrast = Color_Menu.addAction(_("Auto Contrast"))
-            Auto_Contrast.triggered.connect(partial(self.Color_Triggered, COLOR_PRESET_AUTO_CONTRAST, clip_ids))
-            Lift_Shadows = Color_Menu.addAction(_("Lift Shadows"))
-            Lift_Shadows.triggered.connect(partial(self.Color_Triggered, COLOR_PRESET_LIFT_SHADOWS, clip_ids))
-            Warm_Up = Color_Menu.addAction(_("Warm Up"))
-            Warm_Up.triggered.connect(partial(self.Color_Triggered, COLOR_PRESET_WARM_UP, clip_ids))
-            Boost_Color = Color_Menu.addAction(_("Boost Color"))
-            Boost_Color.triggered.connect(partial(self.Color_Triggered, COLOR_PRESET_BOOST_COLOR, clip_ids))
-            Look_Menu.addMenu(Color_Menu)
 
             Film_Menu = StyledContextMenu(title=_("Film"), parent=self)
             Film_Grain_Menu = StyledContextMenu(title=_("Film Grain"), parent=self)
@@ -2035,10 +2014,6 @@ class TimelineView(updates.UpdateInterface, ViewClass):
                 Look_Menu.addMenu(Lighting_Menu)
 
             Look_Menu.addSeparator()
-            Adjust_Colors = Look_Menu.addAction(
-                QIcon(os.path.join(info.PATH, "themes/cosmic/images/view-color.svg")),
-                _("Adjust Colors"))
-            Adjust_Colors.triggered.connect(partial(self.Adjust_Colors_Triggered, clip_ids))
             Analyze_Colors = Look_Menu.addAction(
                 QIcon(os.path.join(info.PATH, "themes/cosmic/images/view-analysis.svg")),
                 _("Analyze Colors"))
@@ -2647,13 +2622,6 @@ class TimelineView(updates.UpdateInterface, ViewClass):
             return True
         return bool(clip.data.get("waveform", False))
 
-    def _create_color_grade_effect_json(self):
-        effect = smartedit.EffectInfo().CreateEffect(COLOR_GRADE_CLASS_NAME)
-        if effect is None:
-            raise RuntimeError("Unable to create Color Grade effect")
-        effect.Id(get_app().project.generate_id())
-        return json.loads(effect.Json())
-
     def _create_film_grain_effect_json(self):
         effect = smartedit.EffectInfo().CreateEffect(FILM_GRAIN_CLASS_NAME)
         if effect is None:
@@ -2819,72 +2787,6 @@ class TimelineView(updates.UpdateInterface, ViewClass):
             self.update_clip_data(clip.data, only_basic_props=False, ignore_reader=True)
             get_app().updates.apply_last_action_to_history(original_clip_data)
 
-    def _ensure_color_grade_effect(self, clip):
-        if not clip or not self._clip_has_visual(clip):
-            return None, False
-
-        effects = clip.data.get("effects")
-        if not isinstance(effects, list):
-            effects = list(effects) if effects else []
-            clip.data["effects"] = effects
-
-        for effect_json in effects:
-            if is_color_grade_effect(effect_json):
-                return effect_json, False
-
-        effect_json = self._create_color_grade_effect_json()
-        effects.append(effect_json)
-        return effect_json, True
-
-    def Color_Triggered(self, preset_name, clip_ids):
-        """Apply or reset Color Grade presets for selected clips."""
-        for clip_id in clip_ids:
-            clip = Clip.get(id=clip_id)
-            if not clip or not self._clip_has_visual(clip):
-                continue
-
-            original_clip_data = json.loads(json.dumps(clip.data))
-            effects = clip.data.get("effects")
-            if not isinstance(effects, list):
-                effects = list(effects) if effects else []
-                clip.data["effects"] = effects
-
-            matching_indexes = [
-                index for index, effect_json in enumerate(effects)
-                if is_color_grade_effect(effect_json)
-            ]
-
-            if preset_name == COLOR_PRESET_RESET:
-                if not matching_indexes:
-                    continue
-                clip.data["effects"] = [
-                    effect_json for effect_json in effects
-                    if not is_color_grade_effect(effect_json)
-                ]
-                self.update_clip_data(clip.data, only_basic_props=False, ignore_reader=True)
-                get_app().updates.apply_last_action_to_history(original_clip_data)
-                continue
-
-            preset_effect = apply_color_grade_preset(
-                self._create_color_grade_effect_json(),
-                preset_name,
-            )
-
-            if matching_indexes:
-                existing_effect = effects[matching_indexes[0]]
-                if existing_effect.get("id"):
-                    preset_effect["id"] = existing_effect["id"]
-                if "order" in existing_effect:
-                    preset_effect["order"] = existing_effect["order"]
-                effects[matching_indexes[0]] = preset_effect
-                for index in reversed(matching_indexes[1:]):
-                    del effects[index]
-            else:
-                effects.append(preset_effect)
-
-            self.update_clip_data(clip.data, only_basic_props=False, ignore_reader=True)
-            get_app().updates.apply_last_action_to_history(original_clip_data)
-
     def Film_Grain_Triggered(self, preset_name, clip_ids):
         """Apply Film Grain presets for selected clips."""
         for clip_id in clip_ids:
@@ -2935,29 +2837,6 @@ class TimelineView(updates.UpdateInterface, ViewClass):
 
             self.update_clip_data(clip.data, only_basic_props=False, ignore_reader=True)
             get_app().updates.apply_last_action_to_history(original_clip_data)
-
-    def Adjust_Colors_Triggered(self, clip_ids):
-        """Ensure a Color Grade effect exists and open the video scopes."""
-        first_effect_id = None
-        first_clip_id = None
-        for clip_id in clip_ids:
-            clip = Clip.get(id=clip_id)
-            if not clip or not self._clip_has_visual(clip):
-                continue
-
-            original_clip_data = json.loads(json.dumps(clip.data))
-            effect_json, changed = self._ensure_color_grade_effect(clip)
-            if not first_effect_id and effect_json and effect_json.get("id"):
-                first_effect_id = effect_json.get("id")
-                first_clip_id = clip_id
-            if changed:
-                self.update_clip_data(clip.data, only_basic_props=False, ignore_reader=True)
-                get_app().updates.apply_last_action_to_history(original_clip_data)
-
-        get_app().window.show_color_grading_docks()
-        if first_effect_id:
-            self.addSelection(first_effect_id, "effect", True)
-            self.window.KeyFrameTransformSignal.emit(first_effect_id, first_clip_id)
 
     def Layout_Triggered(self, action, clip_ids):
         """Callback for the layout context menus"""

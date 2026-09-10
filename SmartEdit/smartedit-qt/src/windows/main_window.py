@@ -422,17 +422,6 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         # Update max size (for fast previews)
         self.MaxSizeChanged.emit(self.videoPreview.size())
 
-    def actionAnimatedTitle_trigger(self):
-        # show dialog
-        from windows.animated_title import AnimatedTitle
-        win = AnimatedTitle()
-        # Run the dialog event loop - blocking interaction on this window during that time
-        result = win.exec_()
-        if result == QDialog.Accepted:
-            log.info('animated title add confirmed')
-        else:
-            log.info('animated title add cancelled')
-
     def actionAnimation_trigger(self):
         # show dialog
         from windows.animation import Animation
@@ -444,76 +433,14 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         else:
             log.info('animation cancelled')
 
-    def actionTitle_trigger(self):
-        # show dialog
-        from windows.title_editor import TitleEditor
-        win = TitleEditor()
-        # Run the dialog event loop - blocking interaction on this window during that time
-        win.exec_()
-
-    def actionEditTitle_trigger(self):
-        # Loop through selected files (set 1 selected file if more than 1)
-        for f in self.selected_files():
-            if f.data.get("path").endswith(".svg"):
-                file_path = f.data.get("path")
-                file_id = f.id
-                break
-
-        if not file_path:
-            return
-
-        # show dialog for editing title
-        from windows.title_editor import TitleEditor
-        win = TitleEditor(edit_file_path=file_path)
-        # Run the dialog event loop - blocking interaction on this window during that time
-        win.exec_()
-
-        # Update file thumbnail
-        self.FileUpdated.emit(file_id)
-
-        # Force update of clips
-        for c in Clip.filter(file_id=file_id):
-            # update clip
-            c.data["reader"]["path"] = file_path
-            c.save()
-
-            # Emit thumbnail update signal (to update timeline thumb image)
-            self.ThumbnailUpdated.emit(c.id, 1)
-
-        # Update preview
-        self.refreshFrameSignal.emit()
-
     def actionClearAllCache_trigger(self):
         """ Clear all timeline cache - deep clear """
         self.timeline_sync.timeline.ClearAllCache(True)
 
     def actionDuplicate_trigger(self):
-        """Duplicate either the selected file in filesView or the timeline selection."""
-
-        # Check if filesView has focus
-        if self.filesView.hasFocus():
-            file_path = None
-
-            # Loop through selected files and find the first .svg file
-            for f in self.selected_files():
-                if f.data.get("path").endswith(".svg"):
-                    file_path = f.data.get("path")
-                    break
-
-            if not file_path:
-                return
-
-            # Show dialog for editing title
-            from windows.title_editor import TitleEditor
-            win = TitleEditor(edit_file_path=file_path, duplicate=True)
-            # Run the dialog event loop (blocking interaction on this window during that time)
-            return win.exec_()
-
-        # If filesView doesn't have focus, duplicate timeline selections
-        # at the current cursor position
-        else:
-            self.copyAll()
-            self.pasteAll()
+        """Duplicate timeline selections at the current cursor position."""
+        self.copyAll()
+        self.pasteAll()
 
     def actionClearWaveformData_trigger(self):
         """Clear audio data from current project"""
@@ -1133,13 +1060,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
     def actionEffectsShowAudio_trigger(self, checked=True):
         self.refreshEffectsSignal.emit()
 
-    def actionAbout_trigger(self, checked=True):
-        """Show about dialog"""
-        from windows.about import About
-        win = About()
-        win.setObjectName("aboutDialog")
-        # Run the dialog event loop - blocking interaction on this window during this time
-        win.exec_()
+
 
     def actionHelpContents_trigger(self, checked=True):
         url = "https://www.smartedit.org/%suser-guide/?app-menu" % info.website_language()
@@ -1500,8 +1421,6 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
 
     def _anchor_and_show_scope_dock(self, dock):
         """Ensure a scope dock lands in the bottom-right group (below Color Wheels)."""
-        color_grade_dock = getattr(
-            getattr(self, "propertyTableView", None), "color_grade_wheels_dock", None)
         scope_docks = [self.dockLumaWaveform, self.dockHistogram, self.dockVectorscope, self.dockAudio]
 
         if self.dockWidgetArea(dock) == Qt.NoDockWidgetArea:
@@ -1512,10 +1431,6 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
             if anchored:
                 # Join the existing bottom scope group
                 self.tabifyDockWidget(anchored[-1], dock)
-            elif (color_grade_dock and
-                  self.dockWidgetArea(color_grade_dock) != Qt.NoDockWidgetArea):
-                # First scope dock: split Color Wheels so scope lands below it
-                self.splitDockWidget(color_grade_dock, dock, Qt.Vertical)
             self.setTabPosition(Qt.RightDockWidgetArea, QTabWidget.North)
         dock.show()
         dock.raise_()
@@ -1532,17 +1447,6 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         self._anchor_and_show_scope_dock(self.dockHistogram)
         self._anchor_and_show_scope_dock(self.dockVectorscope)
         self.dockLumaWaveform.raise_()
-
-    def show_color_grading_docks(self):
-        """Show Color Wheels above the video scope docks on the right side."""
-        property_view = getattr(self, "propertyTableView", None)
-        color_grade_dock = getattr(property_view, "color_grade_wheels_dock", None)
-        if color_grade_dock and property_view:
-            if hasattr(property_view, "_ensure_color_grade_wheels_dock_attached"):
-                property_view._ensure_color_grade_wheels_dock_attached()
-            color_grade_dock.show()
-            color_grade_dock.raise_()
-        self.show_scope_video_docks()
 
     def show_scope_audio_dock(self):
         """Show Audio Levels dock, anchoring to right if needed."""
@@ -1637,10 +1541,6 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
             if (dock.objectName() not in scope_dock_names
                 and dock.objectName() not in {"dockTimeline", "dockTutorial"})
         ]
-        color_grade_dock = getattr(
-            getattr(self, "propertyTableView", None), "color_grade_wheels_dock", None)
-        if color_grade_dock and color_grade_dock not in docks:
-            docks.append(color_grade_dock)
         return docks
 
     def _dock_is_open(self, dock):
@@ -3128,11 +3028,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
 
     def showDocks(self, docks):
         """ Show all dockable widgets on the main screen """
-        property_view = getattr(self, "propertyTableView", None)
-        color_grade_dock = getattr(property_view, "color_grade_wheels_dock", None)
         for dock in docks:
-            if dock is color_grade_dock and hasattr(property_view, "_ensure_color_grade_wheels_dock_attached"):
-                property_view._ensure_color_grade_wheels_dock_attached()
             if dock is getattr(self, "dockAudioRecording", None):
                 self._ensure_audio_recording_dock_content()
             if self.dockWidgetArea(dock) != Qt.NoDockWidgetArea:
@@ -3150,8 +3046,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         _ = get_app()._tr
         self.custom_views_menu = QMenu(_("My Views"), self.menuView)
         separator_after_views = self.menuWindow.menuAction()
-        color_view_index = self.menuView.actions().index(self.actionColor_Grade_View)
-        for action in self.menuView.actions()[color_view_index + 1:]:
+        for action in self.menuView.actions():
             if action.isSeparator():
                 separator_after_views = action
                 break
@@ -3461,64 +3356,6 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         ])
         self.restoreState(qt_types.str_to_bytes(simple_state))
         QCoreApplication.processEvents()
-
-    def actionColor_Grade_View_trigger(self):
-        """Switch to a color grading focused view."""
-        self._set_active_custom_view_id("")
-        self._set_active_builtin_view("color")
-        self.removeDocks()
-
-        color_grade_dock = getattr(getattr(self, "propertyTableView", None), "color_grade_wheels_dock", None)
-
-        self.addDocks([self.dockProperties], Qt.LeftDockWidgetArea)
-        self.addDocks([self.dockVideo], Qt.TopDockWidgetArea)
-        # Right side: Color Wheels top, scope docks tabified below.
-        # Order matters: split FIRST, then tabify so the bottom group stays intact.
-        if color_grade_dock:
-            self.addDocks([color_grade_dock], Qt.RightDockWidgetArea)
-        self.addDocks([self.dockLumaWaveform], Qt.RightDockWidgetArea)
-        if color_grade_dock:
-            self.splitDockWidget(color_grade_dock, self.dockLumaWaveform, Qt.Vertical)
-        self.addDocks([self.dockHistogram], Qt.RightDockWidgetArea)
-        self.addDocks([self.dockVectorscope], Qt.RightDockWidgetArea)
-        self.tabifyDockWidget(self.dockLumaWaveform, self.dockHistogram)
-        self.tabifyDockWidget(self.dockHistogram, self.dockVectorscope)
-        self.splitDockWidget(self.dockVideo, self.dockTimeline, Qt.Vertical)
-        self.setTabPosition(Qt.RightDockWidgetArea, QTabWidget.North)
-
-        self.floatDocks(False)
-
-        docks_to_show = [
-            self.dockProperties,
-            self.dockVideo,
-            self.dockTimeline,
-            self.dockLumaWaveform,
-            self.dockHistogram,
-            self.dockVectorscope,
-        ]
-        if color_grade_dock:
-            docks_to_show.append(color_grade_dock)
-
-        self.showDocks(docks_to_show)
-        QCoreApplication.processEvents()
-        if color_grade_dock:
-            color_grade_dock.raise_()
-        self.dockLumaWaveform.raise_()
-        self.style_dock_widgets()
-
-        # Defer size adjustment so Qt has finished its layout pass first.
-        # Give Color Wheels ~75% of the right column height, scope tab ~25%.
-        if color_grade_dock:
-            def _resize_right_column():
-                available = self.height()
-                scope_h = max(120, available // 4)
-                wheels_h = available - scope_h
-                self.resizeDocks(
-                    [color_grade_dock, self.dockLumaWaveform],
-                    [wheels_h, scope_h],
-                    Qt.Vertical,
-                )
-            QTimer.singleShot(0, _resize_right_column)
 
     def actionAudio_Recording_View_trigger(self):
         """Show the Simple View layout with Recording docked on the right."""
@@ -5558,7 +5395,6 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         self.selected_items = []
         ui_util.load_ui(self, self.ui_path)
         self.actionFullscreen.setText(_("Fullscreen"))
-        self.actionColor_Grade_View.setText(_("Color View"))
 
         # Init UI
         ui_util.init_ui(self)
