@@ -55,7 +55,7 @@ RASTER_IMAGE_EXTENSIONS = {
 
 def is_supported_img2img_path(path):
     path_text = str(path or "").strip()
-    # Comfy annotated paths can look like: "image.jpg [input]"
+    
     if path_text.endswith("]") and " [" in path_text:
         path_text = path_text.rsplit(" [", 1)[0].strip()
     ext = os.path.splitext(path_text)[1].lower()
@@ -78,7 +78,7 @@ class _ComfyAvailabilityWorker(QObject):
 
 class GenerationService(QObject):
     """Encapsulates generation-specific UI + workflow behavior."""
-    SAM2_DEFAULT_TARGET_BATCH_BYTES = 4 * 1024 * 1024 * 1024  # 4 GiB
+    SAM2_DEFAULT_TARGET_BATCH_BYTES = 4 * 1024 * 1024 * 1024  
     SAM2_ESTIMATED_BYTES_PER_PIXEL = 24.0
     SAM2_ESTIMATED_BYTES_PER_PIXEL_HIGHLIGHT = 64.0
     SAM2_ESTIMATED_BYTES_PER_PIXEL_BLUR = 40.0
@@ -403,13 +403,13 @@ class GenerationService(QObject):
         )
         frames = int(target_bytes / bytes_per_frame)
         frames = max(self.SAM2_MIN_FRAMES_PER_BATCH, min(self.SAM2_MAX_FRAMES_PER_BATCH, frames))
-        # Keep chunk sizes aligned for more stable batching behavior.
+        
         frames = max(self.SAM2_MIN_FRAMES_PER_BATCH, int((frames // 4) * 4))
         return frames
 
     def _apply_dynamic_sam2_meta_batch(self, workflow, source_file, template_id=None):
         template_id = str(template_id or "").strip().lower()
-        # Only adjust SAM2 video tracking template workflows.
+        
         if template_id and template_id not in (
             "video-blur-anything-sam2",
             "video-highlight-anything-sam2",
@@ -434,10 +434,10 @@ class GenerationService(QObject):
         if not has_sam2_chunked:
             return
 
-        # Account for downstream per-frame processing memory:
-        # - Highlight path is the heaviest (multiple full-frame tensor intermediates)
-        # - Blur path is moderately heavy
-        # - Mask-only path is closest to baseline SAM2 estimate
+        
+        
+        
+        
         estimated_bpp = float(self.SAM2_ESTIMATED_BYTES_PER_PIXEL)
         for node in workflow.values():
             if not isinstance(node, dict):
@@ -544,10 +544,10 @@ class GenerationService(QObject):
         music_prompt_text = prompt_text
         music_lyrics_text = ""
         if template_id == "txt2music-ace-step" and prompt_text:
-            # Optional inline format:
-            #   <style/tags text>
-            #   Lyrics:
-            #   <lyrics lines...>
+            
+            
+            
+            
             split_match = re.split(r"(?im)^\s*lyrics\s*:\s*", prompt_text, maxsplit=1)
             if len(split_match) == 2:
                 music_prompt_text = str(split_match[0] or "").strip()
@@ -644,11 +644,11 @@ class GenerationService(QObject):
             fallback_value = str(fallback_value or "").strip()
             if not text_value:
                 return fallback_value
-            # Accept raw JSON list format expected by Sam2VideoSegmentationAddPoints.
+            
             if text_value.startswith("[") and "x" in text_value and "y" in text_value:
                 return text_value
 
-            # Also accept "x,y; x,y" shorthand and convert to JSON list.
+            
             points = []
             for chunk in text_value.split(";"):
                 chunk = chunk.strip()
@@ -745,8 +745,8 @@ class GenerationService(QObject):
 
             class_flat = class_type.lower().strip()
 
-            # Resolve generic SmartEdit source placeholders in any string input
-            # (custom nodes may use keys like `video_path` instead of `video`/`file`).
+            
+            
             if source_path or reference_image_path:
                 for input_key, input_value in list(inputs.items()):
                     if isinstance(input_value, str) and source_path and _is_placeholder_value(input_value):
@@ -798,7 +798,7 @@ class GenerationService(QObject):
                     inputs["prompt"] = prompt_text
                     applied_prompt = True
                 elif isinstance(tags_value, str) and _is_prompt_placeholder_value(tags_value):
-                    # Support music nodes that use "tags" instead of "text"/"prompt".
+                    
                     if template_id == "txt2music-ace-step":
                         inputs["tags"] = music_prompt_text
                     else:
@@ -813,7 +813,7 @@ class GenerationService(QObject):
                     inputs["text"] = prompt_text
                     applied_prompt = True
                 elif "prompt" in inputs and isinstance(prompt_value, str) and not prompt_value.strip() and not applied_prompt:
-                    # Support prompt-driven custom nodes (e.g. GroundingDINO/SAM2) that expose a plain string prompt input.
+                    
                     inputs["prompt"] = prompt_text
                     applied_prompt = True
 
@@ -860,13 +860,13 @@ class GenerationService(QObject):
                 if ("anything-sam2" in template_id) and (not points) and (not has_positive_rects) and (not auto_enabled) and (not has_dino_prompt):
                     raise ValueError("No SAM2 seed was provided. Use Points, Rectangle, or Auto mode.")
 
-                # New SmartEdit node contract.
+                
                 if "positive_points_json" in inputs and isinstance(inputs.get("positive_points_json", None), str):
                     inputs["positive_points_json"] = _normalize_sam2_coords_input(
                         coords_text,
                         str(inputs.get("positive_points_json", "")),
                     )
-                # Backward compatibility for third-party node variants.
+                
                 elif "coordinates_positive" in inputs and isinstance(inputs.get("coordinates_positive", None), str):
                     inputs["coordinates_positive"] = _normalize_sam2_coords_input(
                         coords_text,
@@ -874,13 +874,13 @@ class GenerationService(QObject):
                     )
 
                 if class_flat in ("sam2segmentation", "smarteditsam2segmentation") and "individual_objects" in inputs:
-                    # For Blur Anything, treat points as a single combined prompt.
-                    # This is more stable with mixed positive/negative points and avoids
-                    # per-object mask selection quirks in the current SAM2 single-image node.
+                    
+                    
+                    
                     if "blur-anything-sam2" in template_id:
                         inputs["individual_objects"] = False
                     else:
-                        # Non-Blur-Anything templates keep multi-object behavior.
+                        
                         inputs["individual_objects"] = bool(len(points) > 1)
 
                 if coordinates_negative_text:
@@ -930,8 +930,8 @@ class GenerationService(QObject):
                 if "upload" in inputs:
                     inputs["upload"] = "image"
             elif class_flat == "loadimage":
-                # Resolve template-local reference images (relative filenames) to absolute paths,
-                # so ComfyClient can upload and rewrite them to [input] automatically.
+                
+                
                 configured_image = str(inputs.get("image", "")).strip()
                 local_image = _resolve_template_local_file(configured_image)
                 if local_image:
@@ -939,8 +939,8 @@ class GenerationService(QObject):
                     if "upload" in inputs:
                         inputs["upload"] = "image"
                 elif media_type == "image" and source_path:
-                    # If additional reference images are missing, gracefully fallback to the selected source image.
-                    # This keeps common exported workflows usable without hand-editing filenames.
+                    
+                    
                     missing_relative = configured_image and (not os.path.isabs(configured_image))
                     missing_absolute = os.path.isabs(configured_image) and (not os.path.exists(configured_image))
                     if missing_relative or missing_absolute:
@@ -1284,8 +1284,8 @@ class GenerationService(QObject):
                 if downloaded_any_video:
                     continue
 
-                # Some Save SRT node variants return the output file path as text.
-                # Convert that path to a downloadable Comfy output ref when possible.
+                
+                
                 if text_payload.lower().endswith(".srt"):
                     srt_ref = self._comfy_output_ref_from_path(text_payload)
                     if srt_ref:
@@ -1302,8 +1302,8 @@ class GenerationService(QObject):
                         except Exception as ex:
                             log.warning("Failed to download/read SRT from Comfy path output %s: %s", text_payload, ex)
                     if self._looks_like_filesystem_path(text_payload):
-                        # Some Whisper/SRT nodes return only a server-side output path.
-                        # Don't treat that path string as caption text.
+                        
+                        
                         continue
 
                 ext = ".srt" if str(output_ref.get("format", "")).lower() == "srt" else ".txt"
@@ -1651,7 +1651,7 @@ class GenerationService(QObject):
             subfolder = rel_dir
         else:
             if os.path.isabs(normalized):
-                # Unknown absolute location outside Comfy output tree; fallback to basename only.
+                
                 return {
                     "filename": filename,
                     "subfolder": "",

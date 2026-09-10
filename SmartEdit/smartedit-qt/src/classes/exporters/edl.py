@@ -43,7 +43,7 @@ def _interp_name(value):
         numeric = int(value)
     except (TypeError, ValueError):
         numeric = None
-    # libsmartedit: 0=bezier, 1=linear, 2=constant/hold
+    
     if numeric == 0:
         return "bezier"
     if numeric == 1:
@@ -135,15 +135,15 @@ def export_edl():
     app = get_app()
     _ = app._tr
 
-    # EDL Export format
+    
     edl_string = "%03d  %-9s%-6s%-9s%11s %11s %11s %11s\n"
 
-    # Get FPS info
+    
     fps_num = get_app().project.get("fps").get("num", 24)
     fps_den = get_app().project.get("fps").get("den", 1)
     fps_float = float(fps_num / fps_den)
 
-    # Get EDL path
+    
     recommended_path = app.project.current_filepath or ""
     if not recommended_path:
         recommended_path = os.path.join(info.HOME_PATH, "%s.edl" % _("Untitled Project"))
@@ -154,13 +154,13 @@ def export_edl():
     if not file_path:
         return
 
-    # Append .edl if needed
+    
     if not file_path.endswith(".edl"):
         file_path = "%s.edl" % file_path
 
     export_root = os.path.dirname(os.path.abspath(file_path))
 
-    # Get filename with no extension
+    
     file_name_with_ext = os.path.basename(file_path)
     file_name = os.path.splitext(file_name_with_ext)[0]
 
@@ -169,35 +169,35 @@ def export_edl():
     for track in reversed(sorted(all_tracks, key=itemgetter('number'))):
         existing_track = Track.get(number=track.get("number"))
         if not existing_track:
-            # Log error and fail silently, and continue
+            
             log.error('No track object found with number: %s' % track.get("number"))
             continue
 
-        # Track name
+        
         track_name = track.get("label") or "TRACK %s" % track_count
         clips_on_track = sorted(Clip.filter(layer=track.get("number")), key=lambda c: c.data.get('position', 0.0))
         if not clips_on_track:
             continue
 
-        # Generate EDL File (1 per track - limitation of EDL format)
-        # TODO: Improve and move this into its own class
+        
+        
         with open("%s-%s.edl" % (file_path.replace(".edl", ""), track_name), 'w', encoding="utf8") as f:
-            # Add Header
+            
             f.write("TITLE: %s - %s\n" % (file_name, track_name))
             f.write("FCM: %s\n\n" % ("DROP FRAME" if _is_drop_frame(fps_num, fps_den) else "NON-DROP FRAME"))
 
-            # Loop through each track
+            
             export_position = 0.0
             event_index = 1
 
-            # Loop through clips on this track
+            
             for clip in clips_on_track:
                 clip_position = clip.data.get('position', 0.0)
                 clip_start = clip.data.get('start', 0.0)
                 clip_end = clip.data.get('end', clip_start)
                 clip_duration = clip_end - clip_start
 
-                # Do we need a blank clip?
+                
                 if clip_position > export_position:
                     clip_start_time = secondsToTimecode(0.0, fps_num, fps_den)
                     clip_end_time = secondsToTimecode(clip_position - export_position, fps_num, fps_den)
@@ -211,7 +211,7 @@ def export_edl():
                     event_index += 1
                     export_position = clip_position
 
-                # Format clip start/end and timeline start/end values (i.e. 00:00:00:00)
+                
                 clip_start_time = secondsToTimecode(clip_start, fps_num, fps_den)
                 clip_end_time = secondsToTimecode(clip_end, fps_num, fps_den)
                 timeline_start_time = secondsToTimecode(clip_position, fps_num, fps_den)
@@ -225,13 +225,13 @@ def export_edl():
                 reel_video_tag = f"{reel_name} V"
                 reel_audio_tag = f"{reel_name} A1"
                 if has_video:
-                    # Video Track
+                    
                     f.write(edl_string % (
                             event_index, reel_name[:9], "V"[:6], "C",
                             clip_start_time, clip_end_time,
                             timeline_start_time, timeline_end_time))
                 if has_audio:
-                    # Audio Track
+                    
                     f.write(edl_string % (
                             event_index, reel_name[:9], "A"[:6], "C",
                         clip_start_time, clip_end_time,
@@ -242,38 +242,38 @@ def export_edl():
                 if relative_media:
                     f.write("* SOURCE FILE: %s\n" % relative_media)
 
-                # Add opacity data (if any)
+                
                 alpha_points = clip.data.get('alpha', {}).get('Points', [])
                 if len(alpha_points) >= 1:
-                    # Loop through Points (remove duplicates)
+                    
                     keyframes = {}
                     for point in alpha_points:
                         keyframeTime = (point.get('co', {}).get('X', 1.0) - 1) / fps_float
                         keyframeValue = point.get('co', {}).get('Y', 0.0) * 100.0
                         interp_name = _interp_name(point.get("interpolation"))
                         keyframes[keyframeTime] = (keyframeValue, interp_name)
-                    # Write keyframe values to EDL
+                    
                     for opacity_time in sorted(keyframes.keys()):
                         opacity_value, interp_name = keyframes.get(opacity_time)
                         tc = secondsToTimecode(opacity_time, fps_num, fps_den)
                         f.write("* VIDEO LEVEL AT %s IS %s%% %s (REEL %s)\n" % (tc, _fmt_percent(opacity_value), interp_name.upper(), reel_video_tag))
 
-                # Add volume data (if any)
+                
                 volume_points = clip.data.get('volume', {}).get('Points', [])
                 if len(volume_points) >= 1:
-                    # Loop through Points (remove duplicates)
+                    
                     keyframes = {}
                     for point in volume_points:
                         keyframeTime = (point.get('co', {}).get('X', 1.0) - 1) / fps_float
                         keyframeValue = _volume_to_db(point.get('co', {}).get('Y', 0.0))
                         interp_name = _interp_name(point.get("interpolation"))
                         keyframes[keyframeTime] = (keyframeValue, interp_name)
-                    # Write keyframe values to EDL
+                    
                     for volume_time in sorted(keyframes.keys()):
                         volume_value, interp_name = keyframes.get(volume_time)
                         f.write("* AUDIO LEVEL AT %s IS %.2f DB %s (REEL %s)\n" % (secondsToTimecode(volume_time, fps_num, fps_den), volume_value, interp_name.upper(), reel_audio_tag))
 
-                # Export transform keyframes (skip defaults)
+                
                 transform_defs = [
                     ("scale_x", "SCALE X", 100.0, 1.0, True),
                     ("scale_y", "SCALE Y", 100.0, 1.0, True),
@@ -294,9 +294,9 @@ def export_edl():
                         keyframeTime = (point.get('co', {}).get('X', 1.0) - 1) / fps_float
                         raw_value = point.get('co', {}).get('Y', default_val)
                         if not include_all and len(points) == 1 and abs(raw_value - default_val) < 1e-6:
-                            continue  # single default point: skip
+                            continue  
                         if not include_all and keyframes and abs(raw_value - default_val) < 1e-6:
-                            continue  # avoid duplicate defaults when not including all
+                            continue  
                         display_value = raw_value * multiplier if is_percent else raw_value
                         interp_name = _interp_name(point.get("interpolation"))
                         keyframes[keyframeTime] = (display_value, interp_name)
@@ -310,10 +310,10 @@ def export_edl():
                             value_unit = "%s %s" % (display_val, unit.strip())
                         f.write("* %s AT %s IS %s %s (REEL %s)\n" % (label, secondsToTimecode(t, fps_num, fps_den), value_unit, interp_name.upper(), reel_video_tag))
 
-                # Update export position
+                
                 export_position = max(export_position, clip_position + clip_duration)
                 event_index += 1
                 f.write("\n")
 
-            # Update counters
+            
             track_count -= 1

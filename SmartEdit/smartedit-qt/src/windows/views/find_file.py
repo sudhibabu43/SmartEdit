@@ -33,7 +33,7 @@ from classes.path_utils import native_display_path, wrapped_path_html
 from qt_api import Qt
 from qt_api import QFileDialog, QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel
 
-# Keep track of all previously checked paths, and keep checking them
+
 known_paths = [info.HOME_PATH]
 
 
@@ -150,27 +150,27 @@ def find_missing_file(file_path, prompt_state=None):
     if prompt_state is not None:
         prompt_state["last_skip"] = None
 
-    # If user cancelled prompts, skip searching
+    
     if prompt_state and prompt_state.get("cancelled"):
         if prompt_state is not None:
             prompt_state["last_skip"] = "all"
         return ("", modified, True)
 
-    # Bail if path is already valid
+    
     if os.path.exists(file_path):
         return (file_path, modified, skipped)
 
-    # Original filename
+    
     file_name = os.path.split(file_path)[-1]
 
-    # Loop through all known paths, and check for this file
+    
     for known_path in known_paths:
         possible_path = os.path.join(known_path, file_name)
         if os.path.exists(possible_path):
             modified = True
             return (possible_path, modified, skipped)
 
-    # Check if path exists
+    
     while not os.path.exists(file_path):
         recommended_path = _deepest_existing_parent(file_path)
         if not recommended_path:
@@ -183,7 +183,7 @@ def find_missing_file(file_path, prompt_state=None):
         modified = True
 
         if action == "all":
-            # User skipped all missing file prompts
+            
             skipped = True
             if prompt_state is not None:
                 prompt_state["cancelled"] = True
@@ -191,7 +191,7 @@ def find_missing_file(file_path, prompt_state=None):
             return ("", modified, skipped)
 
         if action == "file":
-            # User skipped this missing file only
+            
             skipped = True
             if prompt_state is not None:
                 prompt_state["last_skip"] = "file"
@@ -202,5 +202,5 @@ def find_missing_file(file_path, prompt_state=None):
         if folder_to_check and folder_to_check not in known_paths:
             known_paths.append(folder_to_check)
 
-    # Return found file_path
+    
     return (file_path, modified, skipped)

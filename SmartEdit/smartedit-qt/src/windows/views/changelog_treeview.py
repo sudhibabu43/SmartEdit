@@ -47,9 +47,9 @@ class ChangelogTreeView(QTreeView):
 
     def refresh_view(self):
         """Format columns and sort"""
-        # Model already populated
+        
 
-        # Format columns
+        
         self.header().setSectionResizeMode(0, QHeaderView.Fixed)
         self.header().setSectionResizeMode(1, QHeaderView.Fixed)
         self.setColumnWidth(0, 70)
@@ -68,7 +68,7 @@ class ChangelogTreeView(QTreeView):
         log.info('contextMenuEvent')
         _ = get_app()._tr
 
-        # Get data model and selection
+        
         model = self.model()
         index = self.indexAt(event.pos())
         if index.isValid():
@@ -95,20 +95,20 @@ class ChangelogTreeView(QTreeView):
             log.warning('Failed to launch web browser to %s' % self.commit_url)
 
     def __init__(self, commits, commit_url, *args):
-        # Invoke parent init
+        
         QTreeView.__init__(self, *args)
 
-        # Get a reference to the window object
+        
         self.win = get_app().window
 
-        # Get Model data
+        
         self.changelog_model = ChangelogModel(commits)
         self.selected = []
 
-        # Populate model
+        
         self.changelog_model.update_model()
 
-        # Setup header columns
+        
         self.setModel(self.changelog_model.proxy_model)
         self.setIndentation(0)
         self.setSelectionBehavior(QTreeView.SelectRows)
@@ -120,5 +120,5 @@ class ChangelogTreeView(QTreeView):
         self.setSelectionModel(self.changelog_model.selection_model)
         self.commit_url = commit_url
 
-        # Refresh view
+        
         self.refresh_view()

@@ -41,13 +41,13 @@ class PromptParser:
 
         clean_prompt = prompt.strip()
 
-        # Attempt local SLM if configured and preferred
+        
         if self.prefer_local_slm and self.slm_url:
             slm_response = self._query_slm(clean_prompt)
             if slm_response:
                 return CommandSchemaValidator.validate_and_normalize(slm_response, raw_prompt=clean_prompt)
 
-        # Built-in deterministic semantic NLP engine
+        
         raw_dict = self._parse_semantic_nlp(clean_prompt)
         return CommandSchemaValidator.validate_and_normalize(raw_dict, raw_prompt=clean_prompt)
 
@@ -59,8 +59,8 @@ class PromptParser:
         actions = []
         parameters: Dict[str, Any] = {}
 
-        # 1. Silence removal intent
-        # "Remove silence", "cut silence", "delete silence", "trim quiet parts"
+        
+        
         if re.search(r"\b(remove|cut|delete|drop|trim|filter|strip|clean)\s+(out\s+)?(all\s+)?(the\s+)?(silence|silent|quiet|dead\s*air)\b", t) or \
            re.search(r"\b(silence\s*(removal|cutting|detector))\b", t) or \
            re.search(r"\b(no\s+silence)\b", t):
@@ -70,8 +70,8 @@ class PromptParser:
                 "min_silence_duration_sec": 0.5
             }
 
-        # 2. Clip arrangement intent
-        # "Arrange the clips in the best order", "arrange clips", "order clips", "sequence clips", "reorder clips"
+        
+        
         if re.search(r"\b(arrange|order|reorder|sort|sequence|organize|align)\s+(the\s+)?(clips?|timeline|footage|scenes?|videos?)\b", t) or \
            re.search(r"\b(in\s+(the\s+)?best\s+order)\b", t) or \
            re.search(r"\b(chronological\s+order)\b", t):
@@ -81,30 +81,30 @@ class PromptParser:
                 "align_track": 1000000
             }
 
-        # 3. Camera shake detection intent
-        # "Find shaky footage", "detect shaky", "identify shaky footage", "spot shaky clips", "check for shake"
+        
+        
         detect_shaky = bool(
             re.search(r"\b(find|detect|identify|spot|search|look\s+for|check\s+for|analyze)\s+(any\s+)?(the\s+)?(shaky|jittery|unstable|wobbly)\s*(footage|clips?|videos?|shots?|scenes?)?\b", t) or \
             re.search(r"\b(shaky\s*(footage|clips?|detection|analysis))\b", t)
         )
 
-        # 4. Camera shake labeling intent
-        # "label it", "label shaky", "mark shaky", "tag shaky footage", "highlight shaky"
+        
+        
         label_shaky = bool(
             re.search(r"\b(label|mark|tag|flag|highlight|indicate)\s+(it|them|the\s+shaky|shaky\s+footage|shaky\s+clips?)\b", t) or \
             re.search(r"\b(label\s+shaky)\b", t) or \
             re.search(r"\b(add\s+(a\s+)?label)\b", t)
         )
 
-        # Check for explicit negation on labeling: "do not only label", "don't just label", "do not label", etc.
+        
         negate_label = bool(
             re.search(r"\b(do\s+not|don'?t|not|never|without)\s+(only\s+|just\s+)?(label|mark|tag)(ing)?\b", t)
         )
         if negate_label:
             label_shaky = False
 
-        # 5. Delete / Split & Remove shaky footage from timeline
-        # "delete shaky footage", "remove shaky clips", "actually split and remove those portions", "trim shaky footage"
+        
+        
         delete_shaky = bool(
             re.search(r"\b(delete|remove|drop|cut|trim|eliminate|discard|clear)\s+.*?\b(shak(?:y|e|ing)?|jitter(?:y)?|unstable|wobbl(?:y|e)|those\s+portions|those\s+parts|those\s+segments)\b", t) or \
             re.search(r"\b(split\s+and\s+(?:remove|delete|cut|drop))\b", t) or \
@@ -113,7 +113,7 @@ class PromptParser:
             re.search(r"\b(remove|delete|cut)\s+(?:the\s+)?(?:shaky|jittery|unstable|those\s+portions|those\s+parts|those\s+segments)\b", t)
         )
 
-        # Detect gap closing preference (e.g. ripple edit vs preserving timeline coordinates)
+        
         close_gaps = bool(re.search(r"\b(close\s+gaps?|ripple|pull\s+together|shift\s+left)\b", t))
 
         if delete_shaky:
@@ -141,8 +141,8 @@ class PromptParser:
                 "add_marker": label_shaky and not negate_label
             }
 
-        # 6. Rough cut intent
-        # "Create a rough cut", "make a rough cut", "build rough cut"
+        
+        
         if re.search(r"\b(create|make|build|generate|produce)\s+(a\s+)?(rough\s*cut)\b", t) or \
            re.search(r"\b(rough\s*cut)\b", t):
             if ActionType.ROUGH_CUT not in actions:

@@ -35,7 +35,7 @@ import smartedit
 
 from qt_api import QGuiApplication
 
-# Import parent folder (so it can find other imports)
+
 PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 if PATH not in sys.path:
     sys.path.append(PATH)
@@ -88,7 +88,7 @@ class QueryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """ Init unit test data """
-        # Create or reuse Qt application
+        
         cls.app, cls._owns_app = ensure_open_shot_app()
         cls.clip_ids = []
         cls.file_ids = []
@@ -96,64 +96,64 @@ class QueryTests(unittest.TestCase):
 
         clips = []
 
-        # Insert some clips into the project data
+        
         for num in range(5):
-            # Create clip
+            
             c = smartedit.Clip(os.path.join(info.IMAGES_PATH, "AboutLogo.png"))
             c.Position(num * 10.0)
             c.End(5.0)
 
-            # Parse JSON
+            
             clip_data = json.loads(c.Json())
 
-            # Insert into project data
+            
             query_clip = Clip()
             query_clip.data = clip_data
             query_clip.save()
 
-            # Keep track of the ids
+            
             cls.clip_ids.append(query_clip.id)
             clips.append(query_clip)
 
-        # Insert some files into the project data
+        
         for num in range(5):
-            # Create file
+            
             r = smartedit.DummyReader(smartedit.Fraction(24, 1), 640, 480, 44100, 2, 30.0)
 
-            # Parse JSON
+            
             file_data = json.loads(r.Json())
 
-            # Insert into project data
+            
             query_file = File()
             query_file.data = file_data
             query_file.data["path"] = os.path.join(info.IMAGES_PATH, "AboutLogo.png")
             query_file.data["media_type"] = "image"
             query_file.save()
 
-            # Keep track of the ids
+            
             cls.file_ids.append(query_file.id)
 
-        # Insert some transitions into the project data
+        
         for c in clips:
-            # Create mask object
+            
             t = smartedit.Mask()
-            # Place over the last second of current clip
+            
             pos = c.data.get("position", 0.0)
             start = c.data.get("start", 0.0)
             end = c.data.get("end", 0.0)
             t.Position((pos - start + end) - 1.0)
             t.End(1.0)
 
-            # Insert into project data
+            
             transitions_data = json.loads(t.Json())
             query_transition = Transition()
             query_transition.data = transitions_data
             query_transition.save()
 
-            # Keep track of the ids
+            
             cls.transition_ids.append(query_transition.id)
 
-        # Don't keep the full query objects around
+        
         del clips
 
     @classmethod
@@ -164,14 +164,14 @@ class QueryTests(unittest.TestCase):
 
     def test_add_clip(self):
 
-        # Find number of clips in project
+        
         num_clips = len(Clip.filter())
 
-        # Create clip
+        
         c = smartedit.Clip(os.path.join(info.IMAGES_PATH, "AboutLogo.png"))
         clip_data = json.loads(c.Json())
 
-        # Insert into project data
+        
         query_clip = Clip()
         query_clip.data = clip_data
         query_clip.save()
@@ -179,7 +179,7 @@ class QueryTests(unittest.TestCase):
         self.assertTrue(query_clip)
         self.assertEqual(len(Clip.filter()), num_clips + 1)
 
-        # Save the clip again (which should not change the total # of clips)
+        
         query_clip.save()
         self.assertEqual(len(Clip.filter()), num_clips + 1)
 
@@ -190,12 +190,12 @@ class QueryTests(unittest.TestCase):
         clip = Clip.get(id=update_id)
         self.assertTrue(clip)
 
-        # Update clip
+        
         clip.data["layer"] = 2
         clip.data["title"] = "My Title"
         clip.save()
 
-        # Verify updated data
+        
         clip = Clip.get(id=update_id)
         self.assertEqual(clip.data["layer"], 2)
         self.assertEqual(clip.data["title"], "My Title")
@@ -212,11 +212,11 @@ class QueryTests(unittest.TestCase):
 
         clip.delete()
 
-        # Verify deleted data
+        
         deleted_clip = Clip.get(id=delete_id)
         self.assertFalse(deleted_clip)
 
-        # Delete clip again (should do nothing)
+        
         clip.delete()
         deleted_clip = Clip.get(id=delete_id)
         self.assertFalse(deleted_clip)
@@ -227,7 +227,7 @@ class QueryTests(unittest.TestCase):
         clips = Clip.filter(id=self.clip_ids[0])
         self.assertTrue(clips)
 
-        # Do not find a clip
+        
         clips = Clip.filter(id="invalidID")
         self.assertEqual(len(clips), 0)
 
@@ -237,7 +237,7 @@ class QueryTests(unittest.TestCase):
         clip = Clip.get(id=self.clip_ids[1])
         self.assertTrue(clip)
 
-        # Do not find a clip
+        
         clip = Clip.get(id="invalidID")
         self.assertEqual(clip, None)
 
@@ -289,12 +289,12 @@ class QueryTests(unittest.TestCase):
         file = File.get(id=update_id)
         self.assertTrue(file)
 
-        # Update File
+        
         file.data["height"] = 1080
         file.data["width"] = 1920
         file.save()
 
-        # Verify updated data
+        
         file = File.get(id=update_id)
         self.assertEqual(file.data["height"], 1080)
         self.assertEqual(file.data["width"], 1920)
@@ -308,11 +308,11 @@ class QueryTests(unittest.TestCase):
 
         file.delete()
 
-        # Verify deleted data
+        
         deleted_file = File.get(id=delete_id)
         self.assertFalse(deleted_file)
 
-        # Delete File again (should do nothing)
+        
         file.delete()
         deleted_file = File.get(id=delete_id)
         self.assertFalse(deleted_file)
@@ -323,7 +323,7 @@ class QueryTests(unittest.TestCase):
         files = File.filter(id=self.file_ids[0])
         self.assertTrue(files)
 
-        # Do not find a File
+        
         files = File.filter(id="invalidID")
         self.assertEqual(len(files), 0)
 
@@ -333,7 +333,7 @@ class QueryTests(unittest.TestCase):
         file = File.get(id=self.file_ids[1])
         self.assertTrue(file)
 
-        # Do not find a File
+        
         file = File.get(id="invalidID")
         self.assertEqual(file, None)
 
@@ -356,14 +356,14 @@ class QueryTests(unittest.TestCase):
 
     def test_add_file(self):
 
-        # Find number of files in project
+        
         num_files = len(File.filter())
 
-        # Create file
+        
         r = smartedit.DummyReader(smartedit.Fraction(24, 1), 640, 480, 44100, 2, 30.0)
         file_data = json.loads(r.Json())
 
-        # Insert into project data
+        
         query_file = File()
         query_file.data = file_data
         query_file.data["path"] = os.path.join(info.IMAGES_PATH, "AboutLogo.png")
@@ -373,6 +373,6 @@ class QueryTests(unittest.TestCase):
         self.assertTrue(query_file)
         self.assertEqual(len(File.filter()), num_files + 1)
 
-        # Save the file again (which should not change the total # of files)
+        
         query_file.save()
         self.assertEqual(len(File.filter()), num_files + 1)

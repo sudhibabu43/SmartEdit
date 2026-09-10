@@ -44,7 +44,7 @@ class TransitionsListView(QListView):
     def contextMenuEvent(self, event):
         event.accept()
 
-        # Set context menu mode
+        
         app = get_app()
         self.win = app.window
         app.context_menu_object = "transitions"
@@ -56,10 +56,10 @@ class TransitionsListView(QListView):
     def startDrag(self, supportedActions):
         """ Override startDrag method to display custom icon """
 
-        # Get first column indexes for all selected rows
+        
         selected = self.selectionModel().selectedRows(0)
 
-        # Get image of current item
+        
         current = self.selectionModel().currentIndex()
         if not current.isValid() and selected:
             current = selected[0]
@@ -68,10 +68,10 @@ class TransitionsListView(QListView):
             log.warning("No draggable items found in model!")
             return False
 
-        # Get icon from column 0 on same row as current item
+        
         icon = current.sibling(current.row(), 0).data(Qt.DecorationRole)
 
-        # Start drag operation
+        
         drag = QDrag(self)
         drag.setMimeData(self.model().mimeData(selected))
         drag.setPixmap(icon.pixmap(self.drag_item_size))
@@ -96,24 +96,24 @@ class TransitionsListView(QListView):
         self.transition_model.proxy_model.sort(0, Qt.AscendingOrder)
 
     def __init__(self, model):
-        # Invoke parent init
+        
         QListView.__init__(self)
 
-        # Get a reference to the window object
+        
         app = get_app()
         self.win = app.window
 
-        # Get Model data
+        
         self.transition_model = model
 
-        # Keep track of mouse press start position to determine when to start drag
+        
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
         self.setDropIndicatorShown(True)
 
         self.setModel(self.transition_model.list_proxy_model)
 
-        # Remove the default selection model and wire up to the list-specific one
+        
         self.selectionModel().deleteLater()
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -121,7 +121,7 @@ class TransitionsListView(QListView):
             self.setSelectionRectVisible(False)
         self.setSelectionModel(self.transition_model.list_selection_model)
 
-        # Setup header columns
+        
         self.setIconSize(info.LIST_ICON_SIZE)
         self.setGridSize(info.LIST_GRID_SIZE)
         self.setViewMode(QListView.IconMode)
@@ -130,6 +130,6 @@ class TransitionsListView(QListView):
         self.setWordWrap(False)
         self.setTextElideMode(Qt.ElideRight)
 
-        # setup filter events
+        
         app.window.transitionsFilter.textChanged.connect(self.filter_changed)
         app.window.refreshTransitionsSignal.connect(self.refresh_view)

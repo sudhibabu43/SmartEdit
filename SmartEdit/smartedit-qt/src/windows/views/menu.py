@@ -70,9 +70,9 @@ class StyledContextMenu(QMenu):
         match = re.search(pattern, self.app.styleSheet(), re.IGNORECASE)
         if match:
             border_parts = match.group(1).split()
-            # Typically, border is defined as width style color
+            
             if len(border_parts) >= 3:
-                width = float(border_parts[0].replace('px', ''))  # Remove 'px' and convert to float
+                width = float(border_parts[0].replace('px', ''))  
                 style = border_parts[1]
                 color = QColor(border_parts[2])
                 return {'width': width, 'style': style, 'color': color}
@@ -83,7 +83,7 @@ class StyledContextMenu(QMenu):
         pattern = r'QMenu\s*{\s*[^}]*border-radius:\s*([^;]+);'
         match = re.search(pattern, self.app.styleSheet(), re.IGNORECASE)
         if match:
-            # Split the radius values by whitespace and remove 'px' unit
+            
             radius_values = match.group(1).replace('px', '').split()
             if len(radius_values) == 1:
                 radius = float(radius_values[0])

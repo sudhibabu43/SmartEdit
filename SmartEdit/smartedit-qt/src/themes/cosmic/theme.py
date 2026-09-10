@@ -899,29 +899,29 @@ QMessageBox QPushButton[dialogRole="destructive"] {{
         dark_palette = ui_util.make_dark_palette(self.app.palette())
         self.app.setPalette(dark_palette)
 
-        # Set font for all widgets
+        
         font = QFont("Ubuntu")
         font.setPointSizeF(8)
         self.app.setFont(font)
 
-        # Move tabs to top (all dock areas, since restoreState() does not persist tab positions)
+        
         for area in (Qt.TopDockWidgetArea, Qt.BottomDockWidgetArea,
                      Qt.LeftDockWidgetArea, Qt.RightDockWidgetArea):
             self.app.window.setTabPosition(area, QTabWidget.North)
 
-        # Set dock widget content margins to 0
+        
         self.set_dock_margins([16, 0, 16, 0])
         self.set_dock_margins([0, 0, 0, 0], [0, 10, 0, 0], "dockTimelineContents")
 
-        # Apply new stylesheet
+        
         self.app.setStyleSheet(self.compose_stylesheet())
 
-        # Create a transparent spacer widget
+        
         spacer = QWidget(self.app.window)
         spacer.setFixedSize(15, 1)
         spacer.setStyleSheet("background: transparent;")
 
-        # Main toolbar buttons
+        
         toolbar_buttons = [
             {"action": self.app.window.actionNew, "icon": "themes/cosmic/images/tool-new-project.svg", "style": Qt.ToolButtonTextBesideIcon},
             {"action": self.app.window.actionOpen, "icon": "themes/cosmic/images/tool-open-project.svg", "style": Qt.ToolButtonTextBesideIcon},
@@ -935,7 +935,7 @@ QMessageBox QPushButton[dialogRole="destructive"] {{
         ]
         self.set_toolbar_buttons(self.app.window.toolBar, icon_size=20, settings=toolbar_buttons)
 
-        # Timeline toolbar buttons
+        
         timeline_buttons = [
             {"action": self.app.window.actionAddTrack, "icon": "themes/cosmic/images/tool-add-track.svg", "style": Qt.ToolButtonTextBesideIcon, "stylesheet": "QToolButton { margin-left: 15px; }"},
             {"action": self.app.window.actionUndo, "icon": "themes/cosmic/images/tool-undo.svg", "style": Qt.ToolButtonIconOnly, "stylesheet": "QToolButton { margin-right: 0px; border-bottom-right-radius: 0px; border-top-right-radius: 0px; }"},
@@ -952,7 +952,7 @@ QMessageBox QPushButton[dialogRole="destructive"] {{
         ]
         self.set_toolbar_buttons(self.app.window.timelineToolbar, icon_size=12, settings=timeline_buttons)
 
-        # Video toolbar
+        
         toolbar_buttons = [
             {"expand": True},
             {"action": self.app.window.actionJumpStart, "icon": "themes/cosmic/images/tool-media-skip-back.svg", "style": Qt.ToolButtonIconOnly},
@@ -967,7 +967,7 @@ QMessageBox QPushButton[dialogRole="destructive"] {{
         from .styles import CosmicDuskTimelineTheme
         self.app.window.timeline.apply_theme(CosmicDuskTimelineTheme())
 
-        # Emit signal
+        
         self.app.window.ThemeChangedSignal.emit(self)
 
     def togglePlayIcon(self, isPlay):

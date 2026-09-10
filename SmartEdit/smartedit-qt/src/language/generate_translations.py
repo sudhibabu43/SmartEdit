@@ -57,7 +57,7 @@ import sys
 import re
 import json
 
-# Try to get the security-patched XML functions from defusedxml
+
 try:
   from defusedxml import minidom as xml
 except ImportError:
@@ -65,7 +65,7 @@ except ImportError:
 
 import smartedit
 
-# Get the absolute path of this project
+
 path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 if path not in sys.path:
     sys.path.append(path)
@@ -74,7 +74,7 @@ import classes.info as info
 from classes.logger import log
 from classes.effect_init import effect_options
 
-# get the path of the main SmartEdit folder
+
 language_folder_path = os.path.dirname(os.path.abspath(__file__))
 smartedit_path = os.path.dirname(language_folder_path)
 effects_path = os.path.join(smartedit_path, 'effects')
@@ -88,7 +88,7 @@ log.info("-----------------------------------------------------")
 log.info(" Creating temp POT files")
 log.info("-----------------------------------------------------")
 
-# create empty temp POT files
+
 temp_files = ['SmartEdit_source.pot', 'SmartEdit_glade.pot', 'SmartEdit_effects.pot', 'SmartEdit_export.pot',
               'SmartEdit_transitions.pot', 'SmartEdit_QtUi.pot']
 for temp_file_name in temp_files:
@@ -102,7 +102,7 @@ log.info("-----------------------------------------------------")
 log.info(" Using xgettext to generate .py POT files")
 log.info("-----------------------------------------------------")
 
-# Generate POT for Source Code strings (i.e. strings marked with a _("translate me"))
+
 subprocess.call(r'find %s -iname "*.py" -exec xgettext -j -o %s --keyword=_ --keyword=N_ --keyword=_tr {} \;' % (
     smartedit_path, os.path.join(language_folder_path, 'SmartEdit_source.pot')), shell=True)
 
@@ -110,23 +110,23 @@ log.info("-----------------------------------------------------")
 log.info(" Using Qt's lupdate to generate .ui POT files")
 log.info("-----------------------------------------------------")
 
-# Generate POT for Qt *.ui files (which require the lupdate command, and ts2po command)
+
 os.chdir(windows_ui_path)
 subprocess.call('lupdate *.ui -ts %s' % (os.path.join(language_folder_path, 'SmartEdit_QtUi.ts')), shell=True)
 subprocess.call('lupdate *.ui -ts %s' % (os.path.join(language_folder_path, 'SmartEdit_QtUi.pot')), shell=True)
 os.chdir(language_folder_path)
 
-# Rewrite the UI POT, removing msgctxt
+
 output = open(os.path.join(language_folder_path, "clean.po"), 'w')
 for line in open(os.path.join(language_folder_path, 'SmartEdit_QtUi.pot'), 'r'):
     if not line.startswith('msgctxt'):
         output.write(line)
-# Overwrite original PO file
+
 output.close()
 shutil.copy(os.path.join(language_folder_path, "clean.po"), os.path.join(language_folder_path, 'SmartEdit_QtUi.pot'))
 os.remove(os.path.join(language_folder_path, "clean.po"))
 
-# Remove duplicates (if any found)
+
 subprocess.call('msguniq %s --use-first -o %s' % (os.path.join(language_folder_path, 'SmartEdit_QtUi.pot'),
                                                   os.path.join(language_folder_path, 'clean.po')), shell=True)
 shutil.copy(os.path.join(language_folder_path, "clean.po"), os.path.join(language_folder_path, 'SmartEdit_QtUi.pot'))
@@ -139,16 +139,16 @@ log.info("-----------------------------------------------------")
 
 temp_files = ['SmartEdit_source.pot', 'SmartEdit_glade.pot']
 for temp_file in temp_files:
-    # get the entire text
+    
     f = open(os.path.join(language_folder_path, temp_file), "r")
-    # read entire text of file
+    
     entire_source = f.read()
     f.close()
 
-    # replace charset
+    
     entire_source = entire_source.replace("charset=CHARSET", "charset=UTF-8")
 
-    # Create Updated POT Output File
+    
     if os.path.exists(os.path.join(language_folder_path, temp_file)):
         os.remove(os.path.join(language_folder_path, temp_file))
     f = open(os.path.join(language_folder_path, temp_file), "w")
@@ -161,7 +161,7 @@ log.info("-----------------------------------------------------")
 
 props = json.loads(smartedit.Clip().PropertiesJSON(1))
 
-# Loop through props
+
 effects_text = {}
 for key in props.keys():
     property = props[key]
@@ -171,25 +171,25 @@ for key in props.keys():
         for choice in property["choices"]:
             effects_text[choice["name"]] = "libsmartedit (Clip Properties)"
 
-# Loop through each libsmartedit effect
+
 objects = json.loads(smartedit.EffectInfo.Json())
 for object in objects:
     class_name = object.get("class_name")
     props = json.loads(smartedit.EffectInfo().CreateEffect(class_name).PropertiesJSON(1))
 
-    # Loop through props
+    
     for key in props.keys():
         property = props[key]
         if key == "objects":
-            continue # Skip tracker / object detection property
+            continue 
         if "name" in property:
             effects_text[property["name"]] = "libsmartedit (Effect Properties)"
         if "choices" in object:
             for choice in property["choices"]:
                 effects_text[choice["name"]] = "libsmartedit (Effect Properties)"
 
-# Append Effect Init Data
-# Loop through props
+
+
 for effect in effect_options:
     for param in effect_options[effect]:
         if "title" in param:
@@ -198,18 +198,18 @@ for effect in effect_options:
             for value in param["values"]:
                 effects_text[value["name"]] = "effect_init (Effect parameter for %s)" % effect
 
-# Append Effect Meta Data
+
 e = smartedit.EffectInfo()
 props = json.loads(e.Json())
 
-# Loop through props
+
 for effect in props:
     if "name" in effect:
         effects_text[effect["name"]] = "libsmartedit (Effect Metadata)"
     if "description" in effect:
         effects_text[effect["description"]] = "libsmartedit (Effect Metadata)"
 
-# Append LUT category and file names (for ColorMap effect)
+
 for folder in os.listdir(info.COLORS_PATH):
     category_name = folder.replace("_", " ").title()
     folder_path = os.path.join(info.COLORS_PATH, folder)
@@ -221,7 +221,7 @@ for folder in os.listdir(info.COLORS_PATH):
                 effects_text[category_name] = "ColorMap effect lookup (Category)"
                 effects_text[lut_name] = "ColorMap effect lookup (Name)"
 
-# Append Emoji Data
+
 emoji_text = { "translator-credits": "Translator credits to be translated by LaunchPad" }
 emoji_metadata_path = os.path.join(info.PATH, "emojis", "data", "openmoji-optimized.json")
 emoji_ignore_keys = ("Keyboard", "Sunset", "Key", "Right arrow", "Left arrow", "Bubbles",
@@ -230,7 +230,7 @@ emoji_ignore_keys = ("Keyboard", "Sunset", "Key", "Right arrow", "Left arrow", "
 with open(emoji_metadata_path, 'r', encoding="utf-8") as f:
     emoji_metadata = json.load(f)
 
-    # Loop through props
+    
     for filename, emoji in emoji_metadata.items():
         emoji_name = emoji["annotation"].capitalize()
         emoji_group = emoji["group"].split('-')[0].capitalize()
@@ -239,31 +239,31 @@ with open(emoji_metadata_path, 'r', encoding="utf-8") as f:
         if "group" in emoji and emoji_group not in effects_text and emoji_group not in emoji_ignore_keys:
             emoji_text[emoji_group] = "Emoji Metadata (Group Filter name)"
 
-# Loop through the Blender XML
+
 blender_text = { "translator-credits": "Translator credits to be translated by LaunchPad" }
 blender_ignore_keys = ("Title", "Alpha", "Blur", "Font Name", "Yes", "No", "On", "Off", "Default")
 for file in os.listdir(blender_path):
     if os.path.isfile(os.path.join(blender_path, file)):
-        # load xml effect file
+        
         full_file_path = os.path.join(blender_path, file)
         xmldoc = xml.parse(os.path.join(blender_path, file))
 
-        # add text to list
+        
         translation_key = xmldoc.getElementsByTagName("title")[0].childNodes[0].data
         if translation_key not in blender_ignore_keys:
             blender_text[translation_key] = full_file_path
 
-        # get params
+        
         params = xmldoc.getElementsByTagName("param")
 
-        # Loop through params
+        
         for param in params:
             if param.attributes["title"]:
                 translation_key = param.attributes["title"].value
                 if translation_key not in blender_ignore_keys:
                     blender_text[param.attributes["title"].value] = full_file_path
 
-                    # Loop through child nodes of each param
+                    
                     for child in param.childNodes:
                         if child.nodeName == "values":
                             for value in child.getElementsByTagName("value"):
@@ -272,42 +272,42 @@ for file in os.listdir(blender_path):
                                     if value_name not in blender_ignore_keys:
                                         blender_text[value_name] = full_file_path
 
-# Loop through the Export Settings XML
+
 export_text = {}
 for file in os.listdir(export_path):
     if os.path.isfile(os.path.join(export_path, file)):
-        # load xml export file
+        
         full_file_path = os.path.join(export_path, file)
         xmldoc = xml.parse(os.path.join(export_path, file))
 
-        # add text to list
+        
         export_text[xmldoc.getElementsByTagName("type")[0].childNodes[0].data] = full_file_path
         export_text[xmldoc.getElementsByTagName("title")[0].childNodes[0].data] = full_file_path
 
-# Loop through Settings
+
 settings_file = open(os.path.join(info.PATH, 'settings', '_default.settings'), 'r').read()
 settings = json.loads(settings_file)
 category_names = []
 for setting in settings:
     if "type" in setting and setting["type"] != "hidden":
-        # Add visible settings
+        
         export_text[setting["title"]] = "Settings for %s" % setting["setting"]
     if "type" in setting and setting["type"] != "hidden":
-        # Add visible category names
+        
         if setting["category"] not in category_names:
             export_text[setting["category"]] = "Settings Category for %s" % setting["category"]
             category_names.append(setting["category"])
         if "translate_values" in setting and setting.get("translate_values"):
-            # Add translatable dropdown keys
+            
             for value in setting.get("values", []):
                 export_text[value["name"]] = "Settings for %s" % setting["setting"]
 
-# Include UI Theme Names (for translation)
+
 from themes.manager import ThemeName
 for theme_name in ThemeName.get_sorted_theme_names():
     export_text[theme_name] = "User-Interface Theme Name"
 
-# Include AI model names and descriptions shown in model dropdowns.
+
 for manifest_name in ("yolo-models.json", "cutie-models.json", "efficient-sam-models.json"):
     manifest_path = os.path.join(info.RESOURCES_PATH, manifest_name)
     if not os.path.exists(manifest_path):
@@ -320,64 +320,64 @@ for manifest_name in ("yolo-models.json", "cutie-models.json", "efficient-sam-mo
         if model.get("description"):
             export_text[model["description"]] = "AI model dropdown (%s description)" % manifest_name
 
-# Loop through transitions and add to POT file
+
 transitions_text = { "translator-credits": "Translator credits to be translated by LaunchPad" }
 transitions_ignore_keys = ("Common", "Fade")
 for file in os.listdir(transitions_path):
-    # load xml export file
+    
     full_file_path = os.path.join(transitions_path, file)
     (fileBaseName, fileExtension) = os.path.splitext(file)
 
-    # get transition name
+    
     name = fileBaseName.replace("_", " ").capitalize()
 
-    # add text to list
+    
     if name not in transitions_ignore_keys:
         transitions_text[name] = full_file_path
 
-    # Look in sub-folders
+    
     for sub_file in os.listdir(full_file_path):
-        # load xml export file
+        
         full_subfile_path = os.path.join(full_file_path, sub_file)
         fileBaseName = os.path.splitext(sub_file)[0]
 
-        # split the name into parts (looking for a number)
+        
         suffix_number = None
         name_parts = fileBaseName.split("_")
         if name_parts[-1].isdigit():
             suffix_number = name_parts[-1]
 
-        # get transition name
+        
         name = fileBaseName.replace("_", " ").capitalize()
 
-        # replace suffix number with placeholder (if any)
+        
         if suffix_number:
             name = name.replace(suffix_number, "%s")
 
-        # add text to list
+        
         if name not in transitions_ignore_keys:
             transitions_text[name] = full_subfile_path
 
-# Loop through titles and add to POT file
+
 for sub_file in os.listdir(titles_path):
-    # load xml export file
+    
     full_subfile_path = os.path.join(titles_path, sub_file)
     fileBaseName = os.path.splitext(sub_file)[0]
 
-    # split the name into parts (looking for a number)
+    
     suffix_number = None
     name_parts = fileBaseName.split("_")
     if name_parts[-1].isdigit():
         suffix_number = name_parts[-1]
 
-    # get transition name
+    
     name = fileBaseName.replace("_", " ").capitalize()
 
-    # replace suffix number with placeholder (if any)
+    
     if suffix_number:
         name = name.replace(suffix_number, "%s")
 
-    # add text to list
+    
     transitions_text[name] = full_subfile_path
 
 
@@ -385,7 +385,7 @@ log.info("-----------------------------------------------------")
 log.info(" Creating the custom XML POT files")
 log.info("-----------------------------------------------------")
 
-# header of POT file
+
 header_text = ""
 header_text = header_text + '# SmartEdit Video Editor POT Template File.\n'
 header_text = header_text + '# Copyright (C) 2008-2018 SmartEdit Studios, LLC\n'
@@ -405,7 +405,7 @@ header_text = header_text + '"MIME-Version: 1.0\\n"\n'
 header_text = header_text + '"Content-Type: text/plain; charset=UTF-8\\n"\n'
 header_text = header_text + '"Content-Transfer-Encoding: 8bit\\n"\n'
 
-# Create POT files for the custom text (from our XML files)
+
 temp_files = [['SmartEdit_effects.pot', effects_text],
               ['SmartEdit_export.pot', export_text],
               ['SmartEdit_transitions.pot', transitions_text],
@@ -415,10 +415,10 @@ temp_files = [['SmartEdit_effects.pot', effects_text],
 for temp_file, text_dict in temp_files:
     f = open(temp_file, "w")
 
-    # write header
+    
     f.write(header_text)
 
-    # loop through each line of text
+    
     for k, v in text_dict.items():
         if k:
             f.write('\n')
@@ -426,7 +426,7 @@ for temp_file, text_dict in temp_files:
             f.write('msgid "%s"\n' % k)
             f.write('msgstr ""\n')
 
-    # close file
+    
     f.close()
 
 log.info("-----------------------------------------------------")
@@ -438,63 +438,63 @@ temp_files = ['SmartEdit_source.pot', 'SmartEdit_glade.pot', 'SmartEdit_effects.
               'SmartEdit_export.pot', 'SmartEdit_QtUi.pot']
 command = "msgcat"
 for temp_file in temp_files:
-    # append files
+    
     command = command + " " + os.path.join(language_folder_path, temp_file)
 command = command + " -o " + os.path.join(language_folder_path, "SmartEdit", "SmartEdit.pot")
 
 log.info(command)
 
-# merge all 4 temp POT files
+
 subprocess.call(command, shell=True)
 
 log.info("-----------------------------------------------------")
 log.info(" Create FINAL POT File from all temp POT files ")
 log.info("-----------------------------------------------------")
 
-# get the entire text of SmartEdit.POT
+
 f = open(os.path.join(language_folder_path, "SmartEdit", "SmartEdit.pot"), "r")
-# read entire text of file
+
 entire_source = f.read()
 f.close()
 
-# Create Final POT Output File
+
 if os.path.exists(os.path.join(language_folder_path, "SmartEdit", "SmartEdit.pot")):
     os.remove(os.path.join(language_folder_path, "SmartEdit", "SmartEdit.pot"))
 final = open(os.path.join(language_folder_path, "SmartEdit", "SmartEdit.pot"), "w")
 final.write(header_text)
 final.write("\n")
 
-# Move transitions POT file to final location
+
 if os.path.exists(os.path.join(language_folder_path, "SmartEdit_transitions.pot")):
     os.rename(os.path.join(language_folder_path, "SmartEdit_transitions.pot"),
               os.path.join(language_folder_path, "SmartEdit", "SmartEdit_transitions.pot"))
 
-# Move emoji POT file to final location
+
 if os.path.exists(os.path.join(language_folder_path, "SmartEdit_emojis.pot")):
     os.rename(os.path.join(language_folder_path, "SmartEdit_emojis.pot"),
               os.path.join(language_folder_path, "SmartEdit", "SmartEdit_emojis.pot"))
 
-# Move blender POT file to final location
+
 if os.path.exists(os.path.join(language_folder_path, "SmartEdit_blender.pot")):
     os.rename(os.path.join(language_folder_path, "SmartEdit_blender.pot"),
               os.path.join(language_folder_path, "SmartEdit", "SmartEdit_blender.pot"))
 
-# Trim the beginning off of each POT file
+
 start_pos = entire_source.find("#: ")
 trimmed_source = entire_source[start_pos:]
 
-# Add to Final POT File
+
 final.write(trimmed_source)
 final.write("\n")
 
-# Close final POT file
+
 final.close()
 
 log.info("-----------------------------------------------------")
 log.info(" Remove all temp POT files ")
 log.info("-----------------------------------------------------")
 
-# Delete all 4 temp files
+
 temp_files = ['SmartEdit_source.pot', 'SmartEdit_glade.pot', 'SmartEdit_effects.pot', 'SmartEdit_export.pot',
               'SmartEdit_transitions.pot', 'SmartEdit_QtUi.pot', 'SmartEdit_QtUi.ts']
 for temp_file_name in temp_files:
@@ -502,7 +502,7 @@ for temp_file_name in temp_files:
     if os.path.exists(temp_file_path):
         os.remove(temp_file_path)
 
-# output success
+
 log.info("-----------------------------------------------------")
 log.info(" The SmartEdit.pot file has been successfully created ")
 log.info(" with all text in SmartEdit.")
@@ -510,9 +510,9 @@ log.info("")
 log.info(" Checking for duplicate keys...")
 log.info("-----------------------------------------------------")
 
-# Find any duplicate translations between our 4 template files
-# If these duplicates are translated differently, we will end up
-# with conflicts, and both translations will be combined incorrectly
+
+
+
 all_strings = {}
 
 for pot_file in [

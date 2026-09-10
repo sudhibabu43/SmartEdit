@@ -65,8 +65,8 @@ class MessageBoxStyleFilter(QObject):
             button_box.layout().setSpacing(10)
             button_box.layout().setAlignment(Qt.AlignRight)
 
-        # The glossy stock question-mark icon is visually dated and adds a
-        # large empty column. Other message types retain their useful icons.
+        
+        
         if message_box.icon() == QMessageBox.Question:
             icon_label = message_box.findChild(
                 QWidget, "qt_msgboxex_icon_label")
@@ -74,9 +74,9 @@ class MessageBoxStyleFilter(QObject):
                 icon_label.hide()
                 icon_label.setMaximumSize(0, 0)
 
-            # QMessageBox reserves a spacer column between its icon and text.
-            # Collapse it along with the hidden question icon, then let the
-            # message occupy the full content width.
+            
+            
+            
             if layout:
                 spacer_item = layout.itemAtPosition(0, 1)
                 if spacer_item and spacer_item.spacerItem():
@@ -96,8 +96,8 @@ class MessageBoxStyleFilter(QObject):
             if not isinstance(button, QPushButton):
                 continue
 
-            # Standard dialog-button icons vary dramatically by platform and
-            # icon theme. Text-only actions are calmer and more consistent.
+            
+            
             button.setIcon(QIcon())
             button.setText(
                 button.text().replace("&&", "\0").replace("&", "")
@@ -122,8 +122,8 @@ class MessageBoxStyleFilter(QObject):
                 style_role = "secondary"
             button.setProperty("dialogRole", style_role)
 
-            # Dynamic properties added after construction need repolishing
-            # before their attribute selectors take effect.
+            
+            
             button.style().unpolish(button)
             button.style().polish(button)
 
@@ -237,9 +237,9 @@ QMessageBox QDialogButtonBox#qt_msgbox_buttonbox QPushButton[dialogRole="cancel"
 
         value = m.group(1).strip()
 
-        # Attempt to extract a color from the property value using
-        # a few different patterns. This allows parsing of complex
-        # properties such as "1px solid #FF0000" or "0 0 4px rgba(...)".
+        
+        
+        
         m_color = re.search(r"#([0-9a-fA-F]{3,8})", value)
         if m_color:
             return QColor("#" + m_color.group(1))
@@ -285,13 +285,13 @@ QMessageBox QDialogButtonBox#qt_msgbox_buttonbox QPushButton[dialogRole="cancel"
         for dock in self.app.window.getDocks():
             for child in dock.children():
                 if isinstance(child, QWidget):
-                    # Check filter or use all children
+                    
                     if object_name is None or child.objectName() == object_name:
                         if child.objectName().startswith("dock") and child.objectName().endswith("Contents"):
-                            # Set content margins on QDock* widget
+                            
                             child.setContentsMargins(*content_margins)
                             if child.layout() and layout_margins:
-                                # Set content margins on the QDock Layout (which has additional margins)
+                                
                                 child.layout().setContentsMargins(*layout_margins)
 
     def set_toolbar_buttons(self, toolbar, icon_size=24, settings=None):
@@ -300,19 +300,19 @@ QMessageBox QDialogButtonBox#qt_msgbox_buttonbox QPushButton[dialogRole="cancel"
         """
         from qt_api import QT_API, isdeleted
 
-        # Clear toolbar without deleting actions on PySide6
+        
         if QT_API == "pyside6":
             for action in list(toolbar.actions()):
                 toolbar.removeAction(action)
         else:
             toolbar.clear()
 
-        # Set icon size
+        
         qsize_icon = QSize(icon_size, icon_size)
         toolbar.setIconSize(qsize_icon)
 
         for setting in settings:
-            # Button settings
+            
             button_action = setting.get("action", None)
             button_icon = setting.get("icon", None)
             button_style = setting.get("style", None)
@@ -322,15 +322,15 @@ QMessageBox QDialogButtonBox#qt_msgbox_buttonbox QPushButton[dialogRole="cancel"
             expand = setting.get("expand", False)
             divide = setting.get("divide", False)
 
-            # Update button_icon to abs path (if not found)
-            # This is needed for AppImage, where the relative path is wrong
+            
+            
             if button_icon and not button_icon.startswith(":") and not os.path.exists(button_icon):
                 new_abs_path = os.path.join(PATH, button_icon)
                 if os.path.exists(new_abs_path):
                     button_icon = new_abs_path
 
             if expand:
-                # Add spacer and 'New Version Available' toolbar button (default hidden)
+                
                 spacer = QWidget(toolbar)
                 spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
                 spacer.setFocusPolicy(Qt.NoFocus)
@@ -338,7 +338,7 @@ QMessageBox QDialogButtonBox#qt_msgbox_buttonbox QPushButton[dialogRole="cancel"
                 continue
 
             if divide:
-                # Create a divider
+                
                 toolbar.addSeparator()
                 continue
 
@@ -349,7 +349,7 @@ QMessageBox QDialogButtonBox#qt_msgbox_buttonbox QPushButton[dialogRole="cancel"
                 toolbar.addWidget(widget)
                 continue
 
-            # Create button from action
+            
             if button_action:
                 if QT_API == "pyside6" and isdeleted(button_action):
                     continue
@@ -368,7 +368,7 @@ QMessageBox QDialogButtonBox#qt_msgbox_buttonbox QPushButton[dialogRole="cancel"
                     )
 
     def apply_theme(self):
-        # Apply the stylesheet to the entire application
+        
         from classes import info
         from classes.logger import log
         from qt_api import QFont, QFontDatabase
@@ -383,11 +383,11 @@ QMessageBox QDialogButtonBox#qt_msgbox_buttonbox QPushButton[dialogRole="cancel"
         self.app.setStyleSheet(self.compose_stylesheet())
         self.install_message_box_styling()
 
-        # Hide main window status bar
+        
         if hasattr(self.app, "window") and hasattr(self.app.window, "statusBar"):
             self.app.window.statusBar.hide()
 
-        # Load embedded font
+        
         font_path = os.path.join(info.IMAGES_PATH, "fonts", "Ubuntu-R.ttf")
         if os.path.exists(font_path):
             log.info("Setting font to %s", font_path)
@@ -400,18 +400,18 @@ QMessageBox QDialogButtonBox#qt_msgbox_buttonbox QPushButton[dialogRole="cancel"
             except Exception:
                 log.warning("Error setting Ubuntu-R.ttf QFont", exc_info=1)
 
-        # Load Icon theme if not set by OS
+        
         ui_util.load_icon_theme()
 
-        # Set dock widget content margins to 0
+        
         self.set_dock_margins()
 
-        # Move tabs to bottom (all dock areas, since restoreState() does not persist tab positions)
+        
         for area in (Qt.TopDockWidgetArea, Qt.BottomDockWidgetArea,
                      Qt.LeftDockWidgetArea, Qt.RightDockWidgetArea):
             self.app.window.setTabPosition(area, QTabWidget.South)
 
-        # Main toolbar buttons
+        
         toolbar_buttons = [
             {"action": self.app.window.actionNew, "style": Qt.ToolButtonIconOnly},
             {"action": self.app.window.actionOpen, "style": Qt.ToolButtonIconOnly},
@@ -428,7 +428,7 @@ QMessageBox QDialogButtonBox#qt_msgbox_buttonbox QPushButton[dialogRole="cancel"
         ]
         self.set_toolbar_buttons(self.app.window.toolBar, icon_size=24, settings=toolbar_buttons)
 
-        # Timeline toolbar buttons
+        
         timeline_buttons = [
             {"action": self.app.window.actionAddTrack, "style": Qt.ToolButtonIconOnly},
             {"divide": True},
@@ -445,7 +445,7 @@ QMessageBox QDialogButtonBox#qt_msgbox_buttonbox QPushButton[dialogRole="cancel"
         ]
         self.set_toolbar_buttons(self.app.window.timelineToolbar, icon_size=24, settings=timeline_buttons)
 
-        # Video toolbar
+        
         toolbar_buttons = [
             {"expand": True},
             {"action": self.app.window.actionJumpStart, "style": Qt.ToolButtonIconOnly},
@@ -457,10 +457,10 @@ QMessageBox QDialogButtonBox#qt_msgbox_buttonbox QPushButton[dialogRole="cancel"
         ]
         self.set_toolbar_buttons(self.app.window.videoToolbar, icon_size=24, settings=toolbar_buttons)
 
-        # Init icons from theme name
+        
         ui_util.init_ui(self.app.window)
 
-        # Emit signal
+        
         self.app.window.ThemeChangedSignal.emit(self)
 
     def install_message_box_styling(self):

@@ -68,7 +68,7 @@ class TransitionPainter(BasePainter):
         arrow = _theme_icon("themes/cosmic/images/dropdown-arrow.svg")
         self.dropdown_arrow_pix = arrow if (arrow and not arrow.isNull()) else None
         self.menu_margin = self.w.theme.menu_margin
-        # Cache of fully rendered transition pixmaps
+        
         self.transition_cache = {}
 
     def clear_cache(self):

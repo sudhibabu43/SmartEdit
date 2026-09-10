@@ -29,10 +29,10 @@ from typing import Any, Dict
 
 from qt_api import QColor
 
-# Mapping of effect class names (the "type" field in serialised effect JSON)
-# to their representative colours.  Keys must match the value of the "type"
-# field returned by libsmartedit's Effect.Json() — which is always the
-# CamelCase class name with no spaces (e.g. "ColorShift", not "Color Shift").
+
+
+
+
 _EFFECT_COLORS: Dict[str, str] = {
     "AnalogTape":         "#907600",
     "Bars":               "#4d7bff",

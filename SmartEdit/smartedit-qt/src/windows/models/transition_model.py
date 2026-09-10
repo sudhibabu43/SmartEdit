@@ -33,7 +33,7 @@ from qt_api import (
 )
 from qt_api import QIcon, QStandardItemModel, QStandardItem
 from qt_api import QMessageBox
-import smartedit  # Python module for libsmartedit (required video editing module installed separately)
+import smartedit  
 
 from classes import info
 from classes.logger import log
@@ -89,34 +89,34 @@ class TransitionFilterProxyModel(QSortFilterProxyModel):
         """Filter for common transitions and text filter"""
 
         if get_app().window.actionTransitionsShowCommon.isChecked():
-            # Fetch the group name
-            index = self.sourceModel().index(sourceRow, 2, sourceParent)  # group name column
-            group_name = self.sourceModel().data(index)  # group name (i.e. common)
+            
+            index = self.sourceModel().index(sourceRow, 2, sourceParent)  
+            group_name = self.sourceModel().data(index)  
 
-            # Fetch the transitions name
-            index = self.sourceModel().index(sourceRow, 0, sourceParent)  # transition name column
-            trans_name = self.sourceModel().data(index)  # transition name (i.e. Fade In)
+            
+            index = self.sourceModel().index(sourceRow, 0, sourceParent)  
+            trans_name = self.sourceModel().data(index)  
 
-            # Return, if regExp match in displayed format.
+            
             return group_name == "common" and self.filterRegExp().indexIn(trans_name) >= 0
 
-        # Continue running built-in parent filter logic
+        
         return super(TransitionFilterProxyModel, self).filterAcceptsRow(sourceRow, sourceParent)
 
     def lessThan(self, left, right):
         """Sort with both group name and transition name"""
-        leftData = left.data(self.sortRole())  # Transition name (or other role data)
+        leftData = left.data(self.sortRole())  
         rightData = right.data(self.sortRole())
-        leftGroup = left.sibling(left.row(), 2).data()  # group column
+        leftGroup = left.sibling(left.row(), 2).data()  
         rightGroup = right.sibling(right.row(), 2).data()
 
         return leftGroup <= rightGroup and leftData < rightData
 
     def mimeData(self, indexes):
-        # Create MimeData for drag operation
+        
         data = QMimeData()
 
-        # Create list from requested transition indexes
+        
         items = []
         for proxy_index in indexes:
             if not proxy_index.isValid():
@@ -144,7 +144,7 @@ class TransitionFilterProxyModel(QSortFilterProxyModel):
         data.setHtml("transition")
         log.debug("Transition drag payload items: %d", len(items))
 
-        # Return Mimedata
+        
         return data
 
 
@@ -155,18 +155,18 @@ class TransitionsModel(QObject):
         log.info("updating transitions model.")
         app = get_app()
 
-        # Translations
+        
         _ = app._tr
 
-        # Clear all items
+        
         if clear:
             self.model_paths = {}
             self.model.clear()
 
-        # Add Headers
+        
         self.model.setHorizontalHeaderLabels([_("Thumb"), _("Name")])
 
-        # get a list of files in the SmartEdit /transitions directory
+        
         transitions_dir = os.path.join(info.PATH, "transitions")
         common_dir = os.path.join(transitions_dir, "common")
         extra_dir = os.path.join(transitions_dir, "extra")
@@ -179,7 +179,7 @@ class TransitionsModel(QObject):
              "files": os.listdir(extra_dir)},
         ]
 
-        # Add optional user-defined transitions folder
+        
         if (os.path.exists(info.TRANSITIONS_PATH) and os.listdir(info.TRANSITIONS_PATH)):
             transition_groups.append(
                 {"type": "user",
@@ -196,53 +196,53 @@ class TransitionsModel(QObject):
                 path = os.path.join(dir, filename)
                 fileBaseName = os.path.splitext(filename)[0]
 
-                # Skip hidden files (such as .DS_Store, etc...)
+                
                 if filename[0] == "." or "thumbs.db" in filename.lower():
                     continue
 
-                # split the name into parts (looking for a number)
+                
                 suffix_number = None
                 name_parts = fileBaseName.split("_")
                 if name_parts[-1].isdigit():
                     suffix_number = name_parts[-1]
 
-                # get name of transition
+                
                 trans_name = fileBaseName.replace("_", " ").capitalize()
 
-                # replace suffix number with placeholder (if any)
+                
                 if suffix_number:
                     trans_name = trans_name.replace(suffix_number, "%s")
                     trans_name = self.app._tr(trans_name) % QLocale().toString(int(suffix_number))
                 else:
                     trans_name = self.app._tr(trans_name)
 
-                # Check for thumbnail path (in build-in cache)
+                
                 thumb_path = os.path.join(info.IMAGES_PATH, "cache", "{}.png".format(fileBaseName))
 
-                # Check built-in cache (if not found)
+                
                 if not os.path.exists(thumb_path):
-                    # Check user folder cache
+                    
                     thumb_path = os.path.join(info.CACHE_PATH, "{}.png".format(fileBaseName))
 
-                # Generate thumbnail (if needed)
+                
                 if not os.path.exists(thumb_path):
 
                     try:
-                        # Reload this reader
+                        
                         clip = smartedit.Clip(path)
                         reader = clip.Reader()
 
-                        # Open reader
+                        
                         reader.Open()
 
-                        # Save thumbnail
+                        
                         reader.GetFrame(0).Thumbnail(thumb_path, 98, 64, os.path.join(info.IMAGES_PATH, "mask.png"),
                                                      "", "#000", True, "png", 85)
                         reader.Close()
                         clip.Close()
 
                     except Exception:
-                        # Handle exception
+                        
                         log.debug('Invalid transition image file %s', filename, exc_info=1)
                         msg = QMessageBox()
                         msg.setText(_("{} is not a valid transition file.".format(filename)))
@@ -251,11 +251,11 @@ class TransitionsModel(QObject):
 
                 row = []
 
-                # Load icon (using display DPI)
+                
                 icon = QIcon()
                 icon.addFile(thumb_path)
 
-                # Append thumbnail
+                
                 col = QStandardItem()
                 col.setIcon(icon)
                 col.setText(trans_name)
@@ -265,7 +265,7 @@ class TransitionsModel(QObject):
                 col.setAccessibleText(trans_name)
                 row.append(col)
 
-                # Append Filename
+                
                 col = QStandardItem("Name")
                 col.setData(trans_name, Qt.DisplayRole)
                 col.setText(trans_name)
@@ -273,26 +273,26 @@ class TransitionsModel(QObject):
                 col.setAccessibleText(trans_name)
                 row.append(col)
 
-                # Append Media Type
+                
                 col = QStandardItem("Type")
                 col.setData(type, Qt.DisplayRole)
                 col.setText(type)
                 col.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsUserCheckable | Qt.ItemIsDragEnabled)
                 row.append(col)
 
-                # Append Path
+                
                 col = QStandardItem("Path")
                 col.setData(path, Qt.DisplayRole)
                 col.setText(path)
                 col.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsUserCheckable | Qt.ItemIsDragEnabled)
                 row.append(col)
 
-                # Append ROW to MODEL (if does not already exist in model)
+                
                 if path not in self.model_paths:
                     self.model.appendRow(row)
                     self.model_paths[path] = QPersistentModelIndex(row[3].index())
 
-        # Emit signal when model is updated
+        
         self.ModelRefreshed.emit()
 
     def _sync_tree_to_list_selection(self, selected, deselected):
@@ -332,16 +332,16 @@ class TransitionsModel(QObject):
             self._syncing_selection = False
 
     def __init__(self, *args):
-        # Init QObject superclass
+        
         super().__init__(*args)
 
-        # Create standard model
+        
         self.app = get_app()
         self.model = QStandardItemModel()
         self.model.setColumnCount(4)
         self.model_paths = {}
 
-        # Create proxy model (for sorting and filtering) - used by TreeView
+        
         self.proxy_model = TransitionFilterProxyModel()
         self.proxy_model.setDynamicSortFilter(True)
         self.proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
@@ -349,24 +349,24 @@ class TransitionsModel(QObject):
         self.proxy_model.setSourceModel(self.model)
         self.proxy_model.setSortLocaleAware(True)
 
-        # Create single-column proxy for ListView (wraps proxy_model for accessibility)
+        
         self.list_proxy_model = SingleColumnProxyModel()
         self.list_proxy_model.setSourceModel(self.proxy_model)
 
-        # Create selection models for each view
+        
         self.selection_model = QItemSelectionModel(self.proxy_model)
         self.list_selection_model = QItemSelectionModel(self.list_proxy_model)
 
-        # Sync selections between the two selection models
+        
         self._syncing_selection = False
         self.selection_model.selectionChanged.connect(self._sync_tree_to_list_selection)
         self.list_selection_model.selectionChanged.connect(self._sync_list_to_tree_selection)
 
-        # Attempt to load model testing interface, if requested
-        # (will only succeed with Qt 5.11+)
+        
+        
         if info.MODEL_TEST:
             try:
-                # Create model tester objects
+                
                 from qt_api import QAbstractItemModelTester
                 self.model_tests = []
                 for m in [self.proxy_model, self.model]:

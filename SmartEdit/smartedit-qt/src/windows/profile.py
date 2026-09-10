@@ -28,7 +28,7 @@
 import os
 import functools
 
-import smartedit  # Python module for libsmartedit (required video editing module installed separately)
+import smartedit  
 
 from qt_api import QTimer
 from qt_api import QDialog, QSizePolicy, QDialogButtonBox
@@ -43,45 +43,45 @@ from windows.views.profiles_treeview import ProfilesTreeView
 class Profile(QDialog):
     """ Choose Profile Dialog """
 
-    # Path to ui file
+    
     ui_path = os.path.join(info.PATH, 'windows', 'ui', 'profile.ui')
 
     def __init__(self, initial_profile_desc=None):
 
-        # Create dialog class
+        
         super().__init__()
 
-        # Load UI from designer & init
+        
         ui_util.load_ui(self, self.ui_path)
         ui_util.init_ui(self)
 
-        # get translations
+        
         _ = get_app()._tr
 
-        # Pause playback
+        
         get_app().window.PauseSignal.emit()
 
-        # Track metrics
+        
         track_metric_screen("profile-screen")
 
-        # Keep track of starting selection
+        
         self.initial_index = 0
 
-        # Set up the buttons
+        
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.okButton = self.buttonBox.button(QDialogButtonBox.Ok)
         self.cancelButton = self.buttonBox.button(QDialogButtonBox.Cancel)
 
-        # Set object names (for theme styles)
+        
         self.okButton.setObjectName("acceptButton")
         self.cancelButton.setObjectName("cancelButton")
         self.layout().addWidget(self.buttonBox)
 
-        # Connect the buttons
+        
         self.okButton.clicked.connect(self.accept)
         self.cancelButton.clicked.connect(self.reject)
 
-        # Loop through profiles
+        
         self.profile_list = []
         self.project_profile = None
         self.selected_profile = None
@@ -92,7 +92,7 @@ class Profile(QDialog):
                 if os.path.isdir(profile_path):
                     continue
                 try:
-                    # Load Profile
+                    
                     profile = smartedit.Profile(profile_path)
                     if profile_folder == info.USER_PROFILES_PATH:
                         profile.path = profile_path
@@ -104,23 +104,23 @@ class Profile(QDialog):
                         self.project_index = len(self.profile_list)
                         self.setWindowTitle(f'{_("Choose Profile")} [{profile.info.description}]')
 
-                    # Add description of Profile to list
+                    
                     self.profile_list.append(profile)
 
                 except RuntimeError as e:
                     log.warning("Failed to parse file '%s' as a profile: %s" % (profile_path, e))
 
-        # Create treeview
+        
         self.profileListView = ProfilesTreeView(self, self.profile_list)
         self.profileListView.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.verticalLayout.insertWidget(1, self.profileListView)
 
-        # Select project profile (if any)
+        
         if self.project_profile:
             model_index = self.profileListView.profiles_model.proxy_model.index(self.project_index, 1)
             self.profileListView.select_profile(model_index)
 
-        # Connect signals
+        
         self.txtProfileFilter.textChanged.connect(self.profileListView.refresh_view)
         self.txtProfileFilter.textChanged.connect(self.profileListView.refresh_view)
         self.profileListView.FilterCountChanged.connect(self.profileCountChanged)
@@ -138,22 +138,22 @@ class Profile(QDialog):
 
     def accept(self):
         """ Ok button clicked """
-        # Get selected profile
+        
         profile = self.profileListView.get_profile()
         if profile:
-            # New profile selected
+            
             self.selected_profile = profile
             super(Profile, self).accept()
         else:
-            # No profile or same as current project
+            
             self.reject()
 
     def closeEvent(self, event):
         """Signal for closing Profile window"""
-        # Invoke the close button
+        
         self.reject()
 
     def reject(self):
         """Window closed without choosing a new profile"""
-        # Close dialog
+        
         super(Profile, self).reject()

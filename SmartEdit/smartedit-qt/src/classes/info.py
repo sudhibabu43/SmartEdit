@@ -40,15 +40,15 @@ COMPANY_NAME = "SmartEdit Studios, LLC"
 COPYRIGHT = "(c) 2008-{} {}".format(strftime("%Y"), COMPANY_NAME)
 CWD = os.getcwd()
 
-# Application paths
-PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))  # Primary smartedit folder
+
+PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))  
 RESOURCES_PATH = os.path.join(PATH, "resources")
 PROFILES_PATH = os.path.join(PATH, "profiles")
 IMAGES_PATH = os.path.join(PATH, "images")
 EXPORT_PRESETS_PATH = os.path.join(PATH, "presets")
 COLORS_PATH = os.path.join(PATH, "colors")
 
-# User paths
+
 HOME_PATH = os.path.join(os.path.expanduser("~"))
 USER_PATH = os.path.join(HOME_PATH, ".smartedit_qt")
 BACKUP_PATH = os.path.join(USER_PATH)
@@ -70,12 +70,12 @@ PROTOBUF_DATA_PATH = os.path.join(USER_PATH, "protobuf_data")
 YOLO_PATH = os.path.join(USER_PATH, "yolo")
 CLIPBOARD_PATH = os.path.join(USER_PATH, "clipboard")
 PROXY_PATH = os.path.join(USER_PATH, "optimized")
-# User files
+
 BACKUP_FILE = os.path.join(BACKUP_PATH, "backup.osp")
 USER_DEFAULT_PROJECT = os.path.join(USER_PATH, "default.osp")
 LEGACY_DEFAULT_PROJECT = USER_DEFAULT_PROJECT.replace(".osp", ".project")
 
-# Back up "default" values for user paths
+
 _path_defaults = {
     k: v for k, v in locals().items()
     if k.endswith("_PATH")
@@ -85,54 +85,54 @@ _path_defaults = {
 try:
     from qt_api import QSize
 
-    # UI Thumbnail settings
+    
     LIST_ICON_SIZE = QSize(100, 65)
     LIST_GRID_SIZE = LIST_ICON_SIZE + QSize(5, 25)
     TREE_ICON_SIZE = QSize(75, 49)
     EMOJI_ICON_SIZE = QSize(75, 75)
     EMOJI_GRID_SIZE = EMOJI_ICON_SIZE + QSize(5, 25)
-    # Runtime emoji selections
+    
     EMOJI_FILES = {}
     EMOJI_PATH = ""
     EMOJI_ICON = ""
 except ImportError:
-    # Fail gracefully if we're running without Qt (e.g. CI tasks)
+    
     print("Failed to import `qt_api.QSize` (ignoring exception)")
 
-# Maintainer details, for packaging
+
 JT = {"name": "Jonathan Thomas",
       "email": "jonathan@smartedit.org",
       "website": "http://smartedit.org/developers/jonathan"}
 
-# Desktop launcher ID, for Linux
+
 DESKTOP_ID = "org.smartedit.SmartEdit.desktop"
 
-# Blender minimum version required (a string value)
+
 BLENDER_MIN_VERSION = "5.0"
 
-# Data-model debugging enabler
+
 MODEL_TEST = False
 
-# Default/initial logging levels
+
 LOG_LEVEL_FILE = 'INFO'
 LOG_LEVEL_CONSOLE = 'INFO'
 
-# Sentry.io error & transaction reporting rate (0.0 TO 1.0)
-# 0.0 = no error reporting to Sentry
-# 0.5 = 1/2 of errors reported to Sentry
-# 1.0 = all errors reporting to Sentry
-#    ERROR: Exceptions sent to Sentry
-#    TRANS: Transactions sent to Sentry
-#    STABLE: If this version matches the current version (reported on smartedit.org)
-#    UNSTABLE: If this version does not match the current version (reported on smartedit.org)
-#    STABLE_VERSION: This is the current stable release reported by smartedit.org
+
+
+
+
+
+
+
+
+
 ERROR_REPORT_RATE_STABLE = 0.0
 ERROR_REPORT_RATE_UNSTABLE = 0.0
 TRANS_REPORT_RATE_STABLE = 0.0
 TRANS_REPORT_RATE_UNSTABLE = 0.0
 ERROR_REPORT_STABLE_VERSION = None
 
-# Languages
+
 CMDLINE_LANGUAGE = None
 CURRENT_LANGUAGE = 'en_US'
 SUPPORTED_LANGUAGES = ['en_US']
@@ -145,7 +145,7 @@ except ImportError:
     print("Compiled translation resources missing!")
     print(f"Loading translations from: {language_path}")
 
-# Compile language list from :/locale resource
+
 try:
     from qt_api import QDir
     langdir = QDir(language_path)
@@ -154,11 +154,11 @@ try:
         QDir.NoDotAndDotDot | QDir.Files,
         sort=QDir.Name)
     for trpath in trpaths:
-        # Extract everything between "Smartedit_" and ".qm"
+        
         lang=trpath[trpath.find('_')+1:-3]
         SUPPORTED_LANGUAGES.append(lang)
 except ImportError:
-    # Fail gracefully if we're running without Qt (e.g. CI tasks)
+    
     print("Failed to import `qt_api.QDir` (ignoring exception)")
 
 SETUP = {
@@ -186,7 +186,7 @@ SETUP = {
                         "  * 3D animation (titles and simulations)\n"
                         "  * Upload videos (YouTube and Vimeo supported)",
 
-    # see http://pypi.python.org/pypi?%3Aaction=list_classifiers
+    
     "classifiers": [
                        "Development Status :: 5 - Production/Stable",
                        "Environment :: X11 Applications",
@@ -200,7 +200,7 @@ SETUP = {
                        "Topic :: Multimedia :: Video :: Non-Linear Editor", ] +
                    ["Natural Language :: " + language for language in SUPPORTED_LANGUAGES],
 
-    # Automatic launch script creation
+    
     "entry_points": {
         "gui_scripts": [
             "smartedit-qt = smartedit_qt.launch:main"
@@ -215,7 +215,7 @@ def setup_userdirs():
         if not os.path.exists(os.fsencode(folder)):
             os.makedirs(folder, exist_ok=True)
 
-    # Migrate USER_DEFAULT_PROJECT from former name
+    
     if all([
         os.path.exists(LEGACY_DEFAULT_PROJECT),
         not os.path.exists(USER_DEFAULT_PROJECT),

@@ -80,11 +80,11 @@ class SmartEditApp(QApplication):
         self.errors = []
 
         try:
-            # Import modules
+            
             from classes import info
             from classes.logger import log, reroute_output
 
-            # Log the session's start
+            
             if self.mode != "unittest":
                 import time
                 log.info("-" * 48)
@@ -96,7 +96,7 @@ class SmartEditApp(QApplication):
             from classes import settings, project_data, updates, sentry
             import smartedit
 
-            # Re-route stdout and stderr to logger
+            
             if self.mode != "unittest":
                 reroute_output()
 
@@ -107,7 +107,7 @@ class SmartEditApp(QApplication):
                 "Import Error",
                 "Module: %(name)s\n\n%(tb)s" % {"name": ex.name, "tb": tb},
                 level="error"))
-            # Stop launching
+            
             raise
         except Exception:
             log.error('SmartEditApp::Init Error', exc_info=1)
@@ -115,9 +115,9 @@ class SmartEditApp(QApplication):
 
         self.info = info
 
-        # Log some basic system info
+        
         self.log = log
-        # Clear any stale override cursor (can suppress widget cursors in some Qt bindings)
+        
         try:
             while QApplication.overrideCursor():
                 QApplication.restoreOverrideCursor()
@@ -127,33 +127,33 @@ class SmartEditApp(QApplication):
         if self.mode != "unittest":
             self.check_libsmartedit_version(info, smartedit)
 
-        # Init data objects
+        
         self.settings = settings.SettingStore(parent=self)
         self.settings.load()
         self.project = project_data.ProjectDataStore()
         self.updates = updates.UpdateManager()
-        # It is important that the project is the first listener if the key gets update
+        
         self.updates.add_listener(self.project)
         self.updates.reset()
 
-        # Set location of SmartEdit program (for libsmartedit)
+        
         smartedit.Settings.Instance().PATH_SMARTEDIT_INSTALL = info.PATH
 
-        # Set BABL extensions path
+        
         babl_ext_path = os.path.join(info.PATH, "lib", "babl-ext")
         log.info(f"checking babl_ext_path: {babl_ext_path}")
         if os.path.exists(babl_ext_path):
             os.environ["BABL_PATH"] = babl_ext_path
             log.info(f"setting BABL_PATH: {babl_ext_path}")
 
-        # Check to disable sentry
+        
         if self.mode == "unittest" or not self.settings.get('send_metrics'):
             sentry.disable_tracing()
 
-        # Empty window
+        
         self.window = None
 
-        # Instantiate Theme Manager (Singleton)
+        
         from themes.manager import ThemeManager
         self.theme_manager = ThemeManager(self)
 
@@ -172,7 +172,7 @@ class SmartEditApp(QApplication):
             log.info("python version: %s" % platform.python_version())
             log.info("qt binding: %s (Qt %s, binding %s)" % (QT_API, QT_VERSION_STR, BINDING_VERSION_STR))
 
-            # Look for frozen version info
+            
             version_path = os.path.join(info.PATH, "settings", "version.json")
             if os.path.exists(version_path):
                 with open(version_path, "r", encoding="UTF-8") as f:
@@ -230,21 +230,21 @@ class SmartEditApp(QApplication):
         info = self.info
         log = self.log
 
-        # Init translation system
+        
         language.init_language()
         sentry.set_tag("locale", info.CURRENT_LANGUAGE)
 
-        # Test for permission issues (and display message if needed)
+        
         try:
             log.debug("Testing write access to user directory")
-            # Create test paths
+            
             TEST_PATH_DIR = os.path.join(info.USER_PATH, 'PERMISSION')
             TEST_PATH_FILE = os.path.join(TEST_PATH_DIR, 'test.osp')
             os.makedirs(TEST_PATH_DIR, exist_ok=True)
             with open(TEST_PATH_FILE, 'w') as f:
                 f.write('{}')
                 f.flush()
-            # Delete test paths
+            
             os.unlink(TEST_PATH_FILE)
             os.rmdir(TEST_PATH_DIR)
         except PermissionError as ex:
@@ -258,53 +258,53 @@ class SmartEditApp(QApplication):
                 level="error",
             ))
 
-        # Display any outstanding startup messages
+        
         self.show_errors()
 
-        # Start libsmartedit logging thread
+        
         self.logger_libsmartedit = logger_libsmartedit.LoggerLibSmartEdit()
         self.logger_libsmartedit.start()
 
-        # Track which dockable window received a context menu
+        
         self.context_menu_object = None
 
-        # Create main window
+        
         from windows.main_window import MainWindow
         log.debug("Creating main interface window")
         self.window = MainWindow()
 
-        # Check for gui launch failures
+        
         if self.mode == "quit":
             self.window.close()
             return False
 
-        # Clear undo/redo history
+        
         self.window.updateStatusChanged(False, False)
 
-        # Connect our exit signals
+        
         self.aboutToQuit.connect(self.cleanup)
 
-        # Show the main window using the state restored from saveGeometry().
+        
         self._show_main_window(self.window)
 
-        # On Android, prompt for All Files Access once the window is visible so
-        # the permission is in place before the user first taps Import Files.
+        
+        
         QTimer.singleShot(500, request_android_storage_permission_if_needed)
 
         args = self.args
         if len(args) < 2:
-            # Recover backup file (this can't happen until after the Main Window has completely loaded)
+            
             self.window.RecoverBackup.emit()
             return True
 
         log.info('Process command-line arguments: %s', args[1:])
 
-        # Auto load project if passed as argument
+        
         if args[1].endswith(".osp"):
             self.window.OpenProjectSignal.emit(args[1])
             return True
 
-        # Start a new project and auto import any media files
+        
         self.project.load("")
         for arg in args[1:]:
             self.window.filesView.add_file(arg)

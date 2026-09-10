@@ -44,7 +44,7 @@ def _calculate_retime_metrics(clip, new_end, pfps):
     if new_dur_s <= 0:
         return None
 
-    # Frame snapping and derived X domain
+    
     new_dur_frames = max(1, int(round(new_dur_s * pfps)))
     new_dur_s = new_dur_frames / pfps
     new_end_s = start_s + new_dur_s
@@ -113,7 +113,7 @@ def _reverse_time_points(points):
 
     pivot = min(x_values) + max(x_values)
 
-    # Preserve original order to keep segment interpolation mapping intact.
+    
     orig_points = sorted(points, key=lambda p: p.get("co", {}).get("X", 0))
 
     mirrored = []
@@ -130,9 +130,9 @@ def _reverse_time_points(points):
                 new_point["handle_right"] = hl
         mirrored.append(new_point)
 
-    # Move per-segment interpolation with its segment. In libsmartedit the interpolation
-    # lives on the destination point, so when reversing we shift each interpolation one
-    # point backward to follow the same segment in the new order.
+    
+    
+    
     for idx in range(len(mirrored) - 1):
         mirrored[idx]["interpolation"] = orig_points[idx + 1].get("interpolation", smartedit.LINEAR)
     if mirrored:
@@ -165,7 +165,7 @@ def _finalize_time_points(time_points, start_x, new_end_x):
     domain_end = int(new_end_x)
     count = len(time_points)
 
-    # Normalize all X values into the clip domain
+    
     normalized = []
     for point in time_points:
         co = point.setdefault("co", {})
@@ -177,17 +177,17 @@ def _finalize_time_points(time_points, start_x, new_end_x):
             snapped_x = domain_end
         normalized.append(snapped_x)
 
-    # Clamp endpoints to the domain bounds
+    
     normalized[0] = domain_start
     normalized[-1] = domain_end
 
-    # Ensure the sequence is non-decreasing from start to end
+    
     for index in range(1, count):
         prev = normalized[index - 1]
         if normalized[index] <= prev:
             normalized[index] = min(domain_end, prev + 1)
 
-    # Make sure there is enough room remaining for trailing points
+    
     for index in range(count - 2, -1, -1):
         remaining = count - index - 1
         max_allowed = domain_end - remaining
@@ -201,7 +201,7 @@ def _finalize_time_points(time_points, start_x, new_end_x):
     normalized[0] = domain_start
     normalized[-1] = domain_end
 
-    # Final forward pass to clean up any residual overlap
+    
     for index in range(1, count):
         if normalized[index] <= normalized[index - 1]:
             normalized[index] = min(domain_end, normalized[index - 1] + 1)

@@ -1307,8 +1307,8 @@ class RecordingPreviewTests(unittest.TestCase):
             overlay.mouseMoveEvent(FakeMouseEvent())
             overlay.mouseReleaseEvent(FakeMouseEvent())
 
-        # The returned rectangle is in native gdigrab pixels, not the
-        # 150%-scaled Qt coordinate space, and it cannot escape Screen 2.
+        
+        
         self.assertEqual(overlay.selected_geometry(), (3990, 150, 3690, 2010))
 
     def test_windows_region_overlay_matches_high_dpi_qt_screen(self):

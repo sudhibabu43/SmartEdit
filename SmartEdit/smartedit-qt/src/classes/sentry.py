@@ -43,7 +43,7 @@ try:
 except ModuleNotFoundError:
     sdk = None
 
-# seconds required between errors
+
 min_error_freq = 1
 last_send_time = None
 last_event_message = None
@@ -54,7 +54,7 @@ def init_tracing():
         log.info('No sentry_sdk module detected (error reporting is disabled)')
         return
 
-    # Determine sample rate for errors & transactions
+    
     sample_rate = 0.0
     traces_sample_rate = 0.0
     if info.VERSION == info.ERROR_REPORT_STABLE_VERSION:
@@ -78,7 +78,7 @@ def init_tracing():
         global last_send_time
         global last_event_message
 
-        # Prevent rapid errors
+        
         current_time = datetime.datetime.now()
         if last_send_time:
             time_since_send = (current_time - last_send_time).total_seconds()
@@ -86,7 +86,7 @@ def init_tracing():
                 log.debug("Report prevented: Recent error reported")
                 return None
 
-        # Prevent repeated errors
+        
         event_message = event.\
             get("logentry", {"message": None}).\
             get("message", None)
@@ -94,15 +94,15 @@ def init_tracing():
             log.debug("Report prevented: Same as last Error")
             return None
 
-        # This error will send. Update the last time and last message
+        
         log.debug("Sending Error")
         last_send_time = current_time
         last_event_message = event_message
         return event
 
-    # Sentry is optional. If transport setup fails due to a broken host
-    # environment (for example malformed proxy variables), continue startup
-    # without telemetry instead of crashing the entire application.
+    
+    
+    
     try:
         sdk.init(
             "https://21496af56ab24e94af8ff9771fbc1600@o772439.ingest.sentry.io/5795985",

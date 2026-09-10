@@ -25,7 +25,7 @@
  along with SmartEdit Library.  If not, see <http://www.gnu.org/licenses/>.
  """
 
-import smartedit  # Python module for libsmartedit (required video editing module installed separately)
+import smartedit  
 from qt_api import QTimer
 
 from classes.updates import UpdateInterface
@@ -41,7 +41,7 @@ class TimelineSync(UpdateInterface):
         self.window = window
         project = self.app.project
 
-        # Get some settings from the project
+        
         fps = project.get("fps")
         width = project.get("width")
         height = project.get("height")
@@ -49,7 +49,7 @@ class TimelineSync(UpdateInterface):
         channels = project.get("channels")
         channel_layout = project.get("channel_layout")
 
-        # Create an instance of a libsmartedit Timeline object
+        
         self.timeline = smartedit.Timeline(width, height, smartedit.Fraction(fps["num"], fps["den"]),
                                           sample_rate, channels, channel_layout)
         self.timeline.info.channel_layout = channel_layout
@@ -60,27 +60,27 @@ class TimelineSync(UpdateInterface):
         self.timeline.info.sample_rate = sample_rate
         self.timeline.info.channels = channels
 
-        # Open the timeline reader
+        
         self.timeline.Open()
 
-        # Add self as listener to project data updates (at the beginning of the list)
-        # This listener will receive events before others.
+        
+        
         self.app.updates.add_listener(self, 0)
 
-        # Connect to signal
+        
         self.window.MaxSizeChanged.connect(self.MaxSizeChangedCB)
 
     def changed(self, action):
         """ This method is invoked by the UpdateManager each time a change happens (i.e UpdateInterface) """
 
-        # Ignore changes that don't affect libsmartedit
+        
         if action and len(action.key) >= 1 and action.key[0].lower() in ["files", "history", "markers", "layers", "scale", "profile", "export_settings"]:
             return
 
-        # Enter edit mode for property updates — disable caching until the user seeks or plays.
-        # Only "update" actions represent manual property edits; structural changes like
-        # inserting/deleting clips should not interrupt caching. Also skip during playback
-        # so live property tweaks don't kill an in-progress cache fill.
+        
+        
+        
+        
         if action and action.type == "update":
             try:
                 is_playing = self.window.preview_thread.player.Mode() == smartedit.PLAYBACK_PLAY
@@ -92,34 +92,34 @@ class TimelineSync(UpdateInterface):
         try:
             proxy_service = getattr(self.window, "proxy_service", None)
             if action.type == "load":
-                # Clear any selections in UI (since we are clearing the timeline)
+                
                 self.window.clearSelections()
 
-                # Clear any existing clips & effects (free memory)
+                
                 self.timeline.Close()
                 self.timeline.Clear()
 
-                # This JSON is initially loaded to libsmartedit to update the timeline
+                
                 payload = action.json(only_value=True)
                 if proxy_service:
                     payload = proxy_service.rewrite_json_for_preview(payload)
                 self.timeline.SetJson(payload)
-                self.timeline.Open()  # Re-Open the Timeline reader
+                self.timeline.Open()  
 
-                # The timeline's profile changed, so update all clips
+                
                 self.timeline.ApplyMapperToClips()
 
-                # Always seek back to frame 1
+                
                 self.window.SeekSignal.emit(1, True)
 
-                # Refresh current frame (since the entire timeline was updated)
+                
                 if getattr(self.window, "_project_loading", False):
                     self.window._pending_project_open_refresh = True
                 else:
                     self.window.refreshFrameSignal.emit()
 
             else:
-                # This JSON DIFF is passed to libsmartedit to update the timeline
+                
                 payload = action.json(is_array=True)
                 if proxy_service:
                     payload = proxy_service.rewrite_json_for_preview(payload)
@@ -129,7 +129,7 @@ class TimelineSync(UpdateInterface):
             log.error("Error applying JSON to timeline object in libsmartedit: %s. %s" %
                      (e, action.json(is_array=True)))
 
-        # Cache stays off — re-enabled when the user seeks or starts playback
+        
 
     def MaxSizeChangedCB(self, new_size):
         """Callback for max sized change (i.e. max size of video widget)"""
@@ -143,7 +143,7 @@ class TimelineSync(UpdateInterface):
             self.window._pending_preview_size = new_size
             return
 
-        # Increase based on DPI
+        
         device_pixel_ratio = self.window.devicePixelRatioF()
         scaled_width = round(new_size.width() * device_pixel_ratio)
         scaled_height = round(new_size.height() * device_pixel_ratio)
@@ -158,7 +158,7 @@ class TimelineSync(UpdateInterface):
 
         log.info(f"Adjusting max size of preview image: {scaled_width}x{scaled_height}")
 
-        # Set new max video size (Based on preview widget size and display scaling)
+        
         previous_preview_width = self.timeline.preview_width
         previous_preview_height = self.timeline.preview_height
 
@@ -168,14 +168,14 @@ class TimelineSync(UpdateInterface):
             previous_preview_width != self.timeline.preview_width
             or previous_preview_height != self.timeline.preview_height
         ):
-            # Clear timeline preview cache (since our video size has changed)
+            
             self.timeline.ClearAllCache(True)
 
             if getattr(self.window, "_project_loading", False):
                 self.window._pending_project_open_refresh = True
                 return
 
-            # Refresh current frame (since the entire timeline was updated)
+            
             self.window.refreshFrameSignal.emit()
 
     def GetLastFrame(self):

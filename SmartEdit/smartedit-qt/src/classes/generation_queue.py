@@ -83,8 +83,8 @@ class _GenerationWorker(QObject):
     @staticmethod
     def _allow_unfiltered_output_fallback(template_id):
         template_id = str(template_id or "").strip().lower()
-        # Track-object templates intentionally have multiple save nodes
-        # (mask/debug + final), so we must not relax save-node filtering.
+        
+        
         if template_id in (
             "video-blur-anything-sam2",
             "video-mask-anything-sam2",
@@ -167,7 +167,7 @@ class _GenerationWorker(QObject):
         comfy_url = request.get("comfy_url")
         workflow = request.get("workflow")
         client_id = request.get("client_id") or "smartedit-qt"
-        timeout_s = int(request.get("timeout_s") or 86400)  # default 24 hours safety cap
+        timeout_s = int(request.get("timeout_s") or 86400)  
         save_node_ids = list(request.get("save_node_ids") or [])
         template_id = str(request.get("template_id") or "")
         cancel_event = request.get("cancel_event")
@@ -208,7 +208,7 @@ class _GenerationWorker(QObject):
                     cancel_ok = False
                     cancel_errors = []
 
-                    # Retry cancellation a few times and verify prompt no longer appears in Comfy queue.
+                    
                     for attempt in range(1, 181):
                         try:
                             cancel_ok = client.cancel_prompt(prompt_id) or cancel_ok
@@ -227,7 +227,7 @@ class _GenerationWorker(QObject):
                             if isinstance(history_entry, dict):
                                 status_obj = history_entry.get("status", {}) if isinstance(history_entry, dict) else {}
                                 status_str = str(status_obj.get("status_str", "")).lower()
-                                # Comfy commonly marks interrupted runs as failed/error in history.
+                                
                                 if status_str in ("error", "failed"):
                                     cancel_ok = True
                                     log.debug(
@@ -315,19 +315,19 @@ class _GenerationWorker(QObject):
                             self._job_prompts.pop(job_id, None)
                             self.job_finished.emit(job_id, True, False, "", image_outputs)
                             return
-                        # Meta batch uses follow-up prompts under the same client_id.
-                        # Keep polling progress/queue while waiting for follow-up prompt outputs.
+                        
+                        
                     else:
                         image_outputs = ComfyClient.extract_file_outputs(history_entry, save_node_ids=save_node_ids)
                         if (not image_outputs) and save_node_ids and self._allow_unfiltered_output_fallback(template_id):
-                            # Fallback for workflows whose output node ids shift or emit non-standard keys.
+                            
                             image_outputs = ComfyClient.extract_file_outputs(history_entry, save_node_ids=None)
                         self.progress_changed.emit(job_id, 100)
                         self._job_prompts.pop(job_id, None)
                         self.job_finished.emit(job_id, True, False, "", image_outputs)
                         return
 
-                # Query ComfyUI's live progress values when available.
+                
                 try:
                     ws_progress_emitted = False
                     now = monotonic()
@@ -352,7 +352,7 @@ class _GenerationWorker(QObject):
 
                     if ws_client is not None:
                         try:
-                            # Accept progress from follow-up prompts as well (meta-batch).
+                            
                             progress_event = ws_client.poll_progress(prompt_id=None)
                         except Exception:
                             progress_event = None
@@ -380,9 +380,9 @@ class _GenerationWorker(QObject):
                             raw_max = float(progress_event.get("max", 0.0))
                             progress_type = str(progress_event.get("type", ""))
                             progress_node = str(progress_event.get("node", ""))
-                            # Some workflows emit near-complete progress bursts at startup
-                            # (e.g. tiny setup nodes), then reset to sampler progress.
-                            # Ignore those bootstrap spikes for a short window.
+                            
+                            
+                            
                             if (
                                 (not accepted_progress_started)
                                 and progress >= 95
@@ -466,9 +466,9 @@ class _GenerationWorker(QObject):
                                 next_stale_reconnect_s,
                             )
                             ws_stale_reconnect_s = next_stale_reconnect_s
-                    # Use HTTP /progress only when websocket progress is unavailable.
-                    # If websocket is connected but temporarily quiet, keep waiting for WS
-                    # instead of spamming a misleading 404 fallback warning.
+                    
+                    
+                    
                     if ws_client is None:
                         progress_data = client.progress()
                         if progress_data is None:
@@ -525,20 +525,20 @@ class _GenerationWorker(QObject):
                                 last_progress_signature = progress_signature
                             last_contact_time = monotonic()
                 except Exception:
-                    # Keep polling history and queue even if /progress is unavailable.
+                    
                     now_log = monotonic()
                     if (now_log - last_network_error_log_time) > 8.0:
                         log.debug("Comfy progress poll failed for job=%s", job_id, exc_info=True)
                         last_network_error_log_time = now_log
 
-                # Check queue to avoid timing out long-running but active jobs.
+                
                 in_queue = False
                 try:
                     queue_data = client.queue() or {}
                     in_queue = ComfyClient.prompt_in_queue(prompt_id, queue_data)
                     last_contact_time = monotonic()
                 except Exception:
-                    # If queue check fails, do not penalize the job immediately.
+                    
                     in_queue = True
                     now_log = monotonic()
                     if (now_log - last_network_error_log_time) > 8.0:
@@ -572,7 +572,7 @@ class _GenerationWorker(QObject):
                         )
                         last_network_error_log_time = now_log
 
-                # If prompt vanished from queue for an extended period and still no history, treat as failure.
+                
                 if (now - last_in_queue_time) > 600:
                     self._job_prompts.pop(job_id, None)
                     self.job_finished.emit(

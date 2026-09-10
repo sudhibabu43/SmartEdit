@@ -41,18 +41,18 @@ class Animation(QDialog):
     ui_path = os.path.join(info.PATH, 'windows', 'ui', 'animation.ui')
 
     def __init__(self):
-        # Create dialog class
+        
         super().__init__()
 
-        # Load UI from designer
+        
         ui_util.load_ui(self, self.ui_path)
 
-        # Init Ui
+        
         ui_util.init_ui(self)
 
-        # get translations
+        
         self.app = get_app()
         _ = self.app._tr
 
-        # Track metrics
+        
         track_metric_screen("animation-screen")

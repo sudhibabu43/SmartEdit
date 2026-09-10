@@ -139,15 +139,15 @@ class TimelineWidgetBase(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        # Enable drag and drop
+        
         self.new_item = None
         self.item_type = None
         self.setAcceptDrops(True)
 
-        # Translate object
+        
         _ = get_app()._tr
 
-        # Init default values
+        
         self.leftHandle = None
         self.rightHandle = None
         self.centerHandle = None
@@ -199,7 +199,7 @@ class TimelineWidgetBase(QWidget):
         self.keyframe_panel_row_spacing = 4.0
         self.keyframe_panel_padding = 6.0
 
-        # Wheel scrolling helpers
+        
         self._pending_hscroll_delta = 0.0
         self._hscroll_timer = QTimer(self)
         self._hscroll_timer.setSingleShot(True)
@@ -209,7 +209,7 @@ class TimelineWidgetBase(QWidget):
         self._vscroll_timer.setSingleShot(True)
         self._vscroll_timer.timeout.connect(self._flush_pending_vertical_scroll)
 
-        # Wheel zoom helpers
+        
         self._zoom_emit_timer = QTimer(self)
         self._zoom_emit_timer.setSingleShot(True)
         self._zoom_emit_timer.setInterval(50)
@@ -221,17 +221,17 @@ class TimelineWidgetBase(QWidget):
         self._zoom_playhead_anchor = None
         self._zoom_anchor_locked = False
 
-        # Internal flag to defer repaint scheduling from changed()
+        
         self._suspend_changed_update = 0
 
-        # Guard against re-entrant paintEvent calls
+        
         self._in_paint_event = False
         self._repaint_after_paint = False
 
-        # Strong references to dynamically created state transitions
+        
         self._transitions = []
 
-        # Geometry constants
+        
         self.ruler_height = 40
         self.track_name_width = 140
         self.scroll_bar_thickness = 12
@@ -244,7 +244,7 @@ class TimelineWidgetBase(QWidget):
         self._project_resize_min_duration = 0.0
         self._project_resize_keep_right = False
 
-        # Drag/selection helpers
+        
         self.selection_rect = QRectF()
         self.box_selecting = False
         self.box_start = QPointF()
@@ -263,13 +263,13 @@ class TimelineWidgetBase(QWidget):
         self._pending_transition_menu_target = None
         self._pending_transition_menu_press_pos = None
         self._pending_transition_menu_dragged = False
-        self._last_click_pos = None          # (position, layer) stored for SHIFT+Click range selection
-        self._ctrl_just_selected_id = None   # ID of clip just CTRL-added; guards against double-click toggle
+        self._last_click_pos = None          
+        self._ctrl_just_selected_id = None   
         self._ctrl_just_selected_time = 0.0
-        self._ctrl_just_deselected_id = None # ID of clip just CTRL-removed; guards against double-click re-add
+        self._ctrl_just_deselected_id = None 
         self._ctrl_just_deselected_time = 0.0
 
-        # Resize / timing helpers
+        
         self.enable_timing = False
         self.enable_snapping = True
         self.enable_razor = False
@@ -282,22 +282,22 @@ class TimelineWidgetBase(QWidget):
         self._timing_original_start = 0.0
         self._fixed_cursor = None
 
-        # Cached Qt text flags
+        
         self._clip_text_flags = Qt.AlignLeft | Qt.AlignTop
 
-        # Track toolbar interaction state
+        
         self._toolbar_hover_key = None
         self._toolbar_pressed_key = None
         self._toolbar_pressed_inside = False
 
-        # Frames per second float value
+        
         fps_info = get_app().project.get("fps")
         self.fps_float = float(fps_info.get("num", 24)) / float(fps_info.get("den", 1) or 1)
 
-        # Theme settings
+        
         self.theme = DEFAULT_THEME
 
-        # Thumbnail helpers
+        
         self.thumbnail_style = self._load_thumbnail_style()
         self.thumbnail_generation = 0
         self._suspend_thumbnail_requests = False
@@ -309,7 +309,7 @@ class TimelineWidgetBase(QWidget):
         self._viewport_thumbnail_reset_timer.setInterval(150)
         self._viewport_thumbnail_reset_timer.timeout.connect(self._apply_viewport_thumbnail_reset)
 
-        # Helpers for geometry, snapping and painting
+        
         self.geometry = Geometry(self)
         self.snap = SnapHelper(self, self.geometry)
         self.bg_painter = BackgroundPainter(self)
@@ -329,12 +329,12 @@ class TimelineWidgetBase(QWidget):
             type=Qt.QueuedConnection,
         )
 
-        # In-place editor for the painted playhead time in the ruler header.
+        
         self.playhead_time_editor = TimecodeLineEdit(self)
         self.playhead_time_editor.frameCommitted.connect(self._commit_playhead_time_edit)
         self.playhead_time_editor.editCanceled.connect(self._cancel_playhead_time_edit)
 
-        # Keyframe helpers
+        
         self._keyframe_markers = []
         self._keyframe_marker_offsets = (None, None)
         self._keyframes_dirty = True
@@ -356,10 +356,10 @@ class TimelineWidgetBase(QWidget):
         self._snap_active_targets = {}
         self._press_marker = None
 
-        # Apply default theme
+        
         self.apply_theme("")
 
-        # Load icon (using display DPI)
+        
         self.cursors = {}
         cursor_fallbacks = {
             "move": Qt.SizeAllCursor,
@@ -376,55 +376,55 @@ class TimelineWidgetBase(QWidget):
         self.cursors["razor"] = self._load_razor_cursor()
         self.cursors["razor"] = self._load_razor_cursor()
 
-        # Init Qt widget's properties (background repainting, etc...)
+        
         super().setAttribute(Qt.WA_OpaquePaintEvent)
         super().setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        # Add self as listener to project data updates (used to update the timeline)
+        
         get_app().updates.add_listener(self)
 
-        # Set mouse tracking
+        
         self.setMouseTracking(True)
 
-        # Get a reference to the window object
+        
         self.win = get_app().window
         self.win.ThemeChangedSignal.connect(self.apply_theme)
 
-        # Connect zoom functionality
+        
         self.win.TimelineScrolled.connect(self.update_scrollbars)
         self.win.TimelineScroll.connect(self.set_scroll_left)
         self.win.TimelineZoom.connect(self._apply_external_zoom)
 
         self.win.TimelineResize.connect(self.delayed_resize_callback)
 
-        # Connect Selection signals
+        
         self.win.SelectionChanged.connect(self.handle_selection)
 
-        # Show Property timer
-        # Timer to use a delay before sending MaxSizeChanged signals (so we don't spam libsmartedit)
+        
+        
         self.delayed_size = None
         self.delayed_resize_timer = QTimer(self)
         self.delayed_resize_timer.setInterval(100)
         self.delayed_resize_timer.setSingleShot(True)
         self.delayed_resize_timer.timeout.connect(self.delayed_resize_callback)
 
-        # Initial geometry setup
+        
         self.changed(None)
 
-        # State machine for mouse interactions
+        
         self.events = TimelineEvents(self)
         self._last_event = None
         self._press_hit = None
         self._buildStateMachine()
 
-        # Effect icon hit targets (populated by the clip painter)
+        
         self._effect_icon_rects = []
         self._clip_text_rects = []
         self._transition_text_rects = []
         self._track_title_rects = []
         self._hover_tooltip_text = ""
 
-        # Middle-mouse panning helpers
+        
         self._middle_panning = False
         self._middle_pan_anchor = QPointF()
         self._middle_pan_scroll_start = [0.0, 0.0, 0.0, 0.0]
@@ -556,7 +556,7 @@ class TimelineWidgetBase(QWidget):
         keydrag.exited.connect(lambda: self._safe_disconnect(self.events.moved, self._keyframeMove))
         self._add_simple_transition(keydrag, self.events, self._event_signal_bytes("released"), idle)
 
-        # repaint exactly once when any interactive state exits
+        
         for s in (drag, resize, playhead, boxsel, keydrag):
             s.exited.connect(self.update)
 
@@ -750,8 +750,8 @@ class TimelineWidgetBase(QWidget):
         pixmap = QPixmap(asset_path)
         if pixmap.isNull():
             return QCursor(Qt.CrossCursor)
-        # Match the web timeline hotspot, which uses the asset's top-left
-        # corner as the active cursor position.
+        
+        
         hot_x = 0
         hot_y = min(2, max(0, pixmap.height() - 1))
         return QCursor(pixmap, hot_x, hot_y)
@@ -850,7 +850,7 @@ class TimelineWidgetBase(QWidget):
     def apply_theme(self, theme=None):
         """Apply a TimelineTheme instance to this widget."""
         if not isinstance(theme, TimelineTheme):
-            # ThemeChangedSignal passes the Qt theme instance — just refresh painters.
+            
             self._theme_changed()
             return
 
@@ -899,30 +899,30 @@ class TimelineWidgetBase(QWidget):
     def get_html(self):
         """Compatibility placeholder for legacy timeline integration hooks."""
 
-    # This method is invoked by the UpdateManager each time a change happens (i.e UpdateInterface)
+    
     def changed(self, action):
-        # Ignore changes that don't affect this
+        
         if action and len(action.key) >= 1 and action.key[0].lower() in ["files", "history", "profile"]:
             return
 
         fps_info = get_app().project.get("fps")
         self.fps_float = float(fps_info.get("num", 24)) / float(fps_info.get("den", 1) or 1)
 
-        # Invalidate caches and geometry
+        
         win = getattr(self, "win", None)
         if getattr(win, "_trim_refresh_pending", False):
-            # Keep thumbnail/fallback caches during trim commit to avoid a blank flicker
-            # while new thumbnails are still being generated.
+            
+            
             self.clip_painter.clear_render_cache(drop_preview=False)
         else:
             self.clip_painter.clear_render_cache()
         self.transition_painter.clear_cache()
         self.geometry.mark_dirty()
 
-        # Some trim/retime commits intentionally leave preview overrides alive
-        # for exactly one backend-driven refresh. This avoids rebuilding
-        # keyframes/geometry against committed data while stale preview state is
-        # still being torn down.
+        
+        
+        
+        
         preserve_overrides = (
             getattr(self, "_preserve_overrides_once", False)
             or getattr(self, "_preserve_overrides_during_batch", False)
@@ -934,18 +934,18 @@ class TimelineWidgetBase(QWidget):
             self._pending_clip_overrides.clear()
             self._pending_transition_overrides.clear()
 
-        # Skip panel property rebuild during an active keyframe drag
-        # to prevent stale point references.
+        
+        
         if not self._dragging_panel_keyframes and not self._dragging_keyframe:
             self._update_track_panel_properties()
         self.geometry.ensure()
         self._keyframes_dirty = True
         self._snap_keyframe_seconds = []
 
-        # Mirror some attributes for compatibility
+        
         self.track_list = self.geometry.track_list
 
-        # Schedule repaint unless updates are currently suspended
+        
         if self._suspend_changed_update <= 0:
             self.update()
 
@@ -971,9 +971,9 @@ class TimelineWidgetBase(QWidget):
             if not get_app().window.timeline:
                 return
 
-            # Skip panel property rebuild during an active keyframe drag
-            # to prevent stale point references (the drag writes
-            # pending_seconds directly to the cached point dicts).
+            
+            
+            
             if not self._dragging_panel_keyframes and not self._dragging_keyframe:
                 signature = self._panel_current_signature()
                 if signature != self._panel_refresh_signature:
@@ -1325,14 +1325,14 @@ class TimelineWidgetBase(QWidget):
                 mime_html = "clip"
             else:
                 urls = mime.urls()
-                # Wrap file import + clip creation + auto-transitions in a single
-                # transaction so a single Undo reverts everything.
+                
+                
                 os_drop_tid = str(uuid.uuid4())
                 self.win.files_model.process_urls(
                     urls, import_quietly=True, prevent_image_seq=True,
                     transaction_id=os_drop_tid,
                 )
-                # process_urls preserves our transaction when given a transaction_id
+                
                 for uri in urls:
                     for f in File.filter(path=uri.toLocalFile()):
                         file_ids.append(f.id)
@@ -1390,11 +1390,11 @@ class TimelineWidgetBase(QWidget):
                 if clip:
                     pos.setX(pos.x() + (clip.get("end", 0.0) - clip.get("start", 0.0)))
 
-        # Close the OS-drop transaction (file import + clip + auto-transition)
+        
         if os_drop_tid:
             get_app().updates.transaction_id = None
 
-        # Auto-select newly added clips/transitions
+        
         self._select_added_items("transition" if mime_html == "transition" else "clip")
 
         self._reset_drag_preview()
@@ -1782,15 +1782,15 @@ class TimelineWidgetBase(QWidget):
             return
         for idx, item_id in enumerate(self.item_ids):
             self.win.addSelection(str(item_id), item_type, clear_existing=(idx == 0))
-        # A timeline drop should leave timeline items as the sole active selection,
-        # so Delete removes the new clip/transition and not project files.
+        
+        
         files_model = getattr(self.win, "files_model", None)
         if files_model:
             files_model.selection_model.clearSelection()
             files_model.list_selection_model.clearSelection()
         self.setFocus(Qt.OtherFocusReason)
-        # Geometry was already rebuilt by changed() before the selection was
-        # set, so mark it dirty so the next repaint reflects the new state.
+        
+        
         self.geometry.mark_dirty()
 
     def _invalidate_drag_preview_cache(self):
@@ -1869,7 +1869,7 @@ class TimelineWidgetBase(QWidget):
             if drag_transaction_id:
                 get_app().updates.transaction_id = None
 
-        # Auto-select newly added clips/transitions
+        
         preview_type = "clip"
         if self._drag_preview_items and self._drag_preview_items[0].get("type") == "transition":
             preview_type = "transition"
@@ -1908,8 +1908,8 @@ class TimelineWidgetBase(QWidget):
             prevent_image_seq=True,
             transaction_id=os_drop_tid,
         )
-        # The caller-provided transaction remains active; close it now and
-        # reopen only when committing clip creation on drop.
+        
+        
         get_app().updates.transaction_id = None
 
         file_ids = []
@@ -1980,9 +1980,9 @@ class TimelineWidgetBase(QWidget):
             view_w = float(self.scrollbar_position[3] or 0.0)
             view_h = float(self.v_scrollbar_position[3] or 0.0)
 
-        # Preserve the existing zoom factor and update the visible range instead of
-        # recomputing zoom from the viewport size. This keeps manual zoom choices
-        # intact when the dock is resized.
+        
+        
+        
         self.pixels_per_second = tick_pixels / float(self.zoom_factor or 1.0)
         timeline_w = project_duration * self.pixels_per_second
         self.scrollbar_position[2] = timeline_w
@@ -2015,7 +2015,7 @@ class TimelineWidgetBase(QWidget):
         self.update()
         get_app().window.TimelineScrolled.emit(list(self.scrollbar_position))
 
-    # Capture wheel event to alter zoom/scale of widget
+    
     def wheelEvent(self, event):
         if event.modifiers() & Qt.ControlModifier:
             delta = event.pixelDelta().y() if not event.pixelDelta().isNull() else event.angleDelta().y()
@@ -2045,7 +2045,7 @@ class TimelineWidgetBase(QWidget):
             delta = -horizontal_delta / 120.0
             self._pending_hscroll_delta += delta
             if not self._hscroll_timer.isActive():
-                # Process accumulated wheel events once the event queue is flushed
+                
                 self._hscroll_timer.start(0)
             event.accept()
             return
@@ -2056,20 +2056,20 @@ class TimelineWidgetBase(QWidget):
                 if delta:
                     self._pending_hscroll_delta += delta
                     if not self._hscroll_timer.isActive():
-                        # Process accumulated wheel events once the event queue is flushed
+                        
                         self._hscroll_timer.start(0)
                 event.accept()
             else:
                 event.ignore()
             return
 
-        # Vertical scrolling
+        
         if self.v_scrollbar_position[3] > 0 and self.v_scrollbar_position[2] > self.v_scrollbar_position[3]:
             delta = -event.angleDelta().y() / 120.0
             if delta:
                 self._pending_vscroll_delta += delta
                 if not self._vscroll_timer.isActive():
-                    # Process accumulated wheel events once the event queue is flushed
+                    
                     self._vscroll_timer.start(0)
             event.accept()
         else:
@@ -2192,7 +2192,7 @@ class TimelineWidgetBase(QWidget):
     def _update_scrollbar_handles(self):
         """Recompute scrollbar handle rectangles from the current positions."""
 
-        # Horizontal scrollbar handle
+        
         view_w = float(self.scrollbar_position[3] or 0.0)
         if view_w <= 0.0:
             view_w = max(0.0, self.width() - self.track_name_width - self.scroll_bar_thickness)
@@ -2222,7 +2222,7 @@ class TimelineWidgetBase(QWidget):
         else:
             self.scroll_bar_rect = QRectF()
 
-        # Vertical scrollbar handle
+        
         view_h = float(self.v_scrollbar_position[3] or 0.0)
         if view_h <= 0.0:
             view_h = max(0.0, self.height() - self.ruler_height - self.scroll_bar_thickness)
@@ -2308,7 +2308,7 @@ class TimelineWidgetBase(QWidget):
 
     def setZoomFactor(self, zoom_factor, emit=True):
         """Set the current zoom factor"""
-        # Force recalculation of clips
+        
         zoom_factor = self._clamp_zoom_factor(zoom_factor)
         self.zoom_factor = zoom_factor
         self._suspend_changed_update += 1
@@ -2317,7 +2317,7 @@ class TimelineWidgetBase(QWidget):
         finally:
             self._suspend_changed_update = max(0, self._suspend_changed_update - 1)
 
-        # Update normalized scroll width to match new zoom
+        
         project_duration = self._current_project_duration()
         view_w = self.scrollbar_position[3]
         tick_pixels = float(get_app().project.get("tick_pixels") or 100.0)
@@ -2426,14 +2426,14 @@ class TimelineWidgetBase(QWidget):
         self.h_scroll_offset = self.scrollbar_position[0] * timeline_w
         self.geometry.refresh_viewport(timeline_w=timeline_w)
 
-        # Check for empty clip rectangles
+        
         if not self.geometry.clip_entries:
             self.changed(None)
 
-        # Disable auto center
+        
         self.is_auto_center = False
 
-        # Schedule repaint
+        
         self._schedule_viewport_thumbnail_reset()
         self.update()
 
@@ -2500,7 +2500,7 @@ class TimelineWidgetBase(QWidget):
 
 
     def handle_selection(self):
-        # Force recalculation of clips and repaint
+        
         self.changed(None)
         self._keyframes_dirty = True
         self.update()
@@ -2511,7 +2511,7 @@ class TimelineWidgetBase(QWidget):
 
 
 
-    # ----- State machine helper methods -----
+    
 
     def _hitTest(self, pos):
         return self.geometry.hit(pos)
@@ -2533,7 +2533,7 @@ class TimelineWidgetBase(QWidget):
         if timeline:
             timeline.addSelection(item_id_str, item_type, clear_existing)
         self.win.addSelection(item_id_str, item_type, clear_existing)
-        # Selection changes affect cached clip renders and keyframe visibility.
+        
         self.clip_painter.clear_render_cache()
         self.geometry.mark_dirty()
         self._keyframes_dirty = True
@@ -2694,9 +2694,9 @@ class TimelineWidgetBase(QWidget):
         return True
 
     def _begin_pending_clip_menu_click(self, pos):
-        # Effect badges are embedded inside the title container rect, so a click
-        # on a badge would otherwise register as a pending clip-menu click.
-        # Bail early so the badge handler takes priority (same as _assign_press_target).
+        
+        
+        
         if self._effect_icon_at(pos):
             self._clear_pending_clip_menu_click()
             return False
@@ -3017,15 +3017,15 @@ class TimelineWidgetBase(QWidget):
             self.setCursor(Qt.IBeamCursor)
             return
 
-        # Playhead icon
+        
         handle_rect = self._playhead_handle_rect()
         if (self.playhead_painter.icon_pix and not handle_rect.isNull() and handle_rect.contains(pos)):
             self.setCursor(self.cursors["hand"])
             return
 
-        # Items can extend behind the fixed ruler after vertical scrolling.
-        # Preserve ruler marker interaction, but do not let obscured timeline
-        # content claim the cursor.
+        
+        
+        
         if not self._is_timeline_content_pos(pos):
             marker_entry = self._marker_at(pos)
             if marker_entry and isinstance(marker_entry, dict):
@@ -3044,7 +3044,7 @@ class TimelineWidgetBase(QWidget):
             self.setCursor(Qt.PointingHandCursor)
             return
 
-        # Transition title container (dropdown click target)
+        
         for entry in reversed(getattr(self, "_transition_text_rects", [])):
             rect = entry.get("rect") if isinstance(entry, dict) else None
             if isinstance(rect, QRectF) and rect.contains(pos):
@@ -3072,7 +3072,7 @@ class TimelineWidgetBase(QWidget):
                     self.setCursor(self.cursors.get("razor", Qt.CrossCursor))
                     return
 
-        # Clip title container (dropdown click target)
+        
         for entry in reversed(getattr(self, "_clip_text_rects", [])):
             if isinstance(entry, dict) and entry.get("open_menu"):
                 rect = entry.get("rect")
@@ -3080,7 +3080,7 @@ class TimelineWidgetBase(QWidget):
                     self.setCursor(Qt.PointingHandCursor)
                     return
 
-        # Clip/transition edges and drags (transitions prioritized)
+        
         edge = 5
         for rect, _item, _selected, _type in self.geometry.iter_items(reverse=True):
             resize_edge = self._item_resize_edge_at(rect, pos, edge=edge)
@@ -3095,7 +3095,7 @@ class TimelineWidgetBase(QWidget):
                 self.setCursor(self.cursors["hand"])
                 return
 
-        # Track title container (dropdown click target)
+        
         for _track_rect, track, name_rect in self.geometry.iter_tracks():
             mrect = self._track_menu_rect(name_rect, track)
             if mrect.contains(pos):
@@ -3234,8 +3234,8 @@ class TimelineWidgetBase(QWidget):
         )
 
     def _trigger_clip_title_menu(self, pos):
-        # Effect badges live inside the title container rect; they handle their
-        # own click actions so the clip menu must not fire for those positions.
+        
+        
         if self._effect_icon_at(pos):
             return False
         for entry in reversed(self._clip_text_rects):
@@ -3311,8 +3311,8 @@ class TimelineWidgetBase(QWidget):
             self._press_keyframe = marker
             self._active_keyframe_marker = marker
             clear_existing = not ctrl
-            # Preserve multi-item clip/transition selection when dragging a
-            # keyframe from an already-selected owner.
+            
+            
             if clear_existing:
                 selected_clip_ids = {
                     str(item_id) for item_id in (getattr(self.win, "selected_clips", []) or [])
@@ -3890,9 +3890,9 @@ class TimelineWidgetBase(QWidget):
         """Show appropriate context menu for the position. Returns True if handled."""
         self.geometry.ensure()
 
-        # Playhead context menu
+        
         if self._playhead_hit(pos) and hasattr(self.win, "timeline"):
-            # Convert frame number to seconds for backend API
+            
             seconds = 0.0
             if self.fps_float:
                 seconds = max(0.0, (max(1, self.current_frame) - 1) / self.fps_float)
@@ -3910,25 +3910,25 @@ class TimelineWidgetBase(QWidget):
         if not self._is_timeline_content_pos(pos):
             return False
 
-        # Transition context menu (prioritized over clips)
+        
         for rect, tran, _selected in self.geometry.iter_transitions(reverse=True):
             if rect.contains(pos) and hasattr(self.win, "timeline"):
-                # Preserve multi-selection on right-click when target is already selected.
+                
                 if not _selected:
                     self._select_timeline_item(tran.id, "transition", True)
                 self.win.timeline.ShowTransitionMenu(tran.id)
                 return True
 
-        # Clip context menu
+        
         for rect, clip, _selected in self.geometry.iter_clips(reverse=True):
             if rect.contains(pos) and hasattr(self.win, "timeline"):
-                # Preserve multi-selection on right-click when target is already selected.
+                
                 if not _selected:
                     self._select_timeline_item(clip.id, "clip", True)
                 self.win.timeline.ShowClipMenu(clip.id)
                 return True
 
-        # Track context menu
+        
         for track_rect, track, name_rect in self.geometry.iter_tracks():
             if name_rect.contains(pos) and hasattr(self.win, "timeline"):
                 self.win.timeline.ShowTrackMenu(track.id)

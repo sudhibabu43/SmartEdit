@@ -555,7 +555,7 @@
   <action name="actionExportFiles">
    <property name="icon">
     <iconset theme="media-record" resource="../../../images/smartedit.qrc">
-    <!--PLACEHOLDER ICON-->
+    
      <normaloff>:/icons/Humanity/actions/16/media-record.svg</normaloff>:/icons/Humanity/actions/16/media-record.svg</iconset>
    </property>
    <property name="text">

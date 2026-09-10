@@ -4,23 +4,23 @@ from smartedit import QtImageReader, ColorMap
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from classes.info import PATH
 
-# Path to your source JPG
+
 SOURCE = "../images/effect-background.jpg"
-# Directory of LUT sub-folders
+
 BASE_DIR = "."
-# Frame index to read/apply (1 = first frame)
+
 FRAME_NUMBER = 1
-# Output directory for generated JPEGs
+
 OUTPUT_DIR = os.path.join(PATH, "..", "doc", "images", "colors")
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# Parameters for border and text
+
 BORDER_SIZE = 5
 FONT_SIZE   = 85
 TEXT_OFFSET = 30
 
-# Load a font for overlay text
+
 try:
     FONT = ImageFont.truetype(
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
@@ -48,19 +48,19 @@ for category in sorted(os.listdir(BASE_DIR)):
         out_name  = f"{prefix}_{name_base}.jpg"
         out_path  = os.path.join(OUTPUT_DIR, out_name)
 
-        # Read the source image
+        
         reader = QtImageReader(SOURCE)
         reader.Open()
         frame = reader.GetFrame(FRAME_NUMBER)
 
-        # Apply the LUT
+        
         effect = ColorMap(cube_path)
         result = effect.GetFrame(frame, FRAME_NUMBER)
 
-        # Save downscaled JPEG at 90% quality
+        
         result.Save(out_path, 0.35, "JPG", 90)
 
-        # Add larger border and overlay larger text
+        
         try:
             img = Image.open(out_path).convert("RGB")
             bordered = ImageOps.expand(img, border=BORDER_SIZE, fill="white")
@@ -80,7 +80,7 @@ for category in sorted(os.listdir(BASE_DIR)):
 
         gallery[category].append(out_name)
 
-# Emit Sphinx-friendly gallery RST to stdout
+
 for category, images in gallery.items():
     title = category.replace("_", " ").title()
     print(title)

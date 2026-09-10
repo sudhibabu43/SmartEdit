@@ -62,13 +62,13 @@ class PromptInterpreter:
 
         prompt_clean = prompt_text.strip()
 
-        # If local SLM is preferred and enabled, attempt SLM first
+        
         if self.prefer_local_slm:
             slm_result = self._try_slm_query(prompt_clean)
             if slm_result:
                 return slm_result
 
-        # Built-in high-precision semantic NLP engine (guaranteed instant & offline)
+        
         return self._interpret_with_semantic_nlp(prompt_clean)
 
     def interpret_to_json(self, prompt_text: str, indent: int = 2) -> str:
@@ -78,44 +78,44 @@ class PromptInterpreter:
         data = self.interpret_prompt(prompt_text)
         return json.dumps(data, indent=indent, ensure_ascii=False)
 
-    # -------------------------------------------------------------------------
-    # Built-in Semantic NLP Parser
-    # -------------------------------------------------------------------------
+    
+    
+    
     def _interpret_with_semantic_nlp(self, text: str) -> Dict[str, Any]:
         """Deterministic semantic NLP intent parser."""
         t = text.lower()
 
-        # 1. Detect silence removal
+        
         remove_silence = self._detect_silence_intent(t)
 
-        # 2. Detect shaky removal
+        
         remove_shaky = self._detect_shaky_intent(t)
 
-        # 3. Detect blur removal
+        
         remove_blur = self._detect_blur_intent(t)
 
-        # 4. Target duration
+        
         target_duration = self._detect_duration(t)
 
-        # 5. Pacing
+        
         pacing = self._detect_pacing(t)
 
-        # 6. Style
+        
         style = self._detect_style(t)
 
-        # 7. Aspect ratio
+        
         aspect_ratio = self._detect_aspect_ratio(t)
 
-        # 8. Transitions
+        
         transition = self._detect_transition(t)
 
-        # 9. Music
+        
         music_settings = self._detect_music(t)
 
-        # 10. Highlights / energy
+        
         extract_highlights = bool(re.search(r"\b(highlights?|best parts?|high energy|key moments?)\b", t))
 
-        # Build actions list
+        
         actions = []
         if remove_silence:
             actions.append({
@@ -162,7 +162,7 @@ class PromptInterpreter:
                 }
             })
 
-        # Generate summary description
+        
         summary = self._generate_summary(
             remove_silence, remove_shaky, remove_blur,
             target_duration, style, pacing, aspect_ratio
@@ -189,16 +189,16 @@ class PromptInterpreter:
             },
             "audio_settings": music_settings,
             "summary": summary,
-            # Backwards-compatible flat keys for existing consumers
+            
             "style": style,
             "target_duration_sec": target_duration,
             "remove_silence": remove_silence,
             "remove_shaky": remove_shaky
         }
 
-    # -------------------------------------------------------------------------
-    # Intent Detection Helpers
-    # -------------------------------------------------------------------------
+    
+    
+    
     def _detect_silence_intent(self, text: str) -> bool:
         """Detect silence removal intention, handling negations."""
         if re.search(r"\b(don'?t|do not|never|skip)\s+(remove|cut|delete|filter)\s+silence\b", text):
@@ -245,17 +245,17 @@ class PromptInterpreter:
 
     def _detect_duration(self, text: str) -> Optional[int]:
         """Detect target duration in seconds (e.g., '30 seconds', '1 minute', '45s')."""
-        # Pattern: N minute(s)
+        
         m = re.search(r"\b(\d+(?:\.\d+)?)\s*(?:min(?:ute)?s?)\b", text)
         if m:
             return int(float(m.group(1)) * 60)
 
-        # Pattern: N second(s) or Ns
+        
         m = re.search(r"\b(\d+)\s*(?:s|sec(?:ond)?s?)\b", text)
         if m:
             return int(m.group(1))
 
-        # Common phrases
+        
         if "half minute" in text or "30 seconds" in text:
             return 30
         if "one minute" in text:
@@ -389,9 +389,9 @@ class PromptInterpreter:
             "remove_shaky": False
         }
 
-    # -------------------------------------------------------------------------
-    # Optional Local SLM Querying
-    # -------------------------------------------------------------------------
+    
+    
+    
     def _try_slm_query(self, prompt_text: str) -> Optional[Dict[str, Any]]:
         """Attempt to query a local SLM via HTTP (e.g., Ollama or local endpoint)."""
         system_instruction = (
@@ -431,7 +431,7 @@ class PromptInterpreter:
                     parsed = json.loads(response_text)
                     parsed["engine"] = "local_slm"
                     parsed["model"] = self.model
-                    # Populate compatibility flat fields
+                    
                     filters = parsed.get("filters", {})
                     parsed["remove_silence"] = filters.get("remove_silence", False)
                     parsed["remove_shaky"] = filters.get("remove_shaky", False)

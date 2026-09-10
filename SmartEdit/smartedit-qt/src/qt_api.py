@@ -24,7 +24,7 @@ def _is_android_runtime() -> bool:
     )
 
 
-# Public exports filled in after binding selection
+
 QtCore = QtGui = QtWidgets = QtSvg = None
 Signal = Slot = Property = None
 QRegularExpression = None
@@ -44,7 +44,7 @@ _shiboken_ext_load_error = None
 _smartedit_shiboken_ext = None
 if _is_android_runtime():
     try:
-        import smartedit_shiboken_ext as _smartedit_shiboken_ext  # type: ignore
+        import smartedit_shiboken_ext as _smartedit_shiboken_ext  
     except Exception as exc:
         _shiboken_ext_load_error = exc
     if _smartedit_shiboken_ext is not None:
@@ -59,22 +59,22 @@ def _load_sip_like():
         _select_binding()
     if QT_API == "pyqt6":
         try:
-            from PyQt6 import sip as sip_mod  # type: ignore
+            from PyQt6 import sip as sip_mod  
         except Exception:
             sip_mod = None
         return ("sip", sip_mod)
     if QT_API == "pyqt5":
         try:
-            from PyQt5 import sip as sip_mod  # type: ignore
+            from PyQt5 import sip as sip_mod  
         except Exception:
             try:
-                import sip as sip_mod  # type: ignore  # standalone sip (older PyQt5 builds)
+                import sip as sip_mod  
             except Exception:
                 sip_mod = None
         return ("sip", sip_mod)
     if QT_API == "pyside6":
         try:
-            import shiboken6 as shiboken_mod  # type: ignore
+            import shiboken6 as shiboken_mod  
         except Exception:
             shiboken_mod = None
         return ("shiboken", shiboken_mod)
@@ -103,8 +103,8 @@ def wrapinstance(ptr, base_type):
     if _shiboken_ext_load_error is not None:
         logger.warning("qt_api: smartedit_shiboken_ext unavailable: %s", _shiboken_ext_load_error)
     ptr_in = int(ptr)
-    # Shiboken expects a signed pointer-sized integer. If we got an unsigned
-    # 64-bit value with the high bit set, convert it to signed.
+    
+    
     if ptr_in >= (1 << 63):
         ptr_in -= (1 << 64)
     return mod.wrapInstance(ptr_in, base_type)
@@ -140,11 +140,11 @@ def clear_override_cursor():
         logger.debug("qt_api: failed to clear override cursor: %s", exc, exc_info=True)
 
 
-# Module-level references keep pickers alive until the callback fires.
+
 _active_picker = None
 _active_save_picker = None
 
-# Lazily created on the main thread; used to post callbacks from background threads.
+
 _callback_bridge = None
 
 
@@ -184,7 +184,7 @@ class _AndroidFilePicker:
     Calls on_complete([QUrl, ...]) on the Qt main thread when done.
     """
 
-    # Activity result request codes
+    
     _RC_STORAGE_PERM = 10442
     _RC_FILE_PICKER  = 10443
 
@@ -194,7 +194,7 @@ class _AndroidFilePicker:
         self._listener = None
         self._perm_listener = None
         self._mActivity = None
-        # jnius class refs stored here so open/launch/resolve all share them
+        
         self._Activity = None
         self._Intent = None
         self._OpenableColumns = None
@@ -206,12 +206,12 @@ class _AndroidFilePicker:
 
     def open(self):
         try:
-            from jnius import autoclass, PythonJavaClass, java_method  # type: ignore
+            from jnius import autoclass, PythonJavaClass, java_method  
         except Exception:
             self._on_complete([])
             return
 
-        # Store all class refs on self so they survive across method calls
+        
         self._autoclass = autoclass
         self._PythonJavaClass = PythonJavaClass
         self._java_method = java_method
@@ -224,8 +224,8 @@ class _AndroidFilePicker:
         self._File = autoclass("java.io.File")
         self._FileOutputStream = autoclass("java.io.FileOutputStream")
 
-        # On API 30+ request All Files Access so we can read files directly.
-        # On older API or if already granted, go straight to the picker.
+        
+        
         BuildVersion = autoclass("android.os.Build$VERSION")
         Environment = autoclass("android.os.Environment")
         needs_perm = (BuildVersion.SDK_INT >= 30
@@ -265,7 +265,7 @@ class _AndroidFilePicker:
                 except Exception as exc:
                     logger.debug("qt_api: failed to unregister storage permission listener: %s", exc, exc_info=True)
                 picker._perm_listener = None
-                # Open the picker regardless — user may have granted or denied
+                
                 picker._launch_picker()
 
         try:
@@ -273,7 +273,7 @@ class _AndroidFilePicker:
             self._mActivity.registerActivityResultListener(self._perm_listener)
             self._mActivity.startActivityForResult(intent, self._RC_STORAGE_PERM)
         except Exception:
-            # Some ROMs may not handle this intent; skip straight to the picker
+            
             self._perm_listener = None
             self._launch_picker()
 
@@ -339,13 +339,13 @@ class _AndroidFilePicker:
                 except Exception as exc:
                     logger.debug("qt_api: failed to read Android picker result URIs: %s", exc, exc_info=True)
 
-                # Snapshot URI strings now — jnius objects may not survive thread boundaries.
+                
                 uri_strings = [u.toString() for u in uris]
                 cache_dir = picker._mActivity.getCacheDir().getAbsolutePath()
                 on_complete = picker._on_complete
 
-                # Take persistable read+write permissions so content:// URIs remain
-                # accessible across app restarts (needed for Recent Projects save/load).
+                
+                
                 read_write = (Intent.FLAG_GRANT_READ_URI_PERMISSION
                               | Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                 for uri in uris:
@@ -354,8 +354,8 @@ class _AndroidFilePicker:
                     except Exception as exc:
                         logger.debug("qt_api: failed to persist URI permission for %s: %s", uri, exc, exc_info=True)
 
-                # The bridge was created on the Qt main thread (in show_open_file_dialog).
-                # Do NOT call _get_callback_bridge() here — this runs on the Android main thread.
+                
+                
                 bridge = _callback_bridge
 
                 import threading
@@ -407,7 +407,7 @@ class _AndroidFilePicker:
             """Return path if it is a readable local file, else None."""
             return path if (path and os.path.isfile(path) and os.access(path, os.R_OK)) else None
 
-        # --- Attempt 1: MediaStore path via document ID ---
+        
         if "com.android.providers.media.documents" in uri_str:
             try:
                 Environment = autoclass("android.os.Environment")
@@ -445,8 +445,8 @@ class _AndroidFilePicker:
             except Exception:
                 pass
 
-        # --- Attempt 2: External-storage document ID decoding ---
-        # Document ID format: "primary:relative/path" or "<uuid>:relative/path"
+        
+        
         if "com.android.externalstorage.documents" in uri_str:
             try:
                 DocumentsContract = autoclass("android.provider.DocumentsContract")
@@ -464,8 +464,8 @@ class _AndroidFilePicker:
             except Exception:
                 pass
 
-        # --- Attempt 3: Downloads document ID decoding ---
-        # Modern Android encodes the path as "raw:/absolute/path".
+        
+        
         if "com.android.providers.downloads.documents" in uri_str:
             try:
                 DocumentsContract = autoclass("android.provider.DocumentsContract")
@@ -479,7 +479,7 @@ class _AndroidFilePicker:
             except Exception:
                 pass
 
-        # --- Attempt 4: _data column query (any URI, requires MANAGE_EXTERNAL_STORAGE) ---
+        
         try:
             Environment = autoclass("android.os.Environment")
             if Environment.isExternalStorageManager():
@@ -499,7 +499,7 @@ class _AndroidFilePicker:
         except Exception:
             pass
 
-        # --- Query display name to determine file type for fallback ---
+        
         display_name = ""
         try:
             Uri = autoclass("android.net.Uri")
@@ -518,15 +518,15 @@ class _AndroidFilePicker:
 
         suffix = os.path.splitext(display_name)[1]
 
-        # --- Attempt 5: For project files without a resolvable local path ---
-        # Return the content:// URI directly; read_file_text/write_file_text handle it
-        # so saves go back to the source file (e.g. Google Drive, restricted storage).
+        
+        
+        
         if suffix.lower() == ".osp":
             return uri_str
 
-        # --- Attempt 6: Stream-copy into app cache ---
-        # Required for media files: libsmartedit needs a real filesystem path.
-        # Also used for cloud files (Google Drive) of any type.
+        
+        
+        
         import hashlib
         uri_hash = hashlib.sha1(uri_str.encode()).hexdigest()[:16]
         dest_path = os.path.join(cache_dir, f"smartedit_import_{uri_hash}{suffix}")
@@ -578,7 +578,7 @@ class _AndroidSavePicker:
 
     def open(self):
         try:
-            from jnius import autoclass, PythonJavaClass, java_method  # type: ignore
+            from jnius import autoclass, PythonJavaClass, java_method  
         except Exception:
             self._on_complete("")
             return
@@ -596,10 +596,10 @@ class _AndroidSavePicker:
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
         intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
 
-        # Use Bundle.putString to set EXTRA_TITLE — Intent.putExtra is heavily
-        # overloaded and jnius may silently pick the wrong overload when both
-        # arguments are strings (e.g. resolving to putExtra(String,Serializable)
-        # instead of putExtra(String,String)), causing the prefill to be ignored.
+        
+        
+        
+        
         extras = Bundle()
         extras.putString("android.intent.extra.TITLE", self._suggested_name)
         intent.putExtras(extras)
@@ -629,8 +629,8 @@ class _AndroidSavePicker:
                         uri = data.getData()
                         if uri is not None:
                             uri_str = uri.toString()
-                            # Enforce the required file extension.
-                            # Query the display name; rename via DocumentsContract if needed.
+                            
+                            
                             if picker._extension:
                                 try:
                                     autoclass = picker._autoclass
@@ -658,11 +658,11 @@ class _AndroidSavePicker:
                                         if new_uri is not None:
                                             uri_str = new_uri.toString()
                                 except Exception:
-                                    pass  # Keep original URI if rename fails
+                                    pass  
                     except Exception:
                         pass
 
-                # Deliver result on the Qt main thread via the callback bridge.
+                
                 bridge = _callback_bridge
                 on_complete = picker._on_complete
                 bridge.call(lambda: on_complete(uri_str))
@@ -681,7 +681,7 @@ def read_from_content_uri(uri_str):
     Returns the decoded string on success, raises IOError on failure.
     """
     try:
-        from jnius import autoclass  # type: ignore
+        from jnius import autoclass  
         PythonActivity = autoclass("org.kivy.android.PythonActivity")
         mActivity = PythonActivity.mActivity
         resolver = mActivity.getContentResolver()
@@ -712,13 +712,13 @@ def write_to_content_uri(uri_str, content):
     so the Qt main thread is never blocked by I/O.
     """
     try:
-        from jnius import autoclass  # type: ignore
+        from jnius import autoclass  
         PythonActivity = autoclass("org.kivy.android.PythonActivity")
         mActivity = PythonActivity.mActivity
         resolver = mActivity.getContentResolver()
         Uri = autoclass("android.net.Uri")
         uri_obj = Uri.parse(uri_str)
-        # "wt" mode truncates the file before writing (Android default is append).
+        
         output_stream = resolver.openOutputStream(uri_obj, "wt")
         if output_stream is None:
             raise IOError("ContentResolver returned null OutputStream for %s" % uri_str)
@@ -796,7 +796,7 @@ def request_android_storage_permission_if_needed():
     if not _is_android_runtime():
         return
     try:
-        from jnius import autoclass  # type: ignore
+        from jnius import autoclass  
         BuildVersion = autoclass("android.os.Build$VERSION")
         if BuildVersion.SDK_INT < 30:
             return
@@ -840,10 +840,10 @@ def show_open_file_dialog(parent, caption, directory, file_filter, on_complete, 
     """
     if _is_android_runtime():
         global _active_picker
-        # Create (or confirm) the bridge HERE, on the Qt main thread, so its QObject
-        # ownership belongs to the Qt event loop.  onActivityResult runs on the Android
-        # main thread — a different thread — so creating the bridge there causes queued
-        # signals to be posted to a thread with no Qt event loop (they are never delivered).
+        
+        
+        
+        
         _get_callback_bridge()
         _active_picker = _AndroidFilePicker(on_complete, allow_multiple=allow_multiple)
         _active_picker.open()
@@ -876,7 +876,7 @@ def show_save_file_dialog(parent, caption, suggested_name, mime_type, on_complet
     """
     if _is_android_runtime():
         global _active_save_picker
-        # Ensure the callback bridge is created on the Qt main thread.
+        
         _get_callback_bridge()
         _active_save_picker = _AndroidSavePicker(on_complete, suggested_name=suggested_name,
                                                   mime_type=mime_type)
@@ -901,8 +901,8 @@ def get_font_dialog_selection(initial_font=None, parent=None, title=""):
     if not callable(font_dialog_class):
         raise RuntimeError("QFontDialog is not callable")
 
-    # PySide6 has been unreliable with the static getFont() overloads here.
-    # Use an instance dialog consistently across bindings.
+    
+    
     if initial_font is None:
         dialog = font_dialog_class(parent)
     else:
@@ -922,12 +922,12 @@ def make_filter_regex(pattern: str, case_insensitive: bool = True):
         if case_insensitive:
             regex.setPatternOptions(QRegularExpression.CaseInsensitiveOption)
         return regex
-    # PyQt5 path (QRegExp)
+    
     QRegExp = getattr(QtCore, "QRegExp", None)
     if QRegExp is not None:
         cs = QtCore.Qt.CaseInsensitive if case_insensitive else QtCore.Qt.CaseSensitive
         return QRegExp(pattern, cs)
-    # Fallback to QRegularExpression if available
+    
     if QRegularExpression is not None:
         regex = QRegularExpression(pattern)
         if case_insensitive:
@@ -952,7 +952,7 @@ def get_proxy_filter_regex(proxy):
             return proxy.filterRegularExpression()
         except Exception:
             pass
-    # Fallback to legacy API if present or non-empty
+    
     return proxy.filterRegExp()
 
 
@@ -987,7 +987,7 @@ def _patch_enums_for_qt6():
         return
     QDir = getattr(QtCore, "QDir", None)
     if QDir:
-        # Filters
+        
         filt = getattr(QDir, "Filter", None) or getattr(QDir, "Filters", None)
         if filt:
             for name, val in vars(filt).items():
@@ -1001,7 +1001,7 @@ def _patch_enums_for_qt6():
 
     QLibraryInfo = getattr(QtCore, "QLibraryInfo", None)
     if QLibraryInfo:
-        # Backfill TranslationsPath constant and location() alias
+        
         lib_path_enum = getattr(QLibraryInfo, "LibraryPath", None)
         if lib_path_enum and not hasattr(QLibraryInfo, "TranslationsPath"):
             try:
@@ -1013,7 +1013,7 @@ def _patch_enums_for_qt6():
                 setattr(QLibraryInfo, "location", staticmethod(QLibraryInfo.path))
             except Exception:
                 pass
-        # Sort flags
+        
         sort = getattr(QDir, "SortFlag", None) or getattr(QDir, "SortFlags", None)
         if sort:
             for name, val in vars(sort).items():
@@ -2266,7 +2266,7 @@ def _patch_enums_for_qt6():
                     except Exception:
                         pass
 
-    # Qt6 renamed exec_() -> exec(); backfill exec_ on common classes.
+    
     def _exec_wrapper(self, *args, **kwargs):
         return self.exec(*args, **kwargs)
 
@@ -2298,9 +2298,9 @@ def _patch_enums_for_qt6():
     if not hasattr(QtCore, "QSignalTransition"):
         try:
             if QT_API == "pyqt6":
-                import PyQt6.QtStateMachine as QtStateMachineMod  # type: ignore
+                import PyQt6.QtStateMachine as QtStateMachineMod  
             else:
-                import PySide6.QtStateMachine as QtStateMachineMod  # type: ignore
+                import PySide6.QtStateMachine as QtStateMachineMod  
             q_signal_transition = getattr(QtStateMachineMod, "QSignalTransition", None)
             if q_signal_transition is not None:
                 setattr(QtCore, "QSignalTransition", q_signal_transition)
@@ -2327,7 +2327,7 @@ def _import_binding(name: str) -> Tuple:
         except Exception:
             uicMod = None
         try:
-            import PyQt6.QtStateMachine as QtStateMachineMod  # type: ignore
+            import PyQt6.QtStateMachine as QtStateMachineMod  
             q_state = getattr(QtStateMachineMod, "QState", None)
             q_state_machine = getattr(QtStateMachineMod, "QStateMachine", None)
         except Exception:
@@ -2339,7 +2339,7 @@ def _import_binding(name: str) -> Tuple:
             raise ImportError("PyQt6 QtStateMachine module not available (QState/QStateMachine missing)")
         QtSvgMod = None
         try:
-            import PyQt6.QtSvg as QtSvgMod  # type: ignore
+            import PyQt6.QtSvg as QtSvgMod  
         except Exception:
             pass
         return (
@@ -2366,7 +2366,7 @@ def _import_binding(name: str) -> Tuple:
         import PySide6.QtWidgets as QtWidgetsMod
         QtUiToolsMod = None
         try:
-            import PySide6.QtStateMachine as QtStateMachineMod  # type: ignore
+            import PySide6.QtStateMachine as QtStateMachineMod  
             q_state = getattr(QtStateMachineMod, "QState", None)
             q_state_machine = getattr(QtStateMachineMod, "QStateMachine", None)
         except Exception:
@@ -2378,7 +2378,7 @@ def _import_binding(name: str) -> Tuple:
             raise ImportError("PySide6 QtStateMachine module not available (QState/QStateMachine missing)")
         QtSvgMod = None
         try:
-            import PySide6.QtSvg as QtSvgMod  # type: ignore
+            import PySide6.QtSvg as QtSvgMod  
         except Exception:
             pass
         return (
@@ -2394,7 +2394,7 @@ def _import_binding(name: str) -> Tuple:
             q_state,
             q_state_machine,
             QtUiToolsMod,
-            QtCoreMod.__version__,  # PySide binds Qt version here
+            QtCoreMod.__version__,  
             QtCoreMod.__version__,
             QtCoreMod.__version__,
         )
@@ -2411,7 +2411,7 @@ def _import_binding(name: str) -> Tuple:
 
         QtSvgMod = None
         try:
-            import PyQt5.QtSvg as QtSvgMod  # type: ignore
+            import PyQt5.QtSvg as QtSvgMod  
         except Exception:
             pass
         return (
@@ -2445,7 +2445,7 @@ def _select_binding() -> str:
     if _FAILED_IMPORT:
         raise _FAILED_IMPORT
     if _SELECTING:
-        # Prevent recursion if an import path triggers __getattr__ again
+        
         raise ImportError("qt_api: binding selection already in progress")
     _SELECTING = True
 
@@ -2489,9 +2489,9 @@ def _select_binding() -> str:
                 )
                 if m is not None
             ]
-            # Python 3.6 does not support module-level __getattr__ (PEP 562),
-            # so expose Qt types eagerly as well as through the lazy fallback
-            # below. Preserve the same module precedence used by __getattr__.
+            
+            
+            
             for module in _MODULES:
                 for name in dir(module):
                     if not name.startswith("_"):
@@ -2504,7 +2504,7 @@ def _select_binding() -> str:
             _FAILED_IMPORT = None
             _SELECTING = False
             return QT_API
-        except Exception as ex:  # noqa: BLE001
+        except Exception as ex:  
             if requested == "auto":
                 logger.info("qt_api: skipping %s during auto-detect: %s", candidate, ex)
             else:
@@ -2531,12 +2531,12 @@ def load_ui(path: str, baseinstance=None):
         uic = import_module(f"{'PyQt6' if QT_API == 'pyqt6' else 'PyQt5'}.uic")
         return uic.loadUi(path, baseinstance)
 
-    # PySide
+    
     from importlib import import_module
 
     if QT_API != "pyside6":
         raise RuntimeError(f"Unsupported Qt binding for load_ui(): {QT_API}")
-    QtUiTools = import_module("PySide6.QtUiTools")  # type: ignore
+    QtUiTools = import_module("PySide6.QtUiTools")  
     if baseinstance is not None:
         class UiLoader(QtUiTools.QUiLoader):
             def __init__(self, base):
@@ -2653,7 +2653,7 @@ def __getattr__(name):
     global QSignalTransition, QState, QStateMachine
     if QT_API is None:
         _select_binding()
-    # Expose common QtCore symbols directly
+    
     if name in ("pyqtSignal", "Signal"):
         return Signal
     if name in ("pyqtSlot", "Slot"):
@@ -2668,9 +2668,9 @@ def __getattr__(name):
         if QState is None or QStateMachine is None:
             try:
                 if QT_API == "pyqt6":
-                    import PyQt6.QtStateMachine as QtStateMachine  # type: ignore
+                    import PyQt6.QtStateMachine as QtStateMachine  
                 elif QT_API == "pyside6":
-                    import PySide6.QtStateMachine as QtStateMachine  # type: ignore
+                    import PySide6.QtStateMachine as QtStateMachine  
                 elif QT_API == "pyqt5":
                     QtStateMachine = QtCore
                 else:
@@ -2686,11 +2686,11 @@ def __getattr__(name):
     if name == "QAbstractItemModelTester":
         try:
             if QT_API == "pyqt6":
-                import PyQt6.QtTest as QtTest  # type: ignore
+                import PyQt6.QtTest as QtTest  
             elif QT_API == "pyside6":
-                import PySide6.QtTest as QtTest  # type: ignore
+                import PySide6.QtTest as QtTest  
             elif QT_API == "pyqt5":
-                import PyQt5.QtTest as QtTest  # type: ignore
+                import PyQt5.QtTest as QtTest  
             else:
                 QtTest = None
             if QtTest is not None and hasattr(QtTest, "QAbstractItemModelTester"):
@@ -2703,7 +2703,7 @@ def __getattr__(name):
     raise AttributeError(name)
 
 
-# Select binding immediately on import for visibility
+
 ensure_binding()
 
 __all__ = [
@@ -2717,7 +2717,7 @@ __all__ = [
     "QRegularExpression",
     "QState",
     "QStateMachine",
-    # Commonly used Qt types
+    
     "QSignalTransition",
     "QState",
     "QStateMachine",

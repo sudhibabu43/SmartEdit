@@ -40,10 +40,10 @@ from qt_api import (
 )
 from qt_api import QSizePolicy, QWidget, QPushButton
 
-import smartedit  # Python module for libsmartedit (required video editing module installed separately)
+import smartedit  
 
 from classes import updates
-from classes import smartedit_rc  # noqa
+from classes import smartedit_rc  
 from classes.logger import log
 from classes.app import get_app
 from classes.query import Clip, Effect
@@ -84,17 +84,17 @@ class VideoWidget(QWidget, updates.UpdateInterface):
 
         fps = max(float(fps_float), 0.0001)
 
-        # Playhead frame is 1-indexed in UI; snap to grid by rounding
+        
         try:
             cur_f_raw = float(get_app().window.preview_thread.current_frame)
         except Exception:
             cur_f_raw = 1.0
-        # Ensure integer frame on the project grid
-        cur_f = int(round(cur_f_raw))  # already 1-indexed from preview thread
+        
+        cur_f = int(round(cur_f_raw))  
         if cur_f < 1:
             cur_f = 1
 
-        # Build selected set (clips or single transforming_clip for effects)
+        
         selected = []
         if getattr(self, "transforming_clips", None):
             selected.extend(self.transforming_clips)
@@ -134,7 +134,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
             if ce_sec < cs_sec:
                 cs_sec, ce_sec = ce_sec, cs_sec
 
-            # Snap both edges to the project frame grid (round) using your conventions
+            
             sf = int(round(cs_sec * fps)) + 1
             ef = int(round(ce_sec * fps))
             if ef < sf:
@@ -151,11 +151,11 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                             getattr(c, "id", c), exc, exc_info=True)
                 continue
 
-            # Exact inclusive test on snapped frame bounds
+            
             if sf <= cur_f <= ef:
                 return 1.0
 
-            # Outside distance in frames to the nearest boundary
+            
             if cur_f < sf:
                 d = sf - cur_f
             else:
@@ -167,7 +167,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         if min_dist_frames is None:
             return 1.0
 
-        # Convert distance to seconds for the fade (0.60 -> 0.25 over 90s)
+        
         BASE, FAR, WINDOW = 0.60, 0.25, 90.0
         min_dist_sec = float(min_dist_frames) / fps
         t = min(min_dist_sec / WINDOW, 1.0)
@@ -186,7 +186,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         ox = float(props["origin_x"]["value"])
         oy = float(props["origin_y"]["value"])
 
-        # Clip-local pivot (pre-scale) and its translated amount once clip scale is applied.
+        
         local_origin_x = sw * ox
         local_origin_y = sh * oy
         pivot_tx = local_origin_x * sx
@@ -298,13 +298,13 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                 bottom = 1.0 - top
         return left, top, right, bottom
 
-    # This method is invoked by the UpdateManager each time a change happens (i.e UpdateInterface)
+    
     def changed(self, action):
-        # Handle change
+        
         if action and (len(action.key) >= 1 and action.key[0] in [
                 "display_ratio", "pixel_ratio"
                 ] or action.type in ["load"]):
-            # Update display ratio (if found)
+            
             if action.type == "load" and action.values.get("display_ratio"):
                 self.aspect_ratio = smartedit.Fraction(
                     action.values.get("display_ratio", {}).get("num", 16),
@@ -320,7 +320,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                     "Update: Set video widget display aspect ratio to: %s",
                     self.aspect_ratio.ToFloat())
 
-            # Update pixel ratio (if found)
+            
             if action.type == "load" and action.values.get("pixel_ratio"):
                 self.pixel_ratio = smartedit.Fraction(
                     action.values.get("pixel_ratio").get("num", 1),
@@ -365,24 +365,24 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         skip_origin=False,
         muted_handles=False
     ):
-        # Corner and origin glyph on-screen sizes
+        
         cs = self.cs
         os = 12.0
 
         csx = cs / sx
         csy = cs / sy
 
-        # Accept 0.0 values; only treat None as missing
+        
         has_crop_box = (x1 is not None and y1 is not None and x2 is not None and y2 is not None)
         self.marginBoxFullBounds = QRectF(0.0, 0.0, source_width, source_height)
 
-        # Build bounds in local (clip) coords
+        
         if has_crop_box:
             self.clipBounds = QRectF(
                 QPointF(x1 * source_width, y1 * source_height),
                 QPointF(x2 * source_width, y2 * source_height)
             )
-            # Corner handles
+            
             self.topLeftHandle = QRectF(
                 x1 * source_width - (csx / 2.0),
                 y1 * source_height - (csy / 2.0),
@@ -406,7 +406,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
             self.bottomLeftHandle = QRectF(-csx / 2.0, source_height - csy / 2.0, csx, csy)
             self.bottomRightHandle = QRectF(source_width - csx / 2.0, source_height - csy / 2.0, csx, csy)
 
-        # Side handles
+        
         if has_crop_box:
             self.topHandle = QRectF(
                 ((x1 + x2) * source_width - csx) / 2.0,
@@ -430,7 +430,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
             self.leftHandle = QRectF(-csx / 2.0, (source_height - csy) / 2.0, csx, csy)
             self.rightHandle = QRectF(source_width - (csx / 2.0), (source_height - csy) / 2.0, csx, csy)
 
-        # Shear regions span the visible bounds
+        
         self.topShearHandle = QRectF(self.topLeftHandle.x(), self.topLeftHandle.y(), self.clipBounds.width(),
                                      self.topLeftHandle.height())
         self.leftShearHandle = QRectF(self.topLeftHandle.x(), self.topLeftHandle.y(), self.topLeftHandle.width(),
@@ -440,7 +440,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         self.bottomShearHandle = QRectF(self.bottomLeftHandle.x(), self.bottomLeftHandle.y(), self.clipBounds.width(),
                                         self.topLeftHandle.height())
 
-        # Pen color with global opacity applied
+        
         color_hex = "#d3d3d3" if muted_handles else "#53a0ed"
         pen_color = QColor(color_hex)
         pen_color.setAlphaF(getattr(self, "handle_opacity", 1.0))
@@ -448,7 +448,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         pen.setCosmetic(True)
         painter.setPen(pen)
 
-        # Draw outline + handles
+        
         painter.drawRects([
             self.topLeftHandle, self.topRightHandle,
             self.bottomLeftHandle, self.bottomRightHandle,
@@ -457,7 +457,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
             self.clipBounds,
         ])
 
-        # Origin glyph (hidden in crop mode; crop draws its own)
+        
         if not skip_origin:
             origin_rect = QRectF(
                 source_width * origin_x - (os / sx),
@@ -481,24 +481,24 @@ class VideoWidget(QWidget, updates.UpdateInterface):
 
     def update_title(self):
         """Update the widget title"""
-        # Translate object
+        
         _ = get_app()._tr
         rect = self.centeredViewport(self.width(), self.height())
         scale = self.devicePixelRatioF()
 
-        # Display the playback speed in widget title
+        
         speed = 0.0
         mode = self.win.preview_thread.player.Mode()
         if mode != smartedit.PLAYBACK_PAUSED:
             speed = self.win.preview_thread.player.Speed()
 
-        # Find parent dockWidget (if any)
+        
         dock = None
         if self.parent() and self.parent().parent():
-            # TODO: Find a better way to find the QDockWidget parent (if any)
+            
             dock = self.parent().parent()
         else:
-            # Not a dock widget, ignore title
+            
             return
 
         transform_label = ""
@@ -524,7 +524,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                                    "width": rect.width() * scale,
                                    "height": rect.height() * scale})
         else:
-            # Restore window title
+            
             if not speed in [1, 0, -1]:
                 dock.setWindowTitle(base_title + f" ({speed}x)")
             else:
@@ -542,13 +542,13 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         event.accept()
         self.mutex.lock()
 
-        # Ensure screen-space handle attribute exists and reset each paint
+        
         if not hasattr(self, "cropOriginHandleScreen"):
             self.cropOriginHandleScreen = None
         else:
             self.cropOriginHandleScreen = None
 
-        # Calculate "paint" FPS (and update widget title)
+        
         current_sec = time.localtime(time.time()).tm_sec
         if current_sec != self.paint_fps_sec:
             self.paint_fps = self.paint_fps_counter
@@ -558,7 +558,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         else:
             self.paint_fps_counter += 1
 
-        # Paint custom frame image on QWidget
+        
         painter = QPainter(self)
         try:
             painter.setRenderHints(
@@ -567,11 +567,11 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                 | QPainter.TextAntialiasing,
                 True)
 
-            # Background
+            
             bg_color = self.palette().color(self.backgroundRole())
             painter.fillRect(event.rect(), bg_color)
 
-            # Viewport and frame
+            
             viewport = self.centeredViewport(self.width(), self.height())
             if self.current_image:
                 pix_size = self._scaled_frame_size(self.current_image.size(), self.size())
@@ -585,11 +585,11 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                 )
                 painter.drawImage(viewport, scaled_img)
 
-            # Prep for transform UI
+            
             fps = get_app().project.get("fps")
             fps_float = float(fps["num"]) / float(fps["den"])
 
-            # Compute opacity for all transform UI this frame
+            
             self.handle_opacity = self._compute_handles_opacity(fps_float)
 
             default_props = {
@@ -602,7 +602,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                 "origin_y": {"value": 0.5},
             }
 
-            # Collect selected clips and build union rect
+            
             clip_pairs = []
             if self.transforming_clips and self.transforming_clip_objects:
                 clip_pairs = list(zip(self.transforming_clips, self.transforming_clip_objects))
@@ -627,7 +627,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
             margin_box_norm = None
             tracked_object_overlay = False
 
-            # Effect overlays
+            
             if (self.transforming_effect
                 and self.transforming_effect_object
                 and self.transforming_clip
@@ -708,23 +708,23 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                     union_rect = clip_rect
                     first_props = clip_props
 
-            # Draw handler(s)
+            
             if union_rect and first_props and not self.region_enabled:
                 x = union_rect.x()
                 y = union_rect.y()
                 sw = union_rect.width()
                 sh = union_rect.height()
 
-                # Transform: translate → translate(origin) → rotate → shear → scale → untranslate(origin)
+                
                 self.transform, unpacked, origin_screen = self._build_clip_transform(
                     x, y, sw, sh, first_props
                 )
                 sx, sy, _, _, _, ox, oy = unpacked
 
-                # On-screen pivot
+                
                 self.originHandle = origin_screen
 
-                # Draw the local-space handlers (blue or gray) with global opacity
+                
                 painter.setTransform(self.transform)
                 is_crop = crop_params is not None
                 if is_crop and crop_norm:
@@ -744,22 +744,22 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                     muted_handles=(is_crop or margin_box_norm is not None)
                 )
 
-                # Crop origin glyph (screen space; constant size; with opacity)
+                
                 if is_crop:
                     left, top, right, bottom, resize, crop_x, crop_y, frame_w, frame_h = crop_params
 
                     base_w = max(frame_w, 0.0001)
                     base_h = max(frame_h, 0.0001)
 
-                    # Map clip-space to screen-space
+                    
                     sx_factor = sw / base_w
                     sy_factor = sh / base_h
 
-                    # For origin (x,y) we want full-frame units in both modes
+                    
                     origin_w = base_w * sx_factor
                     origin_h = base_h * sy_factor
 
-                    # The crop origin represents an offset from the center of the clip's image
+                    
                     local_center = QPointF(sw / 2.0, sh / 2.0)
                     local_origin = QPointF(
                         local_center.x() - (crop_x * origin_w),
@@ -769,7 +769,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                     screen_pt = self.transform.map(local_origin)
                     painter.resetTransform()
 
-                    os = 12.0  # fixed on-screen radius
+                    os = 12.0  
                     color = QColor("#d3d3d3")
                     color.setAlphaF(self.handle_opacity)
                     pen = QPen(QBrush(color), 1.5)
@@ -791,7 +791,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                         QLineF(c - halfH, c + halfH),
                     ])
 
-            # Region selection UI (also uses global opacity)
+            
             if self.region_enabled:
                 self.region_transform = QTransform()
                 rx = viewport.x()
@@ -834,7 +834,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                         painter.setBrush(QBrush(neg_color))
                         for pt in self.region_points_negative:
                             painter.drawEllipse(pt, point_radius, point_radius)
-                    # Draw positive rectangles
+                    
                     if self.region_rects_positive:
                         rect_pos_color = QColor("#53a0ed")
                         rect_pos_color.setAlphaF(self.handle_opacity)
@@ -846,7 +846,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                             if isinstance(rect, QRectF):
                                 painter.drawRect(rect.normalized())
 
-                    # Draw negative rectangles
+                    
                     if self.region_rects_negative:
                         rect_neg_color = QColor("#e05757")
                         rect_neg_color.setAlphaF(self.handle_opacity)
@@ -858,7 +858,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                             if isinstance(rect, QRectF):
                                 painter.drawRect(rect.normalized())
 
-                    # Draw current dragging rectangle preview
+                    
                     if self.region_rect_drag_start is not None and self.region_rect_drag_current is not None:
                         drag_color = QColor("#53a0ed")
                         if str(self.region_annotation_tool or "").endswith("negative_rect"):
@@ -905,14 +905,14 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         viewport_rect = QRectF(QPointF(0, 0), viewport_size)
         pan_x, pan_y = self._clamp_pan(width=width, height=height)
         viewport_rect.moveCenter(window_rect.center() + QPointF(pan_x, pan_y))
-        # Always round up to next whole integer value
+        
         return viewport_rect.toAlignedRect()
 
     @pyqtSlot(QImage)
     def present(self, image, *args):
         """ Present the current frame """
 
-        # Calculate "render" / "present" FPS
+        
         current_sec = time.localtime(time.time()).tm_sec
         if current_sec != self.present_fps_sec:
             self.present_fps = self.present_fps_counter
@@ -921,10 +921,10 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         else:
             self.present_fps_counter += 1
 
-        # Get frame's QImage from libsmartedit
+        
         self.current_image = image
 
-        # Request an async paint to avoid recursive QWidget repaint on Windows.
+        
         self.update()
 
     def connectSignals(self, renderer):
@@ -985,7 +985,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
             elif modifiers_has(mods, Qt.ShiftModifier):
                 self.region_points_positive.append(point)
             else:
-                # Default click resets to a single positive point.
+                
                 self.region_points_positive = [point]
                 self.region_points_negative = []
             self.update()
@@ -995,7 +995,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
             point = self.region_transform_inverted.map(event.pos())
             point = self._clamp_region_point(point, include_edges=tool.endswith("_rect"))
             if bool(self.region_annotation_inherited):
-                # First edit on a carried frame should replace inherited selections.
+                
                 self.region_points_positive = []
                 self.region_points_negative = []
                 self.region_rects_positive = []
@@ -1028,7 +1028,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                 self.region_rect_drag_current = QPointF(point)
                 self.update()
 
-        # Ignore undo/redo history temporarily (to avoid a huge pile of undo/redo history)
+        
         get_app().updates.ignore_history = True
 
         if self.transforming_clips or self.transforming_effect:
@@ -1043,7 +1043,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
             self.original_clip_data_map = {}
             self.original_effect_data = None
 
-        # Disable video caching during drag operation (for performance reasons)
+        
         if not self._is_playing():
             smartedit.Settings.Instance().ENABLE_PLAYBACK_CACHING = False
         log.debug('mousePressEvent: Stop caching frames on timeline')
@@ -1084,8 +1084,8 @@ class VideoWidget(QWidget, updates.UpdateInterface):
             self.update()
             self.regionAnnotationChanged.emit()
 
-        # Save region image data (as QImage)
-        # This can be used other widgets to display the selected region
+        
+        
         if (
             self.region_enabled
             and self.region_selection_mode not in ("point", "annotate")
@@ -1103,22 +1103,22 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                 self._apply_scope_region_rect(region_rect, emit_signal=True, enforce_min=True)
                 region_rect = self._scope_region_rect()
 
-            # Get region coordinates
+            
             mapped_region_rect = self.region_transform.mapToPolygon(region_rect.toRect()).boundingRect()
 
-            # Render a scaled version of the region (as a QImage)
-            # TODO: Grab higher quality pixmap from the QWidget, as this method seems to be 1/2 resolution
-            # of the original QWidget video element.
+            
+            
+            
             scale = 3.0
 
-            # Map rect to transform (for scaling video elements)
+            
             mapped_region_rect = QRect(
                 mapped_region_rect.x(),
                 mapped_region_rect.y(),
                 int(mapped_region_rect.width() * scale),
                 int(mapped_region_rect.height() * scale))
 
-            # Render QWidget onto scaled QImage
+            
             self.region_qimage = QImage(
                 mapped_region_rect.size(), QImage.Format_RGBA8888)
             region_painter = QPainter(self.region_qimage)
@@ -1142,10 +1142,10 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         self.region_press_outside = False
         self.scope_region_drag_anchor = None
 
-        # Inform UpdateManager to accept updates, and only store our final update
+        
         get_app().updates.ignore_history = False
 
-        # Record history for all transformed clips
+        
         for clip in self.transforming_clips:
             original = self.original_clip_data_map.get(clip.id)
             if original:
@@ -1159,7 +1159,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
             get_app().updates.transaction_id = self.transaction_id
             get_app().updates.apply_last_action_to_history(self.original_effect_data)
 
-        # Clear transaction and data
+        
         get_app().updates.transaction_id = None
         get_app().updates.ignore_history = False
         self.original_clip_data = None
@@ -1182,7 +1182,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         return QCursor(rotated_pixmap)
 
     def checkTransformMode(self, rotation, shear_x, shear_y, event):
-        # Make sure attr exists even if old sessions
+        
         if not hasattr(self, "cropOriginHandleScreen"):
             self.cropOriginHandleScreen = None
 
@@ -1194,10 +1194,10 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                 self.transform_mode = None
             return
 
-        # Special-case: Crop effect origin is in SCREEN SPACE
+        
         if (self.transforming_effect and self.transforming_effect_object and
             getattr(self.transforming_effect_object.info, 'class_name', '') == 'Crop'):
-            # Test the screen-space rect first
+            
             if self.cropOriginHandleScreen and self.cropOriginHandleScreen.contains(event.pos()):
                 cursor = self.rotateCursor(self.cursors.get('hand'), rotation, shear_x, shear_y)
                 self.hover_cursor = cursor
@@ -1254,10 +1254,10 @@ class VideoWidget(QWidget, updates.UpdateInterface):
             ]
             non_handle_uis["outside"] = {"mode": None, "cursor": None}
 
-        # Ignore any handles that were not drawn
+        
         handle_uis = [h for h in handle_uis if h["handle"]]
 
-        # Mouse over resize button (and not currently dragging)
+        
         if (not self.mouse_dragging
             and self.resize_button.isVisible()
             and self.resize_button.rect().contains(event.pos())
@@ -1269,9 +1269,9 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                 self.transform_mode = None
             return
 
-        # If mouse is over a LOCAL handle, set corresponding pointer/mode
+        
         for h in handle_uis:
-            # Note: the crop-origin case was handled in screen space above
+            
             if self.transform.mapToPolygon(h["handle"].toRect()).containsPoint(event.pos(), Qt.OddEvenFill):
                 if self.transform_mode and self.transform_mode != h["mode"]:
                     continue
@@ -1283,7 +1283,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                 self.setCursor(cursor)
                 return
 
-        # If not over any handles, determine inside/outside active rectangle
+        
         r = non_handle_uis.get("region")
         if self.transform.mapToPolygon(r.toRect()).containsPoint(event.pos(), Qt.OddEvenFill):
             nh = non_handle_uis.get("inside", {})
@@ -1423,41 +1423,41 @@ class VideoWidget(QWidget, updates.UpdateInterface):
             self.setCursor(Qt.OpenHandCursor)
 
         if self.transforming_clip and (not self.transforming_effect):
-            # Modify clip transform properties (x, y, height, width, rotation, shear)
-            # Get framerate
+            
+            
             fps = get_app().project.get("fps")
             fps_float = float(fps["num"]) / float(fps["den"])
 
-            # Determine frame # of clip (absolute frame, accounting for clip start trim)
+            
             clip_frame_number = self._get_clip_frame_number(
                 self.transforming_clip, fps_float)
 
-            # Get properties of clip at current frame
+            
             raw_properties = json.loads(self.transforming_clip_object.PropertiesJSON(clip_frame_number))
 
-            # Get current rotation and skew (used for cursor rotation)
+            
             rotation = raw_properties.get('rotation').get('value')
             shear_x = raw_properties.get('shear_x').get('value')
             shear_y = raw_properties.get('shear_y').get('value')
 
-            # Get the rect where the video is actually drawn (without the black borders, etc...)
+            
             viewport_rect = self.centeredViewport(self.width(), self.height())
 
-            # Make back-up of clip data
+            
             if self.mouse_dragging and not self.transform_mode and self.transforming_clip:
                 if self.transforming_clip.id not in self.original_clip_data_map:
                     self.original_clip_data_map[self.transforming_clip.id] = json.loads(json.dumps(self.transforming_clip.data))
 
             self.checkTransformMode(rotation, shear_x, shear_y, event)
 
-            # Transform clip object
+            
             if self.transform_mode:
 
                 x_motion = event.pos().x() - self.mouse_position.x()
                 y_motion = event.pos().y() - self.mouse_position.y()
 
-                # For all interactions except rotation and location, adjust the motion vector
-                # to account for the clip's current rotation.
+                
+                
                 if self.transform_mode not in ['rotation', 'location']:
                     import math
                     current_rotation = raw_properties.get('rotation').get('value')
@@ -1468,17 +1468,17 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                         x_motion, y_motion = x_motion_unrotated, y_motion_unrotated
 
                 if self.transform_mode == 'origin':
-                    # Get current keyframe value
+                    
                     origin_x = raw_properties.get('origin_x').get('value')
                     origin_y = raw_properties.get('origin_y').get('value')
                     scale_x = raw_properties.get('scale_x').get('value')
                     scale_y = raw_properties.get('scale_y').get('value')
 
-                    # Calculate new location coordinates
+                    
                     origin_x += x_motion / (self.clipBounds.width() * scale_x)
                     origin_y += y_motion / (self.clipBounds.height() * scale_y)
 
-                    # Constrain to clip
+                    
                     if origin_x < 0.0:
                         origin_x = 0.0
                     if origin_x > 1.0:
@@ -1487,7 +1487,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                         origin_y = 0.0
                     if origin_y > 1.0:
                         origin_y = 1.0
-                    # Update keyframe value (or create new one)
+                    
                     self.updateClipProperty(
                         self.transforming_clips[0].id, clip_frame_number,
                         'origin_x', origin_x,
@@ -1503,7 +1503,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                         fps_float, frame_number=clip_frame_number)
 
                 elif self.transform_mode == 'location':
-                    # Get current keyframe value
+                    
                     location_x = raw_properties.get('location_x').get('value')
                     location_y = raw_properties.get('location_y').get('value')
 
@@ -1522,9 +1522,9 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                         layout_height) = self._clip_location_geometry(
                             base_w, base_h, self.transforming_clip, raw_properties, viewport_rect)
 
-                    # Match libsmartedit's location contract: Crop uses the
-                    # distance to the offscreen edge, while all other scale
-                    # modes retain canvas-relative coordinates.
+                    
+                    
+                    
                     if self.transforming_clip.data['scale'] == smartedit.SCALE_CROP:
                         current_x_offset = self._location_offset(
                             location_x, anchored_x - layout_x, layout_width, scaled_w)
@@ -1538,7 +1538,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                         location_x += x_motion / viewport_rect.width()
                         location_y += y_motion / viewport_rect.height()
 
-                    # Update keyframe value (or create new one)
+                    
                     self.updateClipProperty(
                         self.transforming_clips[0].id, clip_frame_number,
                         'location_x', location_x,
@@ -1554,15 +1554,15 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                         fps_float, frame_number=clip_frame_number)
 
                 elif self.transform_mode == 'shear_top':
-                    # Get current keyframe shear value
+                    
                     shear_x = raw_properties.get('shear_x').get('value')
                     scale_x = raw_properties.get('scale_x').get('value')
 
-                    # Calculate new location coordinates
+                    
                     aspect_ratio = (self.clipBounds.width() / self.clipBounds.height()) * 2.0
                     shear_x -= x_motion / ((self.clipBounds.width() * scale_x) / aspect_ratio)
 
-                    # Update keyframe value (or create new one)
+                    
                     self.updateClipProperty(
                         self.transforming_clips[0].id, clip_frame_number,
                         'shear_x', shear_x)
@@ -1571,15 +1571,15 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                         fps_float, frame_number=clip_frame_number)
 
                 elif self.transform_mode == 'shear_bottom':
-                    # Get current keyframe shear value
+                    
                     scale_x = raw_properties.get('scale_x').get('value')
                     shear_x = raw_properties.get('shear_x').get('value')
 
-                    # Calculate new location coordinates
+                    
                     aspect_ratio = (self.clipBounds.width() / self.clipBounds.height()) * 2.0
                     shear_x += x_motion / ((self.clipBounds.width() * scale_x) / aspect_ratio)
 
-                    # Update keyframe value (or create new one)
+                    
                     self.updateClipProperty(
                         self.transforming_clips[0].id, clip_frame_number,
                         'shear_x', shear_x)
@@ -1588,15 +1588,15 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                         fps_float, frame_number=clip_frame_number)
 
                 elif self.transform_mode == 'shear_left':
-                    # Get current keyframe shear value
+                    
                     shear_y = raw_properties.get('shear_y').get('value')
                     scale_y = raw_properties.get('scale_y').get('value')
 
-                    # Calculate new location coordinates
+                    
                     aspect_ratio = (self.clipBounds.height() / self.clipBounds.width()) * 2.0
                     shear_y -= y_motion / (self.clipBounds.height() * scale_y / aspect_ratio)
 
-                    # Update keyframe value (or create new one)
+                    
                     self.updateClipProperty(
                         self.transforming_clips[0].id, clip_frame_number,
                         'shear_y', shear_y)
@@ -1605,15 +1605,15 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                         fps_float, frame_number=clip_frame_number)
 
                 elif self.transform_mode == 'shear_right':
-                    # Get current keyframe shear value
+                    
                     scale_y = raw_properties.get('scale_y').get('value')
                     shear_y = raw_properties.get('shear_y').get('value')
 
-                    # Calculate new location coordinates
+                    
                     aspect_ratio = (self.clipBounds.height() / self.clipBounds.width()) * 2.0
                     shear_y += y_motion / (self.clipBounds.height() * scale_y / aspect_ratio)
 
-                    # Update keyframe value (or create new one)
+                    
                     self.updateClipProperty(
                         self.transforming_clips[0].id, clip_frame_number,
                         'shear_y', shear_y)
@@ -1622,14 +1622,14 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                         fps_float, frame_number=clip_frame_number)
 
                 elif self.transform_mode == 'rotation':
-                    # Get current rotation keyframe value
+                    
                     if self.rotation_drag_value is None:
                         self.rotation_drag_value = raw_properties.get('rotation').get('value')
                     rotation = self.rotation_drag_value
                     scale_x = max(float(raw_properties.get('scale_x').get('value')), 0.001)
                     scale_y = max(float(raw_properties.get('scale_y').get('value')), 0.001)
 
-                    # Calculate new location coordinates
+                    
                     is_on_right = event.pos().x() > self.originHandle.x()
                     is_on_top = event.pos().y() < self.originHandle.y()
 
@@ -1644,7 +1644,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                     if modifiers_has(mods, Qt.ControlModifier) or modifiers_has(mods, Qt.ShiftModifier):
                         rotation = self._snap_angle(rotation, 15.0)
 
-                    # Update keyframe value (or create new one)
+                    
                     self.updateClipProperty(
                         self.transforming_clips[0].id,
                         clip_frame_number,
@@ -1654,7 +1654,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                         fps_float, frame_number=clip_frame_number)
 
                 elif self.transform_mode.startswith('scale_'):
-                    # Get current scale keyframe value
+                    
                     scale_x = max(float(raw_properties.get('scale_x').get('value')), 0.001)
                     scale_y = max(float(raw_properties.get('scale_y').get('value')), 0.001)
 
@@ -1683,13 +1683,13 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                         scale_x += x_motion / half_w
 
                     if modifiers_has(QCoreApplication.instance().keyboardModifiers(), Qt.ControlModifier):
-                        # If CTRL key is pressed, fix the scale_y to the correct aspect ratio
+                        
                         if scale_x:
                             scale_y = scale_x
                         elif scale_y:
                             scale_x = scale_y
 
-                    # Update keyframe value (or create new one)
+                    
                     both_scaled = scale_x != 0.001 and scale_y != 0.001
                     if scale_x != 0.001:
                         self.updateClipProperty(
@@ -1707,30 +1707,30 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                             'scale_y', scale_y - raw_properties.get('scale_y').get('value'),
                             fps_float, frame_number=clip_frame_number)
 
-            # Force re-paint
+            
             self.update()
 
         if self.transforming_effect and self.transforming_clip and self.transforming_effect_object:
-            # Adjust effect keyframes if mouse is on top of the transform handlers
+            
 
-            # Get framerate
+            
             fps = get_app().project.get("fps")
             fps_float = float(fps["num"]) / float(fps["den"])
 
-            # Determine frame # of clip (absolute frame, accounting for clip trim)
+            
             clip_frame_number = self._get_clip_frame_number(
                 self.transforming_clip, fps_float)
 
-            # Get the rect where the video is actually drawn (without the black borders, etc...)
+            
             viewport_rect = self.centeredViewport(self.width(), self.height())
 
-            # Make back-up of clip data
+            
             if self.mouse_dragging and not self.transform_mode and self.transforming_clip:
                 if self.transforming_clip.id not in self.original_clip_data_map:
                     self.original_clip_data_map[self.transforming_clip.id] = json.loads(json.dumps(self.transforming_clip.data))
 
             if self.transforming_effect_object.info.has_tracked_object:
-                # Get properties of effect at current frame
+                
                 raw_properties = json.loads(self.transforming_effect_object.PropertiesJSON(clip_frame_number))
                 objects = raw_properties.get('objects', {})
                 if not objects:
@@ -1759,22 +1759,22 @@ class VideoWidget(QWidget, updates.UpdateInterface):
 
                 self.checkTransformMode(0, 0, 0, event)
 
-                # Transform effect object
+                
                 if self.transform_mode:
 
                     x_motion = event.pos().x() - self.mouse_position.x()
                     y_motion = event.pos().y() - self.mouse_position.y()
 
                     if self.transform_mode == 'location':
-                        # Get current keyframe value
+                        
                         location_x = raw_properties.get('delta_x').get('value')
                         location_y = raw_properties.get('delta_y').get('value')
 
-                        # Calculate new location coordinates
+                        
                         location_x += x_motion / viewport_rect.width()
                         location_y += y_motion / viewport_rect.height()
 
-                        # Update keyframe values (or create new ones)
+                        
                         self.updateEffectProperties(
                             self.transforming_effect.id,
                             clip_frame_number,
@@ -1785,14 +1785,14 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                             })
 
                     elif self.transform_mode == 'rotation':
-                        # Get current rotation keyframe value
+                        
                         if self.rotation_drag_value is None:
                             self.rotation_drag_value = raw_properties.get('rotation').get('value')
                         rotation = self.rotation_drag_value
                         scale_x = max(float(raw_properties.get('scale_x').get('value')), 0.001)
                         scale_y = max(float(raw_properties.get('scale_y').get('value')), 0.001)
 
-                        # Calculate new location coordinates
+                        
                         is_on_right = event.pos().x() > self.originHandle.x()
                         is_on_top = event.pos().y() < self.originHandle.y()
 
@@ -1807,14 +1807,14 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                         if modifiers_has(mods, Qt.ControlModifier) or modifiers_has(mods, Qt.ShiftModifier):
                             rotation = self._snap_angle(rotation, 15.0)
 
-                        # Update keyframe value (or create new one)
+                        
                         self.updateEffectProperty(
                             self.transforming_effect.id,
                             clip_frame_number, obj_id,
                             'rotation', rotation)
 
                     elif self.transform_mode.startswith('scale_'):
-                        # Get current scale keyframe value
+                        
                         scale_x = max(float(raw_properties.get('scale_x').get('value')), 0.001)
                         scale_y = max(float(raw_properties.get('scale_y').get('value')), 0.001)
 
@@ -1843,13 +1843,13 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                             scale_x += x_motion / half_w
 
                         if modifiers_has(QCoreApplication.instance().keyboardModifiers(), Qt.ControlModifier):
-                            # If CTRL key is pressed, fix the scale_y to the correct aspect ratio
+                            
                             if scale_x:
                                 scale_y = scale_x
                             elif scale_y:
                                 scale_x = scale_y
 
-                        # Update keyframe values (or create new ones)
+                        
                         updates = {}
                         if scale_x != 0.001:
                             updates['scale_x'] = scale_x
@@ -1866,7 +1866,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                 raw_properties = json.loads(
                     self.transforming_effect_object.PropertiesJSON(clip_frame_number))
 
-                # Use the clip's transform for cursor orientation
+                
                 clip_props_for_cursors = json.loads(self.transforming_clip_object.PropertiesJSON(clip_frame_number))
                 clip_rot = clip_props_for_cursors.get('rotation', {}).get('value', 0.0)
                 clip_sx  = clip_props_for_cursors.get('shear_x', {}).get('value', 0.0)
@@ -1883,7 +1883,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                 cw = max(1.0 - crop_left - crop_right, 0.0001)
                 ch = max(1.0 - crop_top - crop_bottom, 0.0001)
 
-                # Use the clip's rotation/shear so the resize/rotate cursors match the tilted overlay
+                
                 self.checkTransformMode(clip_rot, clip_sx, clip_sy, event)
 
                 if self.transform_mode:
@@ -1892,7 +1892,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                     base_w = max(self.clipBounds.width(), 0.0001)
                     base_h = max(self.clipBounds.height(), 0.0001)
 
-                    # Determine how clip space maps to screen space (accounts for zoom)
+                    
                     mapped = self.transform.mapRect(self.clipBounds) if self.transform else self.clipBounds
                     sx_factor = mapped.width() / base_w
                     sy_factor = mapped.height() / base_h
@@ -2096,11 +2096,11 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                         updates,
                     )
 
-            # Force re-paint
+            
             self.update()
-            # ==================================================================================
+            
 
-        # Update mouse position
+        
         self.mouse_position = event.pos()
 
         self.mutex.unlock()
@@ -2112,10 +2112,10 @@ class VideoWidget(QWidget, updates.UpdateInterface):
 
         c = Clip.get(id=clip_id)
         if not c:
-            # No clip found
+            
             return
 
-        # Property missing? Create it!
+        
         if property_key not in c.data:
             c.data[property_key] = {"Points": []}
             log.warning("%s: Added missing '%s' to property data", clip_id, property_key)
@@ -2141,12 +2141,12 @@ class VideoWidget(QWidget, updates.UpdateInterface):
             })
 
         if clip_updated:
-            # Reduce # of clip properties we are saving (performance boost)
+            
             c.data = {property_key: c.data.get(property_key)}
             if self.transaction_id:
                 get_app().updates.transaction_id = self.transaction_id
             c.save()
-            # Update the preview
+            
             if refresh:
                 get_app().window.refreshFrameSignal.emit()
 
@@ -2220,10 +2220,10 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         c = Effect.get(id=effect_id)
 
         if not c:
-            # No clip found
+            
             return
 
-        # Clamp frame number to a sane range (effects share clip timing, so keep >= 1)
+        
         frame_number = max(1, int(round(frame_number)))
         updated_properties = {}
 
@@ -2269,7 +2269,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                 updated_properties[property_key] = props.get(property_key, {"Points": []})
 
         if updated_properties:
-            # Reduce # of clip properties we are saving (performance boost)
+            
             if obj_id is not None:
                 c.data = {
                     'objects': {
@@ -2281,7 +2281,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
             if self.transaction_id:
                 get_app().updates.transaction_id = self.transaction_id
             c.save()
-            # Update the preview
+            
             if refresh:
                 get_app().window.refreshFrameSignal.emit()
 
@@ -2289,30 +2289,30 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         """Return clip-relative frame clamped between trimmed start/end."""
         data = clip.data
 
-        # Seconds
+        
         start_sec = float(data.get("start", 0.0))
         end_val = data.get("end", None)
         end_sec = float(end_val) if end_val is not None else None
 
-        # Frames
+        
         start_frame = round(start_sec * fps_float) + 1
         end_frame = None
         if end_sec is not None and end_sec > start_sec:
             end_frame = round(end_sec * fps_float)
 
-        # Timeline position (in frames, 1-based)
+        
         position = (float(data.get("position", 0.0)) * fps_float) + 1
 
-        # Current playhead frame
+        
         try:
             playhead = float(get_app().window.preview_thread.current_frame)
         except Exception:
             playhead = 1.0
 
-        # Original clip-relative math
+        
         frame = round(playhead - position) + start_frame
 
-        # Clamp to [start_frame, end_frame] if end is valid, otherwise just clamp to start
+        
         if frame < start_frame:
             return start_frame
         if end_frame is not None and frame > end_frame:
@@ -2590,7 +2590,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
             if selected_idx in objects:
                 return selected_idx, objects[selected_idx]
 
-            # Newer object IDs are "<effect-uuid>-<index>".
+            
             suffix = f"-{selected_idx}"
             for object_id, object_props in objects.items():
                 if object_id.endswith(suffix):
@@ -2610,7 +2610,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
     def refreshTriggered(self):
         """Signal to refresh viewport (i.e. a property might have changed that effects the preview)"""
 
-        # Update reference to clip(s)
+        
         if self.transforming_clips:
             self.transforming_clips = [Clip.get(id=c.id) for c in self.transforming_clips if Clip.get(id=c.id)]
             if self.transforming_clips:
@@ -2636,7 +2636,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                 self.transforming_clip = None
                 self.transforming_clip_object = None
                 need_refresh = True
-            # Reset cursor when no clips are selected
+            
             self.setCursor(Qt.ArrowCursor)
         else:
             self.transforming_clips = []
@@ -2655,7 +2655,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                 self.transforming_effect_object = None
                 need_refresh = True
 
-        # Selection/transform changes affect overlay UI, not timeline frame.
+        
         if need_refresh:
             self.update()
         self.update_title()
@@ -2665,17 +2665,17 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         win = get_app().window
         need_refresh = False
 
-        # Disable Transform UI
-        # Is this the same clip_id already being transformed?
+        
+        
         if self.transforming_effect and not effect_id:
-            # Clear transform
+            
             self.transforming_effect = None
             self.transforming_effect_object = None
             self.transforming_clip = None
             self.transforming_clip_object = None
             need_refresh = True
 
-        # Get new clip for transform
+        
         if effect_id and clip_id:
             clip = Clip.get(id=clip_id)
             clip_obj = win.timeline_sync.timeline.GetClip(clip_id)
@@ -2695,7 +2695,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
 
             need_refresh = True
 
-        # Transform target changes affect overlay UI, not timeline frame.
+        
         if need_refresh:
             self.update()
             win.propertyTableView.select_frame(win.preview_thread.player.Position())
@@ -2703,7 +2703,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
 
     def regionTriggered(self, clip_id):
         """Handle the 'select region' signal when it's emitted"""
-        # Clear transform
+        
         self.region_enabled = bool(clip_id)
         if not self.region_enabled:
             self.region_points = []
@@ -2896,49 +2896,49 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         self.delayed_size = self.size()
         self.delayed_resize_timer.start()
 
-        # Only the main project preview uses VideoWidget's internal delayed resize
-        # pipeline. Dialog previews manage their own resize/max-size flow and
-        # should not be forcibly paused here during startup.
+        
+        
+        
         if getattr(self, "watch_project", True) and not getattr(self.win, "_dock_interaction_active", False):
             self.win.PauseSignal.emit()
 
     def delayed_resize_callback(self):
         """Callback for resize event timer (to delay the resize event, and prevent lots of similar resize events)"""
-        # While the mouse button is still held down (e.g. dragging docks/splitters),
-        # keep deferring preview resize work so we don't thrash SetMaxSize/ClearAllCache.
+        
+        
         if QApplication.mouseButtons() & Qt.LeftButton:
             self.delayed_resize_timer.start()
             return
 
-        # Ensure width & height are divisible by 2 (round decimals).
-        # Trying to find the closest even number to the requested aspect ratio
-        # so that both width and height are divisible by 2. This is to prevent some
-        # strange phantom scaling lines on the edges of the preview window.
+        
+        
+        
+        
 
-        # Scale project size (with aspect ratio) to the delayed widget size
+        
         project_size = QSize(get_app().project.get("width"), get_app().project.get("height"))
         project_size.scale(self.delayed_size, Qt.KeepAspectRatio)
 
         if project_size.height() > 0:
-            # Ensure width and height are divisible by 2
+            
             ratio = float(project_size.width()) / float(project_size.height())
             even_width = round(project_size.width() / 2.0) * 2
             even_height = round(round(even_width / ratio) / 2.0) * 2
             project_size = QSize(int(even_width), int(even_height))
 
-        # Emit signal that video widget changed size
+        
         self.win.MaxSizeChanged.emit(project_size)
 
-    # Capture wheel event to alter zoom/scale of widget
+    
     def wheelEvent(self, event):
         event.accept()
-        # For each 120 (standard scroll unit) adjust the zoom slider
+        
         tick_scale = 1024
         old_zoom = float(self.zoom)
         old_viewport = QRectF(self.centeredViewport(self.width(), self.height()))
         self.zoom += event.angleDelta().y() / tick_scale
         if self.zoom <= 0.0:
-            # Don't allow zoom to go all the way to zero (or negative)
+            
             self.zoom = 0.05
 
         mods = QCoreApplication.instance().keyboardModifiers()
@@ -2960,13 +2960,13 @@ class VideoWidget(QWidget, updates.UpdateInterface):
             self.pan_x = 0.0
             self.pan_y = 0.0
 
-        # Add resize button (if not 100% zoom)
+        
         if self.zoom != 1.0:
             self.resize_button.show()
         else:
             self.resize_button.hide()
 
-        # Request repaint asynchronously to avoid recursive paint calls.
+        
         self.update()
 
     def resize_button_clicked(self):
@@ -2976,23 +2976,23 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         self.pan_y = 0.0
         self.resize_button.hide()
 
-        # Request repaint asynchronously to avoid recursive paint calls.
+        
         self.update()
 
     def __init__(self, watch_project=True, *args):
         """watch_project: watch for changes in project size / widget size, and
         continue to match the current project's aspect ratio."""
-        # Invoke parent init
+        
         super().__init__(*args)
         self.watch_project = bool(watch_project)
 
-        # Translate object
+        
         _ = get_app()._tr
 
-        # Settings object
+        
         self.settings = get_app().get_settings()
 
-        # Init aspect ratio settings (default values)
+        
         self.aspect_ratio = smartedit.Fraction(16, 9)
         self.pixel_ratio = smartedit.Fraction(1, 1)
         self.transforming_clip = None
@@ -3052,19 +3052,19 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         self.scope_region_drag_anchor = None
         self.regionTopLeftHandle = None
         self.regionBottomRightHandle = None
-        self.curr_frame_size = None # Frame size
-        self.zoom = 1.0  # Zoom of widget (does not affect video, only workspace)
+        self.curr_frame_size = None 
+        self.zoom = 1.0  
         self.pan_x = 0.0
         self.pan_y = 0.0
         self.middle_pan_active = False
-        self.cs = 14.0  # Corner size of Transform Handler rectangles
+        self.cs = 14.0  
         self.resize_button = QPushButton(_('Reset Zoom'), self)
         self.resize_button.hide()
         self.resize_button.setStyleSheet('QPushButton { margin: 10px; padding: 2px; }')
         self.resize_button.clicked.connect(self.resize_button_clicked)
         self.resize_button.setMouseTracking(True)
 
-        # FPS calculations
+        
         self.paint_fps = 0.0
         self.paint_fps_counter = 1
         self.paint_fps_sec = None
@@ -3072,7 +3072,7 @@ class VideoWidget(QWidget, updates.UpdateInterface):
         self.present_fps_counter = 1
         self.present_fps_sec = None
 
-        # Load icon (using display DPI)
+        
         self.cursors = {}
         cursor_fallbacks = {
             "move": Qt.SizeAllCursor,
@@ -3100,41 +3100,41 @@ class VideoWidget(QWidget, updates.UpdateInterface):
                 pixmap = None
             self.cursors[cursor_name] = (pixmap, cursor_fallbacks[cursor_name])
 
-        # Mutex lock
+        
         self.mutex = QMutex()
 
-        # Init Qt widget's properties (background repainting, etc...)
+        
         super().setAttribute(Qt.WA_OpaquePaintEvent)
         super().setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
 
-        # Add self as listener to project data updates (used to update the timeline)
+        
         get_app().updates.add_listener(self)
 
-        # Set mouse tracking
+        
         self.setMouseTracking(True)
 
-        # Init current frame's QImage
+        
         self.current_image = None
 
-        # Get a reference to the window object
+        
         self.win = get_app().window
 
-        # Update title whenever playback speed changes.
+        
         self.win.PlaySignal.connect(self.update_title, Qt.QueuedConnection)
         self.win.PlaySignal.connect(self.update_title, Qt.QueuedConnection)
         self.win.PauseSignal.connect(self.update_title, Qt.QueuedConnection)
         self.win.SpeedSignal.connect(self.update_title, Qt.QueuedConnection)
         self.win.StopSignal.connect(self.update_title, Qt.QueuedConnection)
 
-        # Show Property timer
-        # Timer to use a delay before sending MaxSizeChanged signals (so we don't spam libsmartedit)
+        
+        
         self.delayed_resize_timer = QTimer(self)
         self.delayed_resize_timer.setInterval(200)
         self.delayed_resize_timer.setSingleShot(True)
         if watch_project:
             self.delayed_resize_timer.timeout.connect(self.delayed_resize_callback)
 
-        # Connect to signals
+        
         self.win.TransformSignal.connect(self.transformTriggered)
         self.win.KeyFrameTransformSignal.connect(self.keyFrameTransformTriggered)
         self.win.SelectRegionSignal.connect(self.regionTriggered)

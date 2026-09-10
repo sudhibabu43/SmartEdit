@@ -10,5 +10,5 @@ class RoughCutGenerator:
         Interacts with the SmartEdit Timeline and Clip objects.
         """
         instructions = self.prompt_interpreter.interpret_prompt(prompt)
-        # Initial phase: return structured instructions for timeline application
+        
         return instructions

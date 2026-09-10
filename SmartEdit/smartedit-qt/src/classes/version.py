@@ -49,7 +49,7 @@ def get_version_from_http():
         )
         log.info("Found current version: %s" % version_info)
 
-        # Parse version
+        
         smartedit_version = version_info.get("smartedit_version")
         info.ERROR_REPORT_STABLE_VERSION = version_info.get("smartedit_version")
         info.ERROR_REPORT_RATE_STABLE = version_info.get("error_rate_stable")
@@ -57,7 +57,7 @@ def get_version_from_http():
         info.TRANS_REPORT_RATE_STABLE = version_info.get("trans_rate_stable")
         info.TRANS_REPORT_RATE_UNSTABLE = version_info.get("trans_rate_unstable")
 
-        # Emit signal for the UI
+        
         get_app().window.FoundVersionSignal.emit(smartedit_version)
 
     except Exception:

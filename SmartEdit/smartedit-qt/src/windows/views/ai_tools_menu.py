@@ -100,7 +100,7 @@ def add_ai_tools_menu(win, parent_menu, source_file=None):
                 )
             )
 
-        # Add Shaky Footage Detection & Labeling action
+        
         if hasattr(win, "actionDetectShakyFootage_trigger"):
             ai_menu.addSeparator()
             shaky_action = ai_menu.addAction(_("Detect & Label Shaky Footage"))

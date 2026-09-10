@@ -36,7 +36,7 @@ from qt_api import (
     QPushButton, QHBoxLayout, QLabel, QMessageBox, QDialogButtonBox,
     QButtonGroup, QToolButton, QCheckBox, QApplication,
 )
-import smartedit  # Python module for libsmartedit (required video editing module installed separately)
+import smartedit  
 
 from classes import info, ui_util, time_parts, qt_types, updates
 from classes.app import get_app
@@ -63,8 +63,8 @@ class RegionAnnotatedSlider(QSlider):
         self.setMouseTracking(True)
         self._total_frames = 1
         self._current_frame = 1
-        self._markers = []  # list of (frame, kind)
-        self._marker_positions = []  # list of (x, y, frame)
+        self._markers = []  
+        self._marker_positions = []  
 
     def set_frames(self, total_frames, current_frame, markers):
         self._total_frames = int(max(1, total_frames or 1))
@@ -145,7 +145,7 @@ class RegionAnnotatedSlider(QSlider):
         painter.setRenderHint(QPainter.Antialiasing, True)
 
         groove = self._groove_rect()
-        # Center markers on the slider groove line.
+        
         mid_y = int(groove.center().y())
 
         self._marker_positions = []
@@ -167,7 +167,7 @@ class RegionAnnotatedSlider(QSlider):
                 painter.setBrush(QBrush(QColor("#53A0ED")))
                 painter.drawEllipse(x - 4, mid_y - 4, 8, 8)
 
-        # Current-frame indicator
+        
         cx = self._x_for_frame(self._current_frame)
         cur_pen = QPen(QColor("#EAF5FF"), 1)
         painter.setPen(cur_pen)
@@ -216,10 +216,10 @@ class ObjectMaskPreviewWorker(QObject):
 class SelectRegion(QDialog):
     """ SelectRegion Dialog """
 
-    # Path to ui file
+    
     ui_path = os.path.join(info.PATH, 'windows', 'ui', 'region.ui')
 
-    # Signals for preview thread
+    
     previewFrameSignal = pyqtSignal(int)
     refreshFrameSignal = pyqtSignal()
     LoadFileSignal = pyqtSignal(str)
@@ -233,13 +233,13 @@ class SelectRegion(QDialog):
     def __init__(self, file=None, clip=None, selection_mode="rect", parent=None, object_mask_preview_context=None):
         _ = get_app()._tr
 
-        # Create dialog class
+        
         super().__init__(parent)
 
-        # Load UI from designer
+        
         ui_util.load_ui(self, self.ui_path)
 
-        # Init UI
+        
         ui_util.init_ui(self)
         self._esc_shortcut = QShortcut(QKeySequence("Esc"), self)
         self._esc_shortcut.setContext(Qt.WidgetWithChildrenShortcut)
@@ -255,15 +255,15 @@ class SelectRegion(QDialog):
             self.setWindowModality(Qt.WindowModal)
         self.setSizeGripEnabled(True)
 
-        # Track metrics
+        
         track_metric_screen("cutting-screen")
 
         self.selection_mode = str(selection_mode or "rect").strip().lower()
         if self.selection_mode not in ("rect", "point", "annotate"):
             self.selection_mode = "rect"
         if self.selection_mode == "annotate":
-            # Replace stock UI slider with custom-painted annotation slider
-            # so marker dots are perfectly aligned to the slider groove.
+            
+            
             original_slider = self.sliderVideo
             custom_slider = RegionAnnotatedSlider(Qt.Horizontal, original_slider.parent())
             custom_slider.setObjectName(original_slider.objectName())
@@ -307,7 +307,7 @@ class SelectRegion(QDialog):
         self.file_path = str(self.reader_data.get("path") or "")
         is_single_image = bool(is_single_image_media(self.reader_data) or is_single_image_media(getattr(file, "data", {})))
 
-        # Create region clip with Reader
+        
         if clip:
             if self.file_path:
                 self.clip = smartedit.Clip(self.file_path)
@@ -319,7 +319,7 @@ class SelectRegion(QDialog):
             else:
                 self.clip = smartedit.Clip(clip.Reader())
             self.clip.Open()
-            # Set region clip start and end
+            
             self.clip.Start(clip.Start())
             self.clip.End(clip.End())
         else:
@@ -357,15 +357,15 @@ class SelectRegion(QDialog):
             self.channel_layout = int(project.get("channel_layout"))
         self.video_length = int(self.clip.Duration() * self.fps) + 1
 
-        # Apply effects to region frames
+        
         if clip:
             for effect in clip.Effects():
                 self.clip.AddEffect(effect)
 
-        # Open video file with Reader
+        
         log.info(self.clip.Reader())
 
-        # Set instruction text first so it remains above the preview widget.
+        
         if self.selection_mode == "point":
             self.lblInstructions.setText(
                 _("Click to add tracking point (SHIFT+Click for additional points, CTRL+Click for negative point)")
@@ -377,7 +377,7 @@ class SelectRegion(QDialog):
         else:
             self.lblInstructions.setText(_("Draw a rectangle to select a region of the video frame."))
 
-        # Add Video Widget
+        
         self.videoPreview = VideoWidget(watch_project=False)
         self.videoPreview.win = self
         self.videoPreview.setObjectName("videoPreview")
@@ -390,15 +390,15 @@ class SelectRegion(QDialog):
         if self.selection_mode == "annotate":
             self._build_annotation_toolbar()
 
-        # Set aspect ratio to match source content
+        
         aspect_ratio = smartedit.Fraction(self.width, self.height)
         aspect_ratio.Reduce()
         self.videoPreview.aspect_ratio = aspect_ratio
 
-        # Set max size of video preview (for speed)
+        
         self.viewport_rect = self.videoPreview.centeredViewport(self.width, self.height)
 
-        # Create an instance of a libsmartedit Timeline object
+        
         self.r = smartedit.Timeline(max(2, int(self.width or self.viewport_rect.width() or 2)),
                                    max(2, int(self.height or self.viewport_rect.height() or 2)),
                                    smartedit.Fraction(self.fps_num, self.fps_den),
@@ -407,14 +407,14 @@ class SelectRegion(QDialog):
         self.r.SetMaxSize(self.viewport_rect.width(), self.viewport_rect.height())
 
         try:
-            # Show waveform for audio files
+            
             if not self.clip.Reader().info.has_video and self.clip.Reader().info.has_audio:
                 self.clip.Waveform(True)
 
-            # Set has_audio property
+            
             self.r.info.has_audio = self.clip.Reader().info.has_audio
 
-            # Update video_length property of the Timeline object
+            
             self.r.info.video_length = self.video_length
 
             self.r.AddClip(self.clip)
@@ -423,17 +423,17 @@ class SelectRegion(QDialog):
             log.error('Failed to load media file into region select player: %s' % self.file_path)
             return
 
-        # Open reader
+        
         self.r.Open()
 
-        # Start the preview thread
+        
         self.initialized = False
         self.transforming_clip = False
         self.preview_parent = PreviewParent()
         self.preview_parent.Init(self, self.r, self.videoPreview, self.video_length)
         self.preview_thread = self.preview_parent.worker
 
-        # Set slider constraints
+        
         self.sliderIgnoreSignal = False
         self.sliderVideo.setMinimum(1)
         self.sliderVideo.setMaximum(self.video_length)
@@ -441,7 +441,7 @@ class SelectRegion(QDialog):
         self.sliderVideo.setPageStep(24)
         self.videoPreview.delayed_resize_timer.timeout.connect(self._apply_dynamic_preview_max_size)
 
-        # Add buttons
+        
         self.cancel_button = QPushButton(_('Cancel'))
         if self.selection_mode == "rect":
             process_label = _('Select Region')
@@ -453,7 +453,7 @@ class SelectRegion(QDialog):
         self.buttonBox.addButton(self.process_button, QDialogButtonBox.AcceptRole)
         self.buttonBox.addButton(self.cancel_button, QDialogButtonBox.RejectRole)
 
-        # Connect signals
+        
         self.actionPlay.triggered.connect(self.actionPlay_Triggered)
         self.btnPlay.clicked.connect(self.btnPlay_clicked)
         self.sliderVideo.valueChanged.connect(self.sliderVideo_valueChanged)
@@ -489,7 +489,7 @@ class SelectRegion(QDialog):
         preview_thread.previewFrame(max(1, int(self.current_frame or 1)))
 
     def actionPlay_Triggered(self):
-        # Trigger play button (This action is invoked from the preview thread, so it must exist here)
+        
         self.btnPlay.click()
 
     def keyPressEvent(self, event):
@@ -687,7 +687,7 @@ class SelectRegion(QDialog):
         self.annotation_toolbar.addWidget(self.lblDefinedFrames)
         self.verticalLayout.insertLayout(1, self.annotation_toolbar)
 
-        # Default tool
+        
         default_btn = self.annotation_tool_buttons.get("positive_point")
         if default_btn:
             default_btn.setChecked(True)
@@ -1077,19 +1077,19 @@ class SelectRegion(QDialog):
             self._save_current_frame_annotations()
             self._clear_mask_preview()
         self.current_frame = frame_number
-        # Move slider to correct frame position
+        
         self.sliderIgnoreSignal = True
         self.sliderVideo.setValue(frame_number)
         self.sliderIgnoreSignal = False
 
-        # Convert frame to seconds
+        
         seconds = (frame_number-1) / self.fps
 
-        # Convert seconds to time stamp
+        
         time_text = time_parts.secondsToTime(seconds, self.fps_num, self.fps_den)
         timestamp = "%s:%s:%s:%s" % (time_text["hour"], time_text["min"], time_text["sec"], time_text["frame"])
 
-        # Update label
+        
         self.lblVideoTime.setText(timestamp)
         if self.selection_mode == "annotate":
             self._load_frame_annotations(frame_number)
@@ -1111,12 +1111,12 @@ class SelectRegion(QDialog):
             self.preview_thread.Play()
         else:
             log.info('pause (icon to play)')
-            ui_util.setup_icon(self, self.btnPlay, "actionPlay", "media-playback-start")  # to default
+            ui_util.setup_icon(self, self.btnPlay, "actionPlay", "media-playback-start")  
             self.preview_thread.Pause()
             if self.selection_mode == "annotate":
                 self._schedule_mask_preview()
 
-        # Send focus back to toolbar
+        
         self.sliderVideo.setFocus()
 
     def sliderVideo_valueChanged(self, new_frame):
@@ -1129,25 +1129,25 @@ class SelectRegion(QDialog):
                 self._load_frame_annotations(new_frame)
                 self._refresh_marker_bar()
 
-            # Pause video
+            
             self.btnPlay_clicked(force="pause")
 
-            # Seek to new frame
+            
             self.preview_thread.previewFrame(new_frame)
 
     def accept(self):
         """ Ok button clicked """
-        # get translations
+        
         app = get_app()
         _ = app._tr
 
-        # Legacy behavior for rect/point modes: require frame 1 selection.
+        
         if self.selection_mode in ("rect", "point") and self.sliderVideo.value() != self.sliderVideo.minimum():
-            # Show a warning message box to the user
+            
             QMessageBox.warning(self, _("Invalid Region"),
                                 _("Please choose a region at the beginning of the clip"))
 
-            # Reset the slider to its minimum value
+            
             self.sliderVideo.setValue(self.sliderVideo.minimum())
             return
 
@@ -1213,7 +1213,7 @@ class SelectRegion(QDialog):
         else:
             self._selected_payload = {}
 
-        # Continue with the rest of the accept method
+        
         self._selected_points = self.selected_points()
         self._selected_points_negative = self.selected_points_negative()
         self.shutdownPlayer()
@@ -1226,19 +1226,19 @@ class SelectRegion(QDialog):
 
         self._stop_mask_preview_worker()
 
-        # Stop playback
+        
         self.preview_parent.Stop()
 
-        # Close readers
+        
         self.clip.Close()
-        # self.r.RemoveClip(self.clip)
+        
         self.r.Close()
-        # self.clip.Close()
+        
         self.r.ClearAllCache()
 
     def reject(self):
 
-        # Cancel dialog
+        
         self.shutdownPlayer()
         get_app().window.SelectRegionSignal.emit("")
         super(SelectRegion, self).reject()

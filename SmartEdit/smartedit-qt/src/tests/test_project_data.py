@@ -638,8 +638,8 @@ class ProjectDataTests(unittest.TestCase):
                 self.assertAlmostEqual(x, expected[0])
                 self.assertAlmostEqual(y, expected[1])
 
-                # Re-running migration must not touch a project once its saved
-                # version advances beyond the affected 4.0.0 release.
+                
+                
                 store._data["version"]["smartedit-qt"] = "4.0.1"
                 ProjectDataStore.upgrade_project_data_structures(store)
                 self.assertEqual(

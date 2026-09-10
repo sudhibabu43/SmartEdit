@@ -280,8 +280,8 @@ class MainWindowTests(unittest.TestCase):
             os.mkdir(recovery_dir)
 
             with patch.object(self.main_window_module.info, "RECOVERY_PATH", recovery_dir):
-                # Freeze the module clock so the retention logic and fixture
-                # timestamps use the same notion of "today".
+                
+                
                 now = datetime(2026, 3, 21, 12, 0, 0)
 
                 class FixedDateTime(datetime):

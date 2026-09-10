@@ -316,7 +316,7 @@ class TrackPainter(BasePainter):
         if pps <= 0.0 or fps <= 0.0:
             return
         offset_px = cfg.get("offset_px", 0.0)
-        # Convert visible rect to absolute timeline pixel positions
+        
         left_px = offset_px + max(0.0, rect.left() - self.w.track_name_width)
         right_px = offset_px + max(0.0, rect.right() - self.w.track_name_width)
         if right_px <= left_px:
@@ -326,9 +326,9 @@ class TrackPainter(BasePainter):
         if end_seconds <= start_seconds:
             return
 
-        # Use a small epsilon when converting to frame numbers so that
-        # fractional floating point rounding errors don't cause the
-        # computed frame parity to jitter as we scroll horizontally.
+        
+        
+        
         eps = 1e-9
         start_frame = int(math.floor(start_seconds * fps + eps))
         end_frame = int(math.ceil(end_seconds * fps - eps))
@@ -337,7 +337,7 @@ class TrackPainter(BasePainter):
         painter.save()
         painter.setPen(Qt.NoPen)
         painter.setBrush(cfg.get("color"))
-        # Ensure we do not draw excessive rectangles
+        
         max_frames = end_frame - start_frame
         if max_frames > 2000:
             max_frames = 2000
@@ -389,7 +389,7 @@ class TrackPainter(BasePainter):
             path = self._track_name_path(name_rect)
             painter.drawPath(path)
 
-            # Match JS .track_top overlay (light-to-transparent).
+            
             overlay_top = QColor(self.name_top_overlay)
             overlay_bottom = QColor(self.name_top_overlay2)
             if overlay_top.isValid() or overlay_bottom.isValid():
@@ -444,7 +444,7 @@ class TrackPainter(BasePainter):
                 )
                 painter.fillRect(left_rect, name_border)
 
-            # Preserve curved left-corner border strokes on rounded track names.
+            
             if radius_tl > 0.0 and self.name_border_top_width and name_border_top.isValid():
                 pen = QPen(name_border_top, float(self.name_border_top_width))
                 pen.setCapStyle(Qt.FlatCap)

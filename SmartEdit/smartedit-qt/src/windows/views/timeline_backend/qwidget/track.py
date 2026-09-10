@@ -141,8 +141,8 @@ class TrackInteractionMixin:
             margin_y = spec.get("margin_y", margin)
             text_bottom = name_rect.y() + menu_margin + text_height
 
-            # Anchor icons by their draw position (not padded hit-rect)
-            # so they stay near the bottom edge across all themes.
+            
+            
             desired_draw_y = max_icon_area_bottom - icon_height - TRACK_TOOLBAR_BOTTOM_PADDING
             min_draw_y = max(min_row_top, text_bottom + menu_margin)
             max_draw_y = max_icon_area_bottom - icon_height

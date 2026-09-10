@@ -30,7 +30,7 @@
 import os
 import time
 
-# Try to get the security-patched XML functions from defusedxml
+
 try:
     from defusedxml import ElementTree
 except ImportError:
@@ -45,7 +45,7 @@ from qt_api import uic, load_ui as qt_load_ui
 from classes.app import get_app
 from classes.logger import log
 
-from . import smartedit_rc  # noqa
+from . import smartedit_rc  
 
 DEFAULT_THEME_NAME = "Humanity"
 
@@ -55,54 +55,54 @@ def load_icon_theme():
 
     s = get_app().get_settings()
 
-    # If theme not reported by OS
+    
     if QIcon.themeName() == '' and s.get("theme") != "No Theme":
 
-        # Address known Ubuntu bug of not reporting configured theme name, use default ubuntu theme
+        
         if os.getenv('DESKTOP_SESSION') == 'ubuntu':
             QIcon.setThemeName('unity-icon-theme')
 
-        # Windows/Mac use packaged theme
+        
         else:
             QIcon.setThemeName(DEFAULT_THEME_NAME)
 
 
 def load_ui(window, path):
     """ Load a Qt *.ui file, and also load an XML parsed version """
-    # Attempt to load the UI file 5 times
-    # This is a hack, and I'm trying to avoid a really common error which might be a
-    # race condition. [zipimport.ZipImportError: can't decompress data; zlib not available]
-    # This error only happens when cx_Freeze is used, and the app is launched.
+    
+    
+    
+    
     error = None
     for attempt in range(1, 6):
         try:
-            # Load ui from configured path
+            
             if uic is not None and hasattr(uic, "loadUi"):
                 uic.loadUi(path, window)
             else:
                 qt_load_ui(path, window)
 
-            # Successfully loaded UI file, so clear any previously encountered errors
+            
             error = None
             break
 
         except Exception as ex:
-            # Keep track of this error
+            
             error = ex
             time.sleep(0.1)
 
-    # Raise error (if any)
+    
     if error:
         raise error
 
-    # Save xml tree for ui
+    
     window.uiTree = ElementTree.parse(path)
 
 
 def get_default_icon(theme_name):
     """ Get a QIcon, and fallback to default theme if OS does not support themes. """
 
-    # Default path to backup icons
+    
     start_path = ":/icons/" + DEFAULT_THEME_NAME + "/"
     icon_path = search_dir(start_path, theme_name)
     return QIcon(icon_path), icon_path
@@ -119,9 +119,9 @@ def make_dark_palette(darkPalette: QPalette) -> QPalette:
     darkPalette.setColor(QPalette.ButtonText, Qt.white)
     darkPalette.setColor(QPalette.Highlight, QColor(42, 130, 218, 192))
     darkPalette.setColor(QPalette.HighlightedText, Qt.black)
-    #
-    # Disabled palette
-    #
+    
+    
+    
     darkPalette.setColor(QPalette.Disabled, QPalette.WindowText, QColor(255, 255, 255, 128))
     darkPalette.setColor(QPalette.Disabled, QPalette.Base, QColor(68, 68, 68))
     darkPalette.setColor(QPalette.Disabled, QPalette.Text, QColor(255, 255, 255, 128))
@@ -130,10 +130,10 @@ def make_dark_palette(darkPalette: QPalette) -> QPalette:
     darkPalette.setColor(QPalette.Disabled, QPalette.Highlight, QColor(151, 151, 151, 192))
     darkPalette.setColor(QPalette.Disabled, QPalette.HighlightedText, Qt.black)
 
-    # Tooltips
+    
     darkPalette.setColor(QPalette.ToolTipBase, QColor(42, 130, 218))
     darkPalette.setColor(QPalette.ToolTipText, Qt.white)
-    # Links
+    
     darkPalette.setColor(QPalette.Link, QColor(85, 170, 255))
     darkPalette.setColor(QPalette.LinkVisited, QColor(136, 85, 255))
 
@@ -143,26 +143,26 @@ def make_dark_palette(darkPalette: QPalette) -> QPalette:
 def search_dir(base_path, theme_name):
     """ Search for theme name """
 
-    # Search each entry in this directory
+    
     base_dir = QDir(base_path)
     for e in base_dir.entryList():
-        # Path to current item
+        
         path = base_dir.path() + "/" + e
         base_filename = e.split('.')[0]
 
-        # If file matches theme name, return
+        
         if base_filename == theme_name:
             return path
 
-        # If this is a directory, search within it
+        
         dir = QDir(path)
         if dir.exists():
-            # If found below, return it
+            
             res = search_dir(path, theme_name)
             if res:
                 return res
 
-    # If no match found in dir, return None
+    
     return None
 
 
@@ -183,18 +183,18 @@ def setup_icon(window, elem, name, theme_name=None):
     or if theme_name passed load that icon."""
 
     type_filter = 'action'
-    if isinstance(elem, QWidget):  # Search for widget with name instead
+    if isinstance(elem, QWidget):  
         type_filter = 'widget'
-    # Find iconset in tree (if any)
+    
     iconset = window.uiTree.find(
         './/' + type_filter + '[@name="' + name
         + '"]/property[@name="icon"]/iconset'
         )
-    # For some reason "if iconset:" doesn't work the same
+    
     if iconset is not None or theme_name:
         if not theme_name:
             theme_name = iconset.get('theme', '')
-        # Get Icon (either current theme or fallback)
+        
         icon = get_icon(theme_name)
         if icon:
             elem.setIcon(icon)
@@ -210,7 +210,7 @@ def init_element(window, elem):
         name = elem.objectName()
         connect_auto_events(window, elem, name)
 
-    # Handle generic translatable properties
+    
     if (
             hasattr(elem, 'setText')
             and hasattr(elem, 'text')
@@ -239,53 +239,53 @@ def init_element(window, elem):
         elem.setPlaceholderText(_translate("", elem.placeholderText()))
     if hasattr(elem, 'setLocale'):
         elem.setLocale(QLocale().system())
-    # Handle tabs differently
+    
     if isinstance(elem, QTabWidget):
         for i in range(elem.count()):
             elem.setTabText(i, _translate("", elem.tabText(i)))
             elem.setTabToolTip(i, _translate("", elem.tabToolTip(i)))
-    # Set icon if possible
-    if hasattr(elem, 'setIcon') and name != '':  # Has ability to set its icon
+    
+    if hasattr(elem, 'setIcon') and name != '':  
         setup_icon(window, elem, name)
 
 
 def connect_auto_events(window, elem, name):
     """ Connect any events in a *.ui file with matching Python method names """
 
-    # If trigger slot available check it
+    
     if hasattr(elem, 'trigger'):
         func_name = name + "_trigger"
         if hasattr(window, func_name) and callable(getattr(window, func_name)):
-            # Disconnect existing connections safely
+            
             while True:
                 try:
                     disconnected = elem.triggered.disconnect()
                 except TypeError:
-                    break  # No more connections to disconnect (PyQt)
+                    break  
                 except Exception:
                     break
                 else:
                     if disconnected is False:
-                        break  # No more connections to disconnect (PySide)
-            # Connect the signal to the slot
+                        break  
+            
             elem.triggered.connect(getattr(window, func_name))
 
-    # Similar approach for clicked signal
+    
     if hasattr(elem, 'click'):
         func_name = name + "_click"
         if hasattr(window, func_name) and callable(getattr(window, func_name)):
-            # Disconnect existing connections safely
+            
             while True:
                 try:
                     disconnected = elem.clicked.disconnect()
                 except TypeError:
-                    break  # No more connections to disconnect (PyQt)
+                    break  
                 except Exception:
                     break
                 else:
                     if disconnected is False:
-                        break  # No more connections to disconnect (PySide)
-            # Connect the signal to the slot
+                        break  
+            
             elem.clicked.connect(getattr(window, func_name))
 
 
@@ -294,19 +294,19 @@ def init_ui(window):
     log.info('Initializing UI for {}'.format(window.objectName()))
 
     try:
-        # Set locale & window title on the window object
+        
         if hasattr(window, 'setWindowTitle') and window.windowTitle() != "":
             _translate = QApplication.instance().translate
             window.setWindowTitle(_translate("", window.windowTitle()))
 
-            # Center window
+            
             center(window)
 
-        # Loop through all widgets
+        
         for widget in window.findChildren(QWidget):
             init_element(window, widget)
 
-        # Loop through all actions
+        
         for action in window.findChildren(QAction):
             init_element(window, action)
             window.addAction(action)

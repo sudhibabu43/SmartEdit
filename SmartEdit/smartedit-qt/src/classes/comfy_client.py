@@ -55,7 +55,7 @@ def urlopen(url, *args, **kwargs):
     request_url, scheme = _validate_urlopen_scheme(url)
     if scheme == "https" and "context" not in kwargs:
         kwargs["context"] = http_client.ssl_context()
-    return _stdlib_urlopen(url, *args, **kwargs)  # nosec B310 - URL schemes are restricted above.
+    return _stdlib_urlopen(url, *args, **kwargs)  
 
 
 class ComfyProgressSocket:
@@ -82,7 +82,7 @@ class ComfyProgressSocket:
         if scheme == "https":
             ctx = http_client.ssl_context()
             raw = ctx.wrap_socket(raw, server_hostname=host)
-        # Allow slower remote/proxied websocket handshakes.
+        
         raw.settimeout(6.0)
         self.sock = raw
 
@@ -104,7 +104,7 @@ class ComfyProgressSocket:
         response = self._recv_http_headers()
         if " 101 " not in response.split("\r\n", 1)[0]:
             raise RuntimeError("WebSocket upgrade failed: {}".format(response.split("\r\n", 1)[0]))
-        # Use short timeout for regular frame polling after successful handshake.
+        
         self.sock.settimeout(0.25)
 
     def close(self):
@@ -133,7 +133,7 @@ class ComfyProgressSocket:
                 break
             opcode, payload = frame
 
-            # Ping -> pong
+            
             if opcode == 0x9:
                 self._send_control_frame(0xA, payload)
                 continue
@@ -168,14 +168,14 @@ class ComfyProgressSocket:
                         "type": "progress",
                         "prompt_id": event_prompt,
                     }
-                    # Prefer unfinished progress, and prefer explicit "progress" events.
+                    
                     unfinished = (value + 1e-6) < maximum
                     rank = (1 if unfinished else 0, 2, maximum)
                     if latest is None or rank > latest_rank:
                         latest = candidate
                         latest_rank = rank
             elif event_type == "progress_state":
-                # Newer Comfy events: data={prompt_id, nodes={node_id:{value,max}}}
+                
                 if not isinstance(event_data, dict):
                     continue
                 event_prompt = str(event_data.get("prompt_id", ""))
@@ -184,7 +184,7 @@ class ComfyProgressSocket:
                 nodes = event_data.get("nodes", {})
                 if not isinstance(nodes, dict):
                     continue
-                # Prefer unfinished node progress; only fall back to completed states.
+                
                 best = None
                 best_rank = None
                 for node_id, node_state in nodes.items():
@@ -272,7 +272,7 @@ class ComfyProgressSocket:
             return
         payload = payload or b""
         first = 0x80 | (opcode & 0x0F)
-        # Client frames must be masked.
+        
         mask = os.urandom(4)
         length = len(payload)
         if length < 126:
@@ -404,8 +404,8 @@ class ComfyClient:
                 video_path = str(inputs.get("video", "")).strip()
                 if video_path and os.path.isabs(video_path) and os.path.exists(video_path) and not _annotated(video_path):
                     uploaded = self.upload_input_file(video_path)
-                    # VHS_LoadVideo expects a plain filename from Comfy input options.
-                    # Path-based VHS loaders accept a plain relative path as well.
+                    
+                    
                     if uploaded.endswith(" [input]"):
                         uploaded = uploaded[:-8].strip()
                     inputs["video"] = uploaded
@@ -422,7 +422,7 @@ class ComfyClient:
                 audio_path = str(inputs.get("audio", "") or inputs.get("file", "")).strip()
                 if audio_path and os.path.isabs(audio_path) and os.path.exists(audio_path) and not _annotated(audio_path):
                     uploaded = self.upload_input_file(audio_path)
-                    # LoadAudio expects the uploaded filename from Comfy's input directory.
+                    
                     if uploaded.endswith(" [input]"):
                         uploaded = uploaded[:-8].strip()
                     if "audio" in inputs:
@@ -488,7 +488,7 @@ class ComfyClient:
         else:
             text = str(value or "")
 
-        # Remove huge numeric/tensor dumps that make dialogs unreadable.
+        
         text = re.sub(r"tensor\(\[[\s\S]{250,}?\]\)", "tensor([<omitted>])", text)
         text = re.sub(r"array\(\[[\s\S]{250,}?\]\)", "array([<omitted>])", text)
         text = re.sub(r"\[[\d\.\-eE,\s]{350,}\]", "[<numeric array omitted>]", text)
@@ -544,11 +544,11 @@ class ComfyClient:
         with urlopen("{}/object_info/CheckpointLoaderSimple".format(self.base_url), timeout=8.0) as response:
             data = json.loads(response.read().decode("utf-8"))
 
-        # Expected path:
-        # CheckpointLoaderSimple -> input -> required -> ckpt_name
-        # Supports multiple schema variants:
-        # 1) [ [..names..], {...meta...} ]
-        # 2) ["COMBO", {"options":[..names..], ...}]
+        
+        
+        
+        
+        
         node_info = data.get("CheckpointLoaderSimple", {})
         required = node_info.get("input", {}).get("required", {})
         ckpt_input = required.get("ckpt_name", None)
@@ -558,7 +558,7 @@ class ComfyClient:
     def list_upscale_models(self):
         """Return available upscaler model names from ComfyUI object info."""
         models = []
-        # Primary source: object_info schema for UpscaleModelLoader.
+        
         try:
             with urlopen("{}/object_info/UpscaleModelLoader".format(self.base_url), timeout=8.0) as response:
                 data = json.loads(response.read().decode("utf-8"))
@@ -572,7 +572,7 @@ class ComfyClient:
         except Exception as ex:
             log.debug("ComfyClient list_upscale_models object_info parse failed: %s", ex)
 
-        # Fallback: direct model listing endpoint.
+        
         if not models:
             try:
                 with urlopen("{}/models/upscale_models".format(self.base_url), timeout=8.0) as response:
@@ -582,7 +582,7 @@ class ComfyClient:
             except Exception as ex:
                 log.debug("ComfyClient list_upscale_models /models fallback failed: %s", ex)
 
-        # Dedupe while preserving order.
+        
         seen = set()
         ordered = []
         for name in models:
@@ -634,11 +634,11 @@ class ComfyClient:
         if input_config is None:
             return []
 
-        # Variant: [ [options...], {meta...} ]
+        
         if isinstance(input_config, list) and input_config and isinstance(input_config[0], list):
             return [str(v) for v in input_config[0]]
 
-        # Variant: ["COMBO", {"options":[...], ...}]
+        
         if (
             isinstance(input_config, list)
             and len(input_config) >= 2
@@ -649,7 +649,7 @@ class ComfyClient:
             if isinstance(options, list):
                 return [str(v) for v in options]
 
-        # Variant: direct list of values
+        
         if isinstance(input_config, list):
             scalar_values = []
             for item in input_config:
@@ -674,7 +674,7 @@ class ComfyClient:
                 return json.loads(response.read().decode("utf-8"))
         except HTTPError as ex:
             if int(getattr(ex, "code", 0)) == 404:
-                # Some ComfyUI versions don't expose /progress.
+                
                 return None
             raise
 
@@ -770,10 +770,10 @@ class ComfyClient:
             if not isinstance(entries, list):
                 continue
             for entry in entries:
-                # Common format: [number, prompt_id, ...]
+                
                 if isinstance(entry, list) and len(entry) >= 2 and str(entry[1]) == pid:
                     return True
-                # Defensive fallback for dict-like entries
+                
                 if isinstance(entry, dict):
                     if str(entry.get("prompt_id", "")) == pid:
                         return True
@@ -807,7 +807,7 @@ class ComfyClient:
                                 "subfolder": str(ref.get("subfolder", "")),
                                 "type": str(ref.get("type", "output")),
                             })
-                # Also extract text-like outputs (for custom nodes such as Whisper/SRT pipelines).
+                
                 for value in node_out.values():
                     text_values = ComfyClient._extract_text_outputs(value)
                     for text_value in text_values:
@@ -818,7 +818,7 @@ class ComfyClient:
                             "type": "text",
                         })
             else:
-                # Some custom nodes emit list/string outputs directly instead of dicts.
+                
                 text_values = ComfyClient._extract_text_outputs(node_out)
                 for text_value in text_values:
                     output_format = "srt" if ComfyClient._looks_like_srt(text_value) else "txt"

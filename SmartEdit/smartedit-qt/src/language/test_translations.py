@@ -45,23 +45,23 @@ if SRC_PATH not in sys.path:
 from qt_api import QCoreApplication, QTranslator
 
 
-# Absolute path of the translations directory
+
 LANG_PATH = os.path.dirname(os.path.abspath(__file__))
 REPO_PATH = os.path.dirname(os.path.dirname(LANG_PATH))
 DOC_LOCALE_PATH = os.path.join(REPO_PATH, 'doc', 'locale')
 
-# Match '%(name)x' format placeholders
+
 TAG_RE = re.compile(r'%\(([^\)]*)\)(.)')
 DOC_SUB_RE = re.compile(r'\|[A-Za-z0-9_]+\|')
 PRINTF_TOKEN_RE = re.compile(
     r'%(?:'
-    r'%'  # escaped percent literal
-    r'|\(([^)]+)\)[#0\-+]*\d*(?:\.\d+)?[diouxXeEfFgGcrsa]'  # named placeholder
-    r'|[#0\-+]*\d*(?:\.\d+)?[diouxXeEfFgGcrsa]'  # positional/unnamed placeholder
+    r'%'  
+    r'|\(([^)]+)\)[#0\-+]*\d*(?:\.\d+)?[diouxXeEfFgGcrsa]'  
+    r'|[#0\-+]*\d*(?:\.\d+)?[diouxXeEfFgGcrsa]'  
     r')'
 )
 
-# Match numbers in strings (for detecting number-embedded strings like "Line 1")
+
 NUMBER_RE = re.compile(r'\d+')
 
 
@@ -140,37 +140,37 @@ def build_stringlists() -> Dict[str, List]:
 def check_trans(strings: List) -> List[Tuple[str, str]]:
     """Check all strings in a list against a given .qm file"""
     app = get_app()
-    # Test translation of all strings
+    
     translations = {
         source: app.translate("", source)
         for source in strings
     }
-    # Check for replacements with mismatched number of % escapes
+    
     errors = {}
     for s, t in translations.items():
-        # Count placeholders in source and translation
+        
         s_count = s.count('%s') + s.count('%d') + s.count('%f')
         t_count = t.count('%s') + t.count('%d') + t.count('%f')
 
-        # If counts match, no error
+        
         if s.count('%s') == t.count('%s') and \
            s.count('%d') == t.count('%d') and \
            s.count('%f') == t.count('%f'):
             continue
 
-        # Special case: source has embedded numbers but no placeholders,
-        # and translation has %s placeholders instead.
-        # This is valid when translators use a placeholder pattern
-        # (e.g., "Line 1" translated as "Linia %s" where %s = "1")
+        
+        
+        
+        
         source_numbers = NUMBER_RE.findall(s)
         if source_numbers and s_count == 0 and t_count == len(source_numbers):
             continue
 
         errors[s] = t
-    # Check for missing/added variable names
-    # e.g.: "%(clip_id)s %(value)d" changed to "%(clip)s %(value)d"
-    # or mismatched types
-    # e.g.: "%(seconds)s" changed to "%(seconds)d"
+    
+    
+    
+    
     named_variables = {
         s: (TAG_RE.findall(s), TAG_RE.findall(t))
         for s, t in translations.items()
@@ -179,7 +179,7 @@ def check_trans(strings: List) -> List[Tuple[str, str]]:
     errors.update({
         s: translations[s]
         for s, (s_vars, t_vars) in named_variables.items()
-        # Ensure that t_vars is a strict subset of s_vars
+        
         if not set(t_vars) <= set(s_vars)
     })
     return list(errors.items())
@@ -188,7 +188,7 @@ def check_trans(strings: List) -> List[Tuple[str, str]]:
 def process_qm(file: str, stringlists: Dict[str, List[str]]) -> int:
     """Scan a translation file against all provided strings"""
     app = get_app()
-    # Attempt to load translation file
+    
     basename = os.path.splitext(file)[0]
     translator = QTranslator(app)
     if not translator.load(basename, LANG_PATH):
@@ -197,7 +197,7 @@ def process_qm(file: str, stringlists: Dict[str, List[str]]) -> int:
 
     app.installTranslator(translator)
 
-    # Build a dict mapping source POTfiles to lists of error pairs
+    
     error_sets = {
         sourcefile: check_trans(strings)
         for sourcefile, strings in stringlists.items()
@@ -205,7 +205,7 @@ def process_qm(file: str, stringlists: Dict[str, List[str]]) -> int:
 
     app.removeTranslator(translator)
 
-    # Display any errors found, grouped by source POT file
+    
     error_count = sum([len(v) for v in error_sets.values()])
     invalid_msg = "Invalid"
     if error_count:
@@ -224,7 +224,7 @@ def scan_all_qm(filenames: List[str] = None) -> None:
     all_strings = build_stringlists()
     if not filenames:
         filenames = fnmatch.filter(os.listdir(LANG_PATH), 'SmartEdit*.qm')
-    # Loop through language files and count errors
+    
     total_errors = sum([
         process_qm(filename, all_strings)
         for filename in filenames
@@ -489,7 +489,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-# Autorun if used as script
+
 if __name__ == '__main__':
     try:
         args = parse_args(sys.argv[1:])

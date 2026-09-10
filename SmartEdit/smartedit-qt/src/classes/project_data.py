@@ -57,16 +57,16 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
 
     def __init__(self):
         JsonDataStore.__init__(self)
-        self.data_type = "project data"  # Used in error messages
+        self.data_type = "project data"  
         self.default_project_filepath = os.path.join(info.PATH, 'settings', '_default.project')
 
-        # Set default filepath to user's home folder
+        
         self.current_filepath = None
 
-        # Track changes after save
+        
         self.has_unsaved_changes = False
 
-        # Load default project data on creation
+        
         self.new()
 
     def needs_save(self):
@@ -127,74 +127,74 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
     def get(self, key):
         """Get copied value of a given key in data store"""
 
-        # Verify key is valid type
+        
         if not key:
             log.warning("ProjectDataStore cannot get empty key.")
             return None
         if not isinstance(key, list):
             key = [key]
 
-        # Get reference to internal data structure
+        
         obj = self._data
 
-        # Iterate through key list finding sub-objects either by name or by an object match criteria such as {"id":"ADB34"}.
+        
         for key_index in range(len(key)):
             key_part = key[key_index]
 
-            # Key_part must be a string or dictionary
+            
             if not isinstance(key_part, dict) and not isinstance(key_part, str):
                 log.error("Unexpected key part type: {}".format(type(key_part).__name__))
                 return None
 
-            # If key_part is a dictionary and obj is a list or dict, each key is tested as a property of the items in the current object
-            # in the project data structure, and the first match is returned.
+            
+            
             if isinstance(key_part, dict) and isinstance(obj, list):
-                # Overall status of finding a matching sub-object
+                
                 found = False
-                # Loop through each item in object to find match
+                
                 for item_index in range(len(obj)):
                     item = obj[item_index]
-                    # True until something disqualifies this as a match
+                    
                     match = True
-                    # Check each key in key_part dictionary and if not found to be equal as a property in item, move on to next item in list
+                    
                     for subkey in key_part:
-                        # Get each key in dictionary (i.e. "id", "layer", etc...)
+                        
                         subkey = subkey.lower()
-                        # If object is missing the key or the values differ, then it doesn't match.
+                        
                         if not (subkey in item and item[subkey] == key_part[subkey]):
                             match = False
                             break
-                    # If matched, set key_part to index of list or dict and stop loop
+                    
                     if match:
                         found = True
                         obj = item
                         break
-                # No match found, return None
+                
                 if not found:
                     return None
 
-            # If key_part is a string, homogenize to lower case for comparisons
+            
             if isinstance(key_part, str):
                 key_part = key_part.lower()
 
-                # Check current obj type (should be dictionary)
+                
                 if not isinstance(obj, dict):
                     log.warn(
                         "Invalid project data structure. Trying to use a key on a non-dictionary object. Key part: {} (\"{}\").\nKey: {}".format(
                             (key_index), key_part, key))
                     return None
 
-                # If next part of path isn't in current dictionary, return failure
+                
                 if key_part not in obj:
                     log.warn(
                         'Key not found in project. Mismatch on key part %s ("%s").\nKey: %s',
                         key_index, key_part, key)
                     return None
 
-                # Get the matching item
+                
                 obj = obj[key_part]
 
-        # After processing each key, we've found object, return it
+        
         return obj
 
     def set(self, key, value):
@@ -209,7 +209,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
             key, values, add, remove)
         parent, my_key = None, ""
 
-        # Verify key is valid type
+        
         if not isinstance(key, list):
             log.warning("_set() key must be a list. key=%s", key)
             return None
@@ -217,87 +217,87 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
             log.warning("Cannot set empty key (key=%s)", key)
             return None
 
-        # Get reference to internal data structure
+        
         obj = self._data
 
-        # Iterate through key list finding sub-objects either by name or by an object match criteria such as {"id":"ADB34"}.
+        
         for key_index in range(len(key)):
             key_part = key[key_index]
 
-            # Key_part must be a string or dictionary
+            
             if not isinstance(key_part, dict) and not isinstance(key_part, str):
                 log.error("Unexpected key part type: %s", type(key_part).__name__)
                 return None
 
-            # If key_part is a dictionary and obj is a list or dict, each key is tested as a property of the items in the current object
-            # in the project data structure, and the first match is returned.
+            
+            
             if isinstance(key_part, dict) and isinstance(obj, list):
-                # Overall status of finding a matching sub-object
+                
                 found = False
-                # Loop through each item in object to find match
+                
                 for item_index in range(len(obj)):
                     item = obj[item_index]
-                    # True until something disqualifies this as a match
+                    
                     match = True
-                    # Check each key in key_part dictionary and if not found to be equal as a property in item, move on to next item in list
+                    
                     for subkey in key_part.keys():
-                        # Get each key in dictionary (i.e. "id", "layer", etc...)
+                        
                         subkey = subkey.lower()
-                        # If object is missing the key or the values differ, then it doesn't match.
+                        
                         if not (subkey in item and item[subkey] == key_part[subkey]):
                             match = False
                             break
-                    # If matched, set key_part to index of list or dict and stop loop
+                    
                     if match:
                         found = True
                         obj = item
                         my_key = item_index
                         break
-                # No match found, return None
+                
                 if not found:
                     return None
 
 
-            # If key_part is a string, homogenize to lower case for comparisons
+            
             if isinstance(key_part, str):
                 key_part = key_part.lower()
 
-                # Check current obj type (should be dictionary)
+                
                 if not isinstance(obj, dict):
                     return None
 
-                # If next part of path isn't in current dictionary, return failure
+                
                 if key_part not in obj:
                     log.warn(
                         'Key not found in project. Mismatch on key part %s ("%s").\nKey: %s',
                         key_index, key_part, key)
                     return None
 
-                # Get sub-object based on part key as new object, continue to next part
+                
                 obj = obj[key_part]
                 my_key = key_part
 
 
-            # Set parent to the last set obj (if not final iteration)
+            
             if key_index < (len(key) - 1) or key_index == 0:
                 parent = obj
 
 
-        # After processing each key, we've found object and parent, return former value/s on update
+        
         ret = json.loads(json.dumps(obj))
 
-        # Apply the correct action to the found item
+        
         if remove:
             del parent[my_key]
 
         else:
 
-            # Add or Full Update
-            # For adds to list perform an insert to index or the end if not specified
+            
+            
             if add and isinstance(parent, list):
                 parent.append(values)
 
-            # Otherwise, set the given index
+            
             elif isinstance(values, dict):
                 if (
                     isinstance(obj, dict)
@@ -315,23 +315,23 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                             tracked_objects[object_id].update(object_values)
                         else:
                             tracked_objects[object_id] = object_values
-                # Update existing dictionary value
+                
                 obj.update(values)
 
             else:
 
-                # Update root string
+                
                 self._data[my_key] = values
 
-        # Return the previous value to the matching item (used for history tracking)
+        
         return ret
 
-    # Load default project data
+    
     def new(self):
         """ Try to load default project settings file, will raise error on failure """
         import smartedit
 
-        # Try to load user default project
+        
         if os.path.exists(info.USER_DEFAULT_PROJECT):
             try:
                 self._data = self.read_from_file(info.USER_DEFAULT_PROJECT)
@@ -345,57 +345,57 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                 log.info("Loaded user project defaults from %s",
                          info.USER_DEFAULT_PROJECT)
         else:
-            # Fall back to SmartEdit defaults, if user defaults didn't load
+            
             self._data = self.read_from_file(self.default_project_filepath)
 
         self.current_filepath = None
         self.has_unsaved_changes = False
 
-        # Reset info paths back to their default/initial values
+        
         info.reset_userdirs()
 
-        # Get default profile
+        
         s = get_app().get_settings()
         default_profile_desc = s.get("default-profile")
 
-        # Get profile (if any)
+        
         profile = self.get_profile(profile_desc=default_profile_desc)
         if not profile:
-            # Fallback, in case of missing/invalid default profile
+            
             profile = self.get_profile(profile_desc="HD 720p 30 fps")
 
-        # Update default profile (if it changed)
+        
         if profile and default_profile_desc != profile.info.description:
             log.info(f"Updating default-profile from legacy `{default_profile_desc}` to `{profile.info.description}`.")
             s.set("default-profile", profile.info.description)
 
-        # Apply default audio playback settings to this data structure
+        
         self.apply_default_audio_settings()
 
-        # Set default project ID
+        
         self._data["id"] = self.generate_id()
 
     def get_profile(self, profile_desc=None, profile_key=None):
         """Attempt to find a specific profile"""
         profile = None
 
-        # Loop through legacy profiles
+        
         LEGACY_PROFILE_PATH = os.path.join(info.PROFILES_PATH, "legacy")
         legacy_profile = None
         if os.path.isdir(LEGACY_PROFILE_PATH):
             for legacy_filename in os.listdir(LEGACY_PROFILE_PATH):
                 legacy_profile_path = os.path.join(LEGACY_PROFILE_PATH, legacy_filename)
                 try:
-                    # Load Profile and append description
+                    
                     temp_profile = smartedit.Profile(legacy_profile_path)
                     if profile_desc == temp_profile.info.description:
                         legacy_profile = temp_profile
                         break
                 except RuntimeError:
-                    # Ignore legacy parsing errors
+                    
                     pass
 
-        # Loop through profiles
+        
         profile_dirs = [info.USER_PROFILES_PATH, info.PROFILES_PATH]
         available_dirs = [f for f in profile_dirs if os.path.exists(f)]
         for profile_folder in available_dirs:
@@ -404,22 +404,22 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                 if os.path.isdir(profile_path):
                     continue
                 try:
-                    # Load Profile and append description
+                    
                     temp_profile = smartedit.Profile(profile_path)
 
                     if profile_desc == temp_profile.info.description:
                         profile = self.apply_profile(temp_profile)
                         break
                     if legacy_profile and legacy_profile.Key() == temp_profile.Key():
-                        # Switch from legacy profile to new profile
+                        
                         legacy_profile_match = temp_profile
 
                 except RuntimeError as e:
-                    # This exception occurs when there's a problem parsing the Profile file - display a message and continue
+                    
                     log.error("Failed to parse file '%s' as a profile: %s" % (profile_path, e))
 
-        # Upgrade a legacy profile (if needed). Sometimes legacy profiles do match a new profile description, so
-        # only upgrade if we have not already found a profile matching the description
+        
+        
         if not profile and legacy_profile_match:
             profile = self.apply_profile(legacy_profile_match)
 
@@ -429,7 +429,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
         """Apply a specific profile to the current project data"""
         log.info("Setting profile to %s" % profile.info.description)
 
-        # Update default profile
+        
         self._data["profile"] = profile.info.description
         self._data["width"] = profile.info.width
         self._data["height"] = profile.info.height
@@ -437,7 +437,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
         self._data["display_ratio"] = {"num": profile.info.display_ratio.num, "den": profile.info.display_ratio.den}
         self._data["pixel_ratio"] = {"num": profile.info.pixel_ratio.num, "den": profile.info.pixel_ratio.den}
 
-        # Convert all position, start, and end trims to profile FPS precision (if any)
+        
         change_profile(self._data["clips"] + self._data["effects"] + self._data["markers"], profile)
 
         return profile
@@ -450,18 +450,18 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
         if file_path:
             log.info("Loading project file: %s", file_path)
 
-            # Default project data
+            
             default_project = self._data
 
             try:
-                # Attempt to load v2.X project file
+                
                 project_data = self.read_from_file(file_path, path_mode="absolute")
 
-                # Fix history (if broken)
+                
                 if not project_data.get("history"):
                     project_data["history"] = {"undo": [], "redo": []}
 
-                # If project has waveforms, enable removing waveforms
+                
                 get_app().window.actionClearWaveformData.setEnabled(False)
                 for file in project_data["files"]:
                     if file.get("ui",{}).get("audio_data", []):
@@ -470,20 +470,20 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
 
             except Exception:
                 try:
-                    # Attempt to load legacy project file (v1.X version)
+                    
                     project_data = self.read_legacy_project_file(file_path)
 
                 except Exception:
-                    # Project file not recognized as v1.X or v2.X, bubble up error
+                    
                     raise
 
-            # Merge default and project settings, excluding settings not in default.
+            
             self._data = self.merge_settings(default_project, project_data)
 
-            # On success, save current filepath
+            
             self.current_filepath = file_path
 
-            # Update info paths to assets folders
+            
             if clear_thumbnails:
                 info.THUMBNAIL_PATH = os.path.join(get_assets_path(self.current_filepath), "thumbnail")
                 info.TITLE_PATH = os.path.join(get_assets_path(self.current_filepath), "title")
@@ -498,43 +498,43 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
 
             self._migrate_optimized_asset_paths()
 
-            # Clear needs save flag
+            
             self.has_unsaved_changes = False
 
-            # Check if paths are all valid
+            
             self.check_if_paths_are_valid()
 
-            # Clear old thumbnails
+            
             smartedit_thumbnails = info.get_default_path("THUMBNAIL_PATH")
             if os.path.exists(smartedit_thumbnails) and clear_thumbnails:
-                # Clear thumbnails
+                
                 shutil.rmtree(smartedit_thumbnails, True)
                 os.mkdir(smartedit_thumbnails)
 
-            # Add to recent files setting
+            
             self.add_to_recent_files(file_path)
 
-            # Upgrade any data structures
+            
             self.upgrade_project_data_structures()
 
-            # Get profile (if any)
+            
             project_profile_desc = self._data.get("profile", "HD 720p 30 fps")
             profile = self.get_profile(profile_desc=project_profile_desc)
             if not profile:
-                # Fallback, in case of missing/invalid default profile
+                
                 profile = self.get_profile(profile_desc="HD 720p 30 fps")
 
-            # Apply default audio playback settings to this data structure
+            
             self.apply_default_audio_settings()
 
-        # Get app, and distribute all project data through update manager
+        
         get_app().updates.load(self._data)
 
     def rescale_keyframes(self, scale_factor):
         """Adjust all keyframe coordinates from previous FPS to new FPS (using a scale factor)
            and return scaled project data without modifing the current project."""
         log.info('Scale all keyframes by a factor of %s', scale_factor)
-        # Create a scaler instance, and scale all key-frames
+        
         scaler = KeyframeScaler(factor=scale_factor)
         scaler(self._data)
 
@@ -546,19 +546,19 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
         import smartedit
         import json
 
-        # Get translation method
+        
         _ = get_app()._tr
 
-        # Append version info
+        
         project_data = {}
         project_data["version"] = {"smartedit-qt": info.VERSION,
                                    "libsmartedit": smartedit.SMARTEDIT_VERSION_FULL}
 
-        # Get FPS from project
+        
         fps = get_app().project.get("fps")
         fps_float = float(fps["num"]) / float(fps["den"])
 
-        # Import legacy smartedit classes (from version 1.X)
+        
         from classes.legacy.smartedit import classes as legacy_classes
         from classes.legacy.smartedit.classes import project as legacy_project
         from classes.legacy.smartedit.classes import sequences as legacy_sequences
@@ -580,34 +580,34 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
         sys.modules['classes.effect'] = legacy_effect
         sys.modules['classes.marker'] = legacy_marker
 
-        # Keep track of files that failed to load
+        
         failed_files = []
 
         with open(os.fsencode(file_path), 'rb') as f:
             try:
-                # Unpickle legacy smartedit project file
+                
                 v1_data = pickle.load(f, fix_imports=True, encoding="UTF-8")
                 file_lookup = {}
 
-                # Loop through files
+                
                 for item in v1_data.project_folder.items:
-                    # Is this item a File (i.e. ignore folders)
+                    
                     if isinstance(item, legacy_files.SmartEditFile):
-                        # Create file
+                        
                         try:
                             clip = smartedit.Clip(item.name)
                             reader = clip.Reader()
                             file_data = json.loads(reader.Json(), strict=False)
 
-                            # Determine media type
+                            
                             file_data["media_type"] = get_media_type(file_data)
 
-                            # Save new file to the project data
+                            
                             file = File()
                             file.data = file_data
                             file.save()
 
-                            # Keep track of new ids and old ids
+                            
                             file_lookup[item.unique_id] = file
 
                         except Exception:
@@ -616,12 +616,12 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                                       exc_info=1)
                             failed_files.append(item.name)
 
-                # Delete all tracks
+                
                 track_list = Track.filter()
                 for track in track_list:
                     track.delete()
 
-                # Create new tracks
+                
                 track_counter = 0
                 for legacy_t in reversed(v1_data.sequences[0].tracks):
                     t = Track()
@@ -630,53 +630,53 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
 
                     track_counter += 1
 
-                # Loop through clips
+                
                 track_counter = 0
                 for sequence in v1_data.sequences:
                     for track in reversed(sequence.tracks):
                         for clip in track.clips:
-                            # Get associated file for this clip
+                            
                             if clip.file_object.unique_id in file_lookup:
                                 file = file_lookup[clip.file_object.unique_id]
                             else:
-                                # Skip missing file
+                                
                                 log.info("Skipping importing missing file: %s" % clip.file_object.unique_id)
                                 continue
 
-                            # Create clip
+                            
                             if (file.data["media_type"] == "video" or file.data["media_type"] == "image"):
-                                # Determine thumb path
+                                
                                 thumb_path = os.path.join(info.THUMBNAIL_PATH, "%s.png" % file.data["id"])
                             else:
-                                # Audio file
+                                
                                 thumb_path = os.path.join(info.PATH, "images", "AudioThumbnail.svg")
 
-                            # Get file name
+                            
                             filename = os.path.basename(file.data["path"])
 
                             file_path = file.absolute_path()
 
-                            # Create clip object for this file
+                            
                             c = smartedit.Clip(file_path)
 
-                            # Append missing attributes to Clip JSON
+                            
                             new_clip = json.loads(c.Json(), strict=False)
                             new_clip["file_id"] = file.id
                             new_clip["title"] = filename
 
-                            # Check for optional start and end attributes
+                            
                             new_clip["start"] = clip.start_time
                             new_clip["end"] = clip.end_time
                             new_clip["position"] = clip.position_on_track
                             new_clip["layer"] = track_counter
 
-                            # Clear alpha (if needed)
+                            
                             if clip.video_fade_in or clip.video_fade_out:
                                 new_clip["alpha"]["Points"] = []
 
-                            # Video Fade IN
+                            
                             if clip.video_fade_in:
-                                # Add keyframes
+                                
                                 start = smartedit.Point(round(clip.start_time * fps_float) + 1, 0.0, smartedit.BEZIER)
                                 start_object = json.loads(start.Json(), strict=False)
                                 end = smartedit.Point(round((clip.start_time + clip.video_fade_in_amount) * fps_float) + 1, 1.0, smartedit.BEZIER)
@@ -684,9 +684,9 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                                 new_clip["alpha"]["Points"].append(start_object)
                                 new_clip["alpha"]["Points"].append(end_object)
 
-                            # Video Fade OUT
+                            
                             if clip.video_fade_out:
-                                # Add keyframes
+                                
                                 start = smartedit.Point(round((clip.end_time - clip.video_fade_out_amount) * fps_float) + 1, 1.0, smartedit.BEZIER)
                                 start_object = json.loads(start.Json(), strict=False)
                                 end = smartedit.Point(round(clip.end_time * fps_float) + 1, 0.0, smartedit.BEZIER)
@@ -694,7 +694,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                                 new_clip["alpha"]["Points"].append(start_object)
                                 new_clip["alpha"]["Points"].append(end_object)
 
-                            # Clear Audio (if needed)
+                            
                             if clip.audio_fade_in or clip.audio_fade_out:
                                 new_clip["volume"]["Points"] = []
                             else:
@@ -702,9 +702,9 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                                 p_object = json.loads(p.Json(), strict=False)
                                 new_clip["volume"] = {"Points": [p_object]}
 
-                            # Audio Fade IN
+                            
                             if clip.audio_fade_in:
-                                # Add keyframes
+                                
                                 start = smartedit.Point(round(clip.start_time * fps_float) + 1, 0.0, smartedit.BEZIER)
                                 start_object = json.loads(start.Json(), strict=False)
                                 end = smartedit.Point(round((clip.start_time + clip.video_fade_in_amount) * fps_float) + 1, clip.volume / 100.0, smartedit.BEZIER)
@@ -712,9 +712,9 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                                 new_clip["volume"]["Points"].append(start_object)
                                 new_clip["volume"]["Points"].append(end_object)
 
-                            # Audio Fade OUT
+                            
                             if clip.audio_fade_out:
-                                # Add keyframes
+                                
                                 start = smartedit.Point(round((clip.end_time - clip.video_fade_out_amount) * fps_float) + 1, clip.volume / 100.0, smartedit.BEZIER)
                                 start_object = json.loads(start.Json(), strict=False)
                                 end = smartedit.Point(round(clip.end_time * fps_float) + 1, 0.0, smartedit.BEZIER)
@@ -722,18 +722,18 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                                 new_clip["volume"]["Points"].append(start_object)
                                 new_clip["volume"]["Points"].append(end_object)
 
-                            # Save clip
+                            
                             clip_object = Clip()
                             clip_object.data = new_clip
                             clip_object.save()
 
-                        # Loop through transitions
+                        
                         for trans in track.transitions:
-                            # Fix default transition
+                            
                             if not trans.resource or not os.path.exists(trans.resource):
                                 trans.resource = os.path.join(info.PATH, "transitions", "common", "fade.svg")
 
-                            # Open up QtImageReader for transition Image
+                            
                             transition_reader = smartedit.QtImageReader(trans.resource)
 
                             trans_begin_value = 1.0
@@ -747,7 +747,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                             brightness.AddPoint(round(trans.length * fps_float) + 1, trans_end_value, smartedit.BEZIER)
                             contrast = smartedit.Keyframe(trans.softness * 10.0)
 
-                            # Create transition dictionary
+                            
                             transitions_data = {
                                 "id": get_app().project.generate_id(),
                                 "layer": track_counter,
@@ -762,26 +762,26 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                                 "replace_image": False
                             }
 
-                            # Save transition
+                            
                             t = Transition()
                             t.data = transitions_data
                             t.save()
 
-                        # Increment track counter
+                        
                         track_counter += 1
 
             except Exception as ex:
-                # Error parsing legacy contents
+                
                 msg = "Failed to load legacy project file %(path)s" % {"path": file_path}
                 log.error(msg, exc_info=1)
                 raise RuntimeError(msg) from ex
 
-        # Show warning if some files failed to load
+        
         if failed_files:
-            # Throw exception
+            
             raise RuntimeError("Failed to load the following files:\n%s" % ", ".join(failed_files))
 
-        # Return mostly empty project_data dict (with just the current version #)
+        
         log.info("Successfully loaded legacy project file: %s", file_path)
         return project_data
 
@@ -794,12 +794,12 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                  smartedit_version, libsmartedit_version)
 
         if smartedit_version == "0.0.0":
-            # If version = 0.0.0, this is the beta of SmartEdit
-            # Fix alpha values (they are now flipped)
+            
+            
             for clip in self._data["clips"]:
-                # Loop through keyframes for alpha
+                
                 for point in clip["alpha"]["Points"]:
-                    # Flip the alpha value
+                    
                     if "co" in point:
                         point["co"]["Y"] = 1.0 - point["co"]["Y"]
                     if "handle_left" in point:
@@ -808,43 +808,43 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                         point["handle_right"]["Y"] = 1.0 - point["handle_right"]["Y"]
 
         elif smartedit_version <= "2.1.0-dev":
-            # Fix handle_left and handle_right coordinates and default to ease in/out bezier curve
-            # using the new percent based keyframes
+            
+            
             for clip_type in ["clips", "effects"]:
                 for clip in self._data[clip_type]:
                     for object in [clip] + clip.get('effects', []):
                         for item_key, item_data in object.items():
-                            # Does clip attribute have a {"Points": [...]} list
+                            
                             if type(item_data) == dict and "Points" in item_data:
                                 for point in item_data.get("Points"):
-                                    # Convert to percent-based curves
+                                    
                                     if "handle_left" in point:
-                                        # Left handle
+                                        
                                         point.get("handle_left")["X"] = 0.5
                                         point.get("handle_left")["Y"] = 1.0
                                     if "handle_right" in point:
-                                        # Right handle
+                                        
                                         point.get("handle_right")["X"] = 0.5
                                         point.get("handle_right")["Y"] = 0.0
 
                             elif type(item_data) == dict and "red" in item_data:
                                 for color in ["red", "blue", "green", "alpha"]:
                                     for point in item_data.get(color).get("Points"):
-                                        # Convert to percent-based curves
+                                        
                                         if "handle_left" in point:
-                                            # Left handle
+                                            
                                             point.get("handle_left")["X"] = 0.5
                                             point.get("handle_left")["Y"] = 1.0
                                         if "handle_right" in point:
-                                            # Right handle
+                                            
                                             point.get("handle_right")["X"] = 0.5
                                             point.get("handle_right")["Y"] = 0.0
 
         elif smartedit_version.startswith("2.5."):
-            # Replace missing crop properties from 2.5.x
+            
             log.debug("Scanning SmartEdit 2.5 project for legacy cropping")
             for clip in self._data.get("clips", []):
-                # Loop through keyframes for alpha
+                
                 crop_x = clip.pop("crop_x", {})
                 crop_y = clip.pop("crop_y", {})
                 crop_width = clip.pop("crop_width", {})
@@ -855,14 +855,14 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                         self.is_keyframe_valid(crop_width, 1.0),
                         self.is_keyframe_valid(crop_height, 1.0),
                        ]):
-                    # Apply crop effect to clip (which wasn't available in 2.5.x)
+                    
                     log.info("Migrating SmartEdit 2.5 crop properties for clip %s", clip.get("id", "<unknown>"))
                     from json import loads as jl
                     effect = smartedit.EffectInfo().CreateEffect("Crop")
                     effect.Id(get_app().project.generate_id())
                     effect_json = jl(effect.Json())
 
-                    # Attach previous clip crop values
+                    
                     effect_json.update({
                         "x": crop_x or jl(smartedit.Keyframe(0.0).Json()),
                         "y": crop_y or jl(smartedit.Keyframe(0.0).Json()),
@@ -870,25 +870,25 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                         "bottom": crop_height or jl(smartedit.Keyframe(1.0).Json()),
                     })
 
-                    # Reverse values on right & bottom
+                    
                     for prop in ["right", "bottom"]:
                         for point in effect_json[prop].get("Points", []):
                             point["co"]["Y"] = 1.0 - point.get("co", {}).get("Y", 0.0)
 
-                    # Append effect JSON to clip
+                    
                     clip["effects"].append(effect_json)
 
 
         elif smartedit_version <= "3.1.1":
 
-            # Reverse alpha value for Tracker & Object Detector tracked boxes
+            
             log.debug("Scanning SmartEdit project for legacy TrackedObjectBBox (background_alpha, stroke_alpha)")
 
             for clip in self._data.get("clips", []):
                 for effect in clip.get("effects", []):
                     if effect.get("name") in ["Tracker", "Object Detector"]:
 
-                        # Update display_box_text
+                        
                         if "display_box_text" in effect:
                             log.info("Migrating legacy Object Detector display_box_text property "
                                      "for clip %s", clip.get("id", "<unknown>"))
@@ -898,16 +898,16 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                                     display_box_text = point.get("co", {}).get("Y", 1.0)
                                     point["co"]["Y"] = 1.0 - display_box_text
                             if not display_box_text_points:
-                                # Default to text visible
+                                
                                 display_box_text_points.append(json.loads(smartedit.Point(1.0).Json()))
 
-                        # Update tracked objects
+                        
                         objects = effect.get("objects", {})
                         for tracked_key, tracked_data in objects.items():
                             log.info("Migrating legacy TrackedObjectBBox alpha properties "
                                      "for clip %s and tracked object: %s", clip.get("id", "<unknown>"), tracked_key)
 
-                            # Update Child Clip ID to Parent property (if any)
+                            
                             child_clip_id = tracked_data.get("child_clip_id")
                             if child_clip_id:
                                 for child_clip in self._data.get("clips", []):
@@ -915,23 +915,23 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                                         log.info(f"Migrating child_clip_id {child_clip_id} to parent property for tracked object {tracked_key}")
                                         child_clip["parentObjectId"] = tracked_key
 
-                            # Update background_alpha points directly
+                            
                             background_alpha_points = tracked_data.get("background_alpha", {}).get("Points", [])
                             for point in background_alpha_points:
                                 if "co" in point:
                                     background_alpha = point.get("co", {}).get("Y", 1.0)
                                     point["co"]["Y"] = 1.0 - background_alpha
 
-                            # Update stroke_alpha points directly
+                            
                             stroke_alpha_points = tracked_data.get("stroke_alpha", {}).get("Points", [])
                             for point in stroke_alpha_points:
                                 if "co" in point:
                                     stroke_alpha = point.get("co", {}).get("Y", 1.0)
                                     point["co"]["Y"] = 1.0 - stroke_alpha
 
-        # libsmartedit 1.0 corrected location_x/y so +/-1 moves a scaled clip
-        # fully offscreen. Preserve the visual positions stored by released
-        # libsmartedit versions which used the canvas size for these offsets.
+        
+        
+        
         if (
             self._version_at_most(libsmartedit_version, "0.7.0")
             and self._version_at_most(smartedit_version, "3.5.1")
@@ -939,17 +939,17 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
         ):
             self._migrate_legacy_crop_locations()
 
-        # SmartEdit 4.0.0 saved non-Crop locations using libsmartedit 1.0's
-        # temporary geometry-relative behavior. Convert those values back to
-        # canvas-relative units so the positions remain unchanged with the
-        # corrected libsmartedit behavior.
+        
+        
+        
+        
         if (
             self._numeric_version(smartedit_version) == (4, 0, 0)
             and "-" not in smartedit_version
         ):
             self._migrate_400_non_crop_locations()
 
-        # Fix default project id (if found)
+        
         if self._data.get("id") == "T0":
             self._data["id"] = self.generate_id()
 
@@ -1132,8 +1132,8 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                     factor = self._legacy_location_factor(
                         value, layout_size, clip_size, alignment)
                     if factor:
-                        # Undo old->new conversion, then account for the fact
-                        # that restored non-Crop coordinates use the full canvas.
+                        
+                        
                         coordinate["Y"] = value * layout_size / (factor * canvas_size)
 
     def is_keyframe_valid(self, keyframe, default_value):
@@ -1152,16 +1152,16 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
 
         log.info("Saving project file: %s", file_path)
 
-        # Move all temp files (i.e. Blender Animations, Titles, Thumbnails, Protobuf files) to the project folder
+        
         if not backup_only:
             self.move_temp_paths_to_project_folder(
                 file_path, previous_path=self.current_filepath)
 
-        # Append version info
+        
         self._data["version"] = {"smartedit-qt": info.VERSION,
                                  "libsmartedit": smartedit.SMARTEDIT_VERSION_FULL}
 
-        # Try to save project settings file, will raise error on failure
+        
         self.write_to_file(
             file_path,
             self._data,
@@ -1169,10 +1169,10 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
             previous_path=self.current_filepath if not backup_only else None)
 
         if not backup_only:
-            # On success, save current filepath
+            
             self.current_filepath = file_path
 
-            # Update info paths to assets folders
+            
             info.THUMBNAIL_PATH = os.path.join(get_assets_path(self.current_filepath), "thumbnail")
             info.TITLE_PATH = os.path.join(get_assets_path(self.current_filepath), "title")
             info.BLENDER_PATH = os.path.join(get_assets_path(self.current_filepath), "blender")
@@ -1283,7 +1283,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
     def move_temp_paths_to_project_folder(self, file_path, previous_path=None):
         """ Move all temp files (such as Thumbnails, Titles, and Blender animations) to the project asset folder. """
         try:
-            # Get or generate asset folder name, max 30 chars of filename + "_assets"
+            
             asset_path = get_assets_path(file_path)
             target_thumb_path = os.path.join(asset_path, "thumbnail")
             target_title_path = os.path.join(asset_path, "title")
@@ -1294,7 +1294,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
             target_proxy_path = os.path.join(asset_path, "optimized")
             target_recording_path = os.path.join(asset_path, "recordings")
 
-            # Create any missing target paths
+            
             try:
                 for target_dir in [asset_path, target_thumb_path, target_title_path,
                                    target_blender_path, target_protobuf_path,
@@ -1305,8 +1305,8 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
             except OSError:
                 pass
 
-            # Update paths (if a previous path exists)
-            #   /Project1/ to /Project2/ for example
+            
+            
             if previous_path:
                 previous_asset_path = get_assets_path(previous_path)
                 info.THUMBNAIL_PATH = os.path.join(previous_asset_path, "thumbnail")
@@ -1317,7 +1317,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                 info.COMFYUI_OUTPUT_PATH = os.path.join(previous_asset_path, "comfyui-output")
                 info.PROXY_PATH = os.path.join(previous_asset_path, "optimized")
 
-            # Track assets we copy/update
+            
             copied_assets = {
                 "blender": set(),
                 "title": set(),
@@ -1385,15 +1385,15 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                 move=self._should_move_runtime_assets(info.PROXY_PATH, "PROXY_PATH"),
             )
 
-            # Copy any necessary assets for File records
+            
             for file in self._data["files"]:
                 path = file["path"]
                 file_id = file["id"]
 
-                # For now, store thumbnail path for backwards compatibility
+                
                 file["image"] = os.path.join(target_thumb_path, f"{file_id}.png")
 
-                # Assets which need to be copied
+                
                 new_asset_path = None
                 for recording_root, move_recording in recording_roots:
                     relative_recording_path = self._path_relative_to_root(path, recording_root)
@@ -1430,10 +1430,10 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                         new_asset_path = os.path.join(target_blender_path, relative_blender_path)
 
                 if info.TITLE_PATH in path:
-                    # Copy title files into assets folder
+                    
                     old_dir, asset_name = os.path.split(path)
                     if asset_name not in copied_assets["title"]:
-                        # Copy title into assets title folder
+                        
                         if os.path.abspath(old_dir) != os.path.abspath(target_title_path):
                             copied_assets["title"].add(asset_name)
                             log.info("Copied title %s to %s", asset_name, target_title_path)
@@ -1457,7 +1457,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                             log.info("Copied ComfyUI output %s to %s", relative_output_path, target_comfy_output_path)
                         new_asset_path = os.path.join(target_comfy_output_path, relative_output_path)
 
-                # Update path in File object to new location
+                
                 if new_asset_path:
                     file["path"] = new_asset_path
                     reader_paths[file_id] = new_asset_path
@@ -1481,21 +1481,21 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                             log.info("Copied proxy %s to %s", proxy_name, target_proxy_path)
                     proxy_reader["path"] = os.path.join(target_proxy_path, proxy_name)
 
-            # Copy top-level effect protobuf assets and update paths.
+            
             for effect in self._data.get("effects", []):
                 relocate_effect_protobuf(effect)
 
-            # Copy all Clip thumbnails and update reader paths
+            
             for clip in self._data["clips"]:
                 file_id = clip["file_id"]
                 clip_id = clip["id"]
 
-                # For now, store thumbnail path for backwards compatibility
+                
                 clip["image"] = os.path.join(target_thumb_path, f"{file_id}.png")
 
                 log.info("Checking clip %s path for file %s", clip_id, file_id)
-                # Update paths to files stored in our working space or old path structure
-                # (should have already been copied during previous File stage)
+                
+                
                 if file_id and file_id in reader_paths:
                     clip["reader"]["path"] = reader_paths[file_id]
                     log.info("Updated clip %s path for file %s", clip_id, file_id)
@@ -1512,7 +1512,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
     def add_to_recent_files(self, file_path):
         """ Add this project to the recent files list """
         if not file_path or file_path is info.BACKUP_FILE:
-            # Ignore backup recovery project
+            
             return
 
         s = get_app().get_settings()
@@ -1521,21 +1521,21 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
         normalized_path = normalized_local_path(file_path)
         normalized_key = comparable_local_path(normalized_path)
 
-        # Remove existing project entries, including mixed-separator duplicates.
+        
         recent_projects = [
             normalized_local_path(existing_path)
             for existing_path in recent_projects
             if comparable_local_path(existing_path) != normalized_key
         ]
 
-        # Remove oldest item (if needed)
+        
         if len(recent_projects) >= 10:
             del recent_projects[0]
 
-        # Append file path to end of recent files
+        
         recent_projects.append(normalized_path)
 
-        # Save setting
+        
         s.set("recent_projects", recent_projects)
         s.save()
 
@@ -1543,7 +1543,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
         """Check if all paths are valid, and prompt to update them if needed"""
         app = get_app()
         settings = app.get_settings()
-        # Get translation method
+        
         _ = app._tr
 
         log.info("checking project files...")
@@ -1557,9 +1557,9 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
             if not _path_is_missing(path):
                 return path, False
 
-            # Reuse prior decision for this exact missing path in this load pass.
-            # This avoids duplicate prompts when the same asset path appears in
-            # multiple places (e.g. top-level effect + clip effect).
+            
+            
+            
             missing_path_decisions = prompt_state.setdefault("missing_path_decisions", {})
             if path in missing_path_decisions:
                 cached_path = missing_path_decisions[path]
@@ -1579,7 +1579,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                     skip_detail = " (user selected Skip All)"
                 else:
                     skip_detail = " (user selected Skip File)"
-                # Use warning level so this is visible even when info logs are filtered.
+                
                 log.warning(
                     "Missing path skipped during project load%s: %s",
                     skip_detail,
@@ -1659,7 +1659,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
 
             return True
 
-        # Loop through each files in natural-sorted filename order
+        
         files_sorted = sorted(
             self._data["files"],
             key=lambda f: os.path.basename(f.get("path", "")).lower()
@@ -1670,7 +1670,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
 
             log.info("checking file %s", path)
             if not os.path.exists(path) and "%" not in path:
-                # File is missing - prompt/resolve using the shared path-decision cache.
+                
                 resolved_path, should_remove = _resolve_missing_path(path)
                 if should_remove:
                     log.info('Removed missing file: %s', file_name_with_ext)
@@ -1680,14 +1680,14 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                     settings.setDefaultPath(settings.actionType.IMPORT, resolved_path)
                     log.info("Auto-updated missing file: %s", resolved_path)
 
-        # Build a lookup of valid file IDs after any removals/updates
+        
         file_paths_by_id = {file.get("id"): file.get("path") for file in self._data["files"]}
 
-        # Loop through each clip (in reverse order). Don't prompt for clips.
+        
         for clip in reversed(self._data["clips"]):
             file_id = clip.get("file_id") or clip.get("reader", {}).get("id")
             if file_id and file_id in file_paths_by_id:
-                # Keep clip reader path in sync with its File path
+                
                 reader = clip.get("reader")
                 if not isinstance(reader, dict):
                     reader = {}
@@ -1697,19 +1697,19 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
             path = clip.get("reader", {}).get("path", "")
 
             if file_id and file_id not in file_paths_by_id:
-                # Remove clips with invalid/missing files
+                
                 file_name_with_ext = os.path.basename(path) if path else ""
                 log.info('Removed missing clip: %s', file_name_with_ext)
                 self._data["clips"].remove(clip)
                 continue
 
             if path and not os.path.exists(path) and "%" not in path:
-                # Remove missing clip without prompting
+                
                 file_name_with_ext = os.path.basename(path)
                 log.info('Removed missing clip: %s', file_name_with_ext)
                 self._data["clips"].remove(clip)
 
-        # Loop through top-level effects/transitions and prompt for missing reader/resource paths.
+        
         for effect in reversed(self._data["effects"]):
             self._drop_obsolete_effect_resource(effect)
             if not _repair_effect_paths(effect):
@@ -1718,7 +1718,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
                 log.info("Removed missing effect: %s", effect_name)
                 self._data["effects"].remove(effect)
 
-        # Some clip effects can also carry reader/resource paths (e.g. mask/image-driven effects).
+        
         for clip in self._data["clips"]:
             effects = clip.get("effects")
             if not isinstance(effects, list):
@@ -1747,23 +1747,23 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
             self.has_unsaved_changes = True
 
         if action.type == "insert":
-            # Insert new item
+            
             old_vals = self._set(action.key, action.values, add=True)
-            action.set_old_values(old_vals)  # Save previous values to reverse this action
+            action.set_old_values(old_vals)  
             mark_dirty()
 
         elif action.type == "update":
-            # Update existing item
+            
             old_vals = self._set(action.key, action.values)
-            action.set_old_values(old_vals)  # Save previous values to reverse this action
+            action.set_old_values(old_vals)  
             mark_dirty()
 
             if len(action.key) == 1 and action.key[0] in ["fps"]:
-                # FPS changed (apply profile)
+                
                 profile_key = self._data.get("profile")
                 profile = self.get_profile(profile_key)
                 if profile:
-                    # Get current FPS (prior to changing)
+                    
                     new_fps = self._data.get("fps")
                     new_fps_float = float(new_fps["num"]) / float(new_fps["den"])
                     old_fps_float = float(old_vals["num"]) / float(old_vals["den"])
@@ -1771,43 +1771,43 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
 
                     if fps_factor != 1.0:
                         log.info(f"Convert {old_fps_float} FPS to {new_fps_float} FPS (profile: {profile.ShortName()})")
-                        # Snap to new FPS grid (start, end, duration)
+                        
                         change_profile(self._data["clips"] + self._data["effects"], profile)
 
-                        # Rescale keyframes to match new FPS
+                        
                         self.rescale_keyframes(fps_factor)
 
-                    # Update size of audio-only files
+                    
                     for file in self._data.get("files", []):
-                        # Check for audio-only files
+                        
                         if file.get("has_audio") and not file.get("has_video"):
-                            # Audio-only file should match the current project size and FPS
+                            
                             file["width"] = profile.info.width
                             file["height"] = profile.info.height
                             file["display_ratio"]["num"] = profile.info.display_ratio.num
                             file["display_ratio"]["den"] = profile.info.display_ratio.den
 
-                            # Change all related clips
+                            
                             for clip in self._data.get("clips", []):
                                 if clip.get("reader", {}).get("id") == file.get("id"):
                                     clip["reader"] = file
 
-                    # Broadcast this change out
+                    
                     get_app().updates.load(self._data, reset_history=False)
                 else:
                     log.warning(f"No profile found for {profile_key}")
 
         elif action.type == "delete":
-            # Delete existing item
+            
             old_vals = self._set(action.key, remove=True)
-            action.set_old_values(old_vals)  # Save previous values to reverse this action
+            action.set_old_values(old_vals)  
             mark_dirty()
 
         elif action.type == "load":
-            # Don't track unsaved changes when loading a project
+            
             pass
 
-    # Utility methods
+    
     def generate_id(self, digits=10):
         """ Generate random alphanumeric ids """
 
@@ -1824,7 +1824,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
         a specific # of audio channels and channel layout."""
         s = get_app().get_settings()
 
-        # Get the default audio settings for the timeline (and preview playback)
+        
         default_sample_rate = int(s.get("default-samplerate"))
         default_channel_layout = s.get("default-channellayout")
 
@@ -1846,7 +1846,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
             channels = 8
             channel_layout = smartedit.LAYOUT_7POINT1
 
-        # Set default samplerate and channels
+        
         self._data["sample_rate"] = default_sample_rate
         self._data["channels"] = channels
         self._data["channel_layout"] = channel_layout

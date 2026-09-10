@@ -630,9 +630,9 @@ class KeyframeMixin:
         for update in marker_updates.values():
             apply_marker_update(update["marker"], update)
 
-        # If a dragged path still exists on another marker (stale cache/data
-        # frame), force it to the same pending drag position this paint cycle.
-        # This prevents old pre-snap marker positions from lingering visually.
+        
+        
+        
         if pending_by_path:
             for marker in markers:
                 if id(marker) in marker_updates:
@@ -900,7 +900,7 @@ class KeyframeMixin:
         for marker in getattr(self, "_keyframe_markers", []):
             if marker.get("object_id") != clip_id_str:
                 continue
-            # Use unclamped seconds so trimmed-off keyframes remain snap targets.
+            
             marker_seconds = marker.get("seconds")
             if marker_seconds is None:
                 marker_seconds = marker.get("display_seconds")

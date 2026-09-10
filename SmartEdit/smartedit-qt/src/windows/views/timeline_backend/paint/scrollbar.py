@@ -45,7 +45,7 @@ class ScrollbarPainter(BasePainter):
         self.track_brush = QBrush(track)
 
     def paint(self, painter: QPainter):
-        # Horizontal scrollbar
+        
         sb = self.w.scroll_bar_rect
         if not sb.isNull():
             track = QRectF(
@@ -57,7 +57,7 @@ class ScrollbarPainter(BasePainter):
             painter.fillRect(track, self.track_brush)
             painter.fillRect(sb, self.handle_brush)
 
-        # Vertical scrollbar
+        
         sbv = getattr(self.w, "v_scroll_bar_rect", QRectF())
         if not sbv.isNull():
             track = QRectF(

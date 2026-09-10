@@ -46,9 +46,9 @@ class CreditsTreeView(QTreeView):
 
     def refresh_view(self):
         """Format columns and sort"""
-        # Model is already populated; just adjust view
+        
 
-        # Format columns
+        
         self.header().setSectionResizeMode(0, QHeaderView.Fixed)
         self.header().setSectionResizeMode(1, QHeaderView.Fixed)
         self.setColumnWidth(0, 22)
@@ -74,7 +74,7 @@ class CreditsTreeView(QTreeView):
         log.info('contextMenuEvent')
         _ = get_app()._tr
 
-        # Get proxy model and selection
+        
         model = self.model()
         index = self.indexAt(event.pos())
         if index.isValid():
@@ -103,17 +103,17 @@ class CreditsTreeView(QTreeView):
             log.warning('Failed to launch web browser to %s' % website)
 
     def __init__(self, credits, columns, *args):
-        # Invoke parent init
+        
         QTreeView.__init__(self, *args)
 
-        # Get a reference to the window object
+        
         self.win = get_app().window
 
-        # Get Model data
+        
         self.credits_model = CreditsModel(credits)
         self.selected = []
 
-        # Setup header columns
+        
         self.setIndentation(0)
         self.setSelectionBehavior(QTreeView.SelectRows)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -122,13 +122,13 @@ class CreditsTreeView(QTreeView):
         self.setWordWrap(True)
         self.columns = columns
 
-        # Populate model
+        
         self.credits_model.update_model()
 
-        # Set proxy model and shared selection model
+        
         self.setModel(self.credits_model.proxy_model)
         self.selectionModel().deleteLater()
         self.setSelectionModel(self.credits_model.selection_model)
 
-        # Refresh view
+        
         self.refresh_view()

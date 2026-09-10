@@ -27,7 +27,7 @@ class PromptInterpreterDialog(QDialog):
         self.interpreter = PromptInterpreter()
 
         self._setup_ui(initial_prompt)
-        # Perform initial interpretation if default prompt is provided
+        
         if initial_prompt:
             self._on_interpret()
 
@@ -36,7 +36,7 @@ class PromptInterpreterDialog(QDialog):
         layout.setSpacing(12)
         layout.setContentsMargins(20, 20, 20, 20)
 
-        # Header banner
+        
         header_frame = QFrame()
         header_frame.setStyleSheet("""
             QFrame {
@@ -60,7 +60,7 @@ class PromptInterpreterDialog(QDialog):
         header_layout.addWidget(desc_lbl)
         layout.addWidget(header_frame)
 
-        # Presets row
+        
         preset_layout = QHBoxLayout()
         preset_layout.addWidget(QLabel("Quick Presets:"))
         presets = [
@@ -91,7 +91,7 @@ class PromptInterpreterDialog(QDialog):
         preset_layout.addStretch()
         layout.addLayout(preset_layout)
 
-        # Prompt input area
+        
         input_label = QLabel("Enter Natural Language Instruction:")
         input_label.setStyleSheet("font-weight: bold; color: #eceff1;")
         layout.addWidget(input_label)
@@ -115,7 +115,7 @@ class PromptInterpreterDialog(QDialog):
         """)
         layout.addWidget(self.prompt_input)
 
-        # Control Row (Engine selection + Action button)
+        
         control_layout = QHBoxLayout()
 
         engine_lbl = QLabel("Engine:")
@@ -159,7 +159,7 @@ class PromptInterpreterDialog(QDialog):
         control_layout.addWidget(self.interpret_btn)
         layout.addLayout(control_layout)
 
-        # Summary & Badges panel
+        
         self.summary_frame = QFrame()
         self.summary_frame.setStyleSheet("""
             QFrame {
@@ -180,7 +180,7 @@ class PromptInterpreterDialog(QDialog):
         summary_vbox.addLayout(self.badges_layout)
         layout.addWidget(self.summary_frame)
 
-        # Structured JSON Output viewer
+        
         json_label = QLabel("Structured JSON Representation:")
         json_label.setStyleSheet("font-weight: bold; color: #eceff1;")
         layout.addWidget(json_label)
@@ -200,7 +200,7 @@ class PromptInterpreterDialog(QDialog):
         """)
         layout.addWidget(self.json_viewer)
 
-        # Bottom action buttons
+        
         bottom_layout = QHBoxLayout()
 
         self.copy_btn = QPushButton("📋 Copy JSON")
@@ -235,19 +235,19 @@ class PromptInterpreterDialog(QDialog):
             json_str = json.dumps(parsed, indent=2, ensure_ascii=False)
             self.json_viewer.setPlainText(json_str)
 
-            # Update summary
+            
             summary = parsed.get("summary", "")
             engine_used = parsed.get("engine", "semantic_nlp")
             self.summary_text_lbl.setText(f"{summary} (Engine: {engine_used})")
 
-            # Update badges
+            
             self._update_badges(parsed)
         except Exception as ex:
             log.error("Failed to interpret prompt: %s", ex, exc_info=True)
             self.json_viewer.setPlainText(f"Error interpreting prompt: {ex}")
 
     def _update_badges(self, parsed: dict):
-        # Clear existing badges
+        
         while self.badges_layout.count():
             item = self.badges_layout.takeAt(0)
             widget = item.widget()

@@ -66,6 +66,10 @@ class ShakyFootageService:
         else:
             try:
                 timeline_clips = Clip.filter()
+                app = _safe_app()
+                if app and hasattr(app, "window") and hasattr(app.window, "selected_clips") and app.window.selected_clips:
+                    selected_ids = set(app.window.selected_clips)
+                    timeline_clips = [c for c in timeline_clips if str(c.id) in selected_ids]
             except Exception as ex:
                 logger.warning(f"Failed to query timeline clips: {ex}")
                 timeline_clips = []
@@ -73,18 +77,18 @@ class ShakyFootageService:
         for clip in timeline_clips:
             clip_data = clip.data if isinstance(clip.data, dict) else {}
 
-            # Ignore AI label clips themselves if re-running
+            
             clip_ui = clip_data.get("ui") if isinstance(clip_data.get("ui"), dict) else {}
             if clip_ui.get("ai_label") or str(clip_data.get("title", "")).startswith("SHAKY FOOTAGE") or str(clip_data.get("title", "")).startswith("[⚠ SHAKY"):
                 continue
 
-            # Check if media has video
+            
             reader = clip_data.get("reader") or {}
             has_video = reader.get("has_video")
             if has_video is False:
                 continue
 
-            # Resolve file path
+            
             path = reader.get("path") or ""
             file_id = clip_data.get("file_id") or reader.get("id")
             if (not path or not os.path.isfile(path)) and file_id:
@@ -95,7 +99,7 @@ class ShakyFootageService:
                 except Exception:
                     pass
 
-            # Duration and position
+            
             try:
                 pos = float(clip_data.get("position", 0.0))
             except (TypeError, ValueError):
@@ -118,11 +122,11 @@ class ShakyFootageService:
 
             clip_name = clip.title() or os.path.basename(path) or "Clip"
 
-            # Run optical flow shake analysis
+            
             if path and os.path.isfile(path):
                 analysis = self.video_analyzer.analyze_shaky_footage(path, threshold=thresh_pct)
             else:
-                # Fallback for placeholder clips in tests
+                
                 analysis = self.video_analyzer._heuristic_analysis(clip_name, threshold=thresh_pct)
 
             shake_pct = float(analysis.get("shake_percentage", 0.0))
@@ -170,6 +174,10 @@ class ShakyFootageService:
         else:
             try:
                 timeline_clips = Clip.filter()
+                app = _safe_app()
+                if app and hasattr(app, "window") and hasattr(app.window, "selected_clips") and app.window.selected_clips:
+                    selected_ids = set(app.window.selected_clips)
+                    timeline_clips = [c for c in timeline_clips if str(c.id) in selected_ids]
             except Exception as ex:
                 logger.warning(f"Failed to query timeline clips: {ex}")
                 timeline_clips = []
@@ -177,7 +185,7 @@ class ShakyFootageService:
         for clip in timeline_clips:
             clip_data = clip.data if isinstance(clip.data, dict) else {}
 
-            # Skip AI label / marker clips
+            
             clip_ui = clip_data.get("ui") if isinstance(clip_data.get("ui"), dict) else {}
             if clip_ui.get("ai_label") or str(clip_data.get("title", "")).startswith("SHAKY FOOTAGE") or str(clip_data.get("title", "")).startswith("[⚠ SHAKY") or str(clip_data.get("title", "")).startswith("[⚠ REMOVED"):
                 continue
@@ -268,7 +276,7 @@ class ShakyFootageService:
         except Exception:
             pass
 
-        # Collect occupied layers (ignore existing AI label clips)
+        
         occupied_layers = set()
         for c in all_clips:
             c_data = c.data if isinstance(c.data, dict) else {}
@@ -289,7 +297,7 @@ class ShakyFootageService:
         max_occupied = max(occupied_layers) if occupied_layers else 0
         max_existing = max(existing_track_numbers) if existing_track_numbers else 0
 
-        # Look for existing unused track strictly above all occupied tracks
+        
         candidates_above = [
             n for n in existing_track_numbers
             if n > max_occupied and n not in occupied_layers
@@ -356,18 +364,18 @@ class ShakyFootageService:
                 p = QPainter(img)
                 p.setRenderHint(QPainter.Antialiasing, True)
 
-                # Card colors
+                
                 border_color = QColor(39, 174, 96) if removed else QColor(231, 76, 60)
                 card_bg = QColor(18, 28, 24, 242) if removed else QColor(21, 27, 38, 242)
 
-                # 1. Main container card at top center
+                
                 card = QRectF(380, 50, 1160, 120)
                 p.setBrush(card_bg)
                 p.setPen(QPen(border_color, 4))
                 p.drawRoundedRect(card, 16, 16)
 
                 if removed:
-                    # Checkmark / Shield badge for removed
+                    
                     p.setBrush(QColor(39, 174, 96))
                     p.setPen(QPen(QColor(255, 255, 255), 2))
                     p.drawRoundedRect(QRectF(420, 72, 60, 60), 12, 12)
@@ -375,7 +383,7 @@ class ShakyFootageService:
                     p.drawLine(QPointF(434, 102), QPointF(446, 118))
                     p.drawLine(QPointF(446, 118), QPointF(466, 86))
 
-                    # Title & Subtitle
+                    
                     p.setFont(QFont("Segoe UI", 26, QFont.Bold))
                     p.setPen(QColor(255, 255, 255))
                     p.drawText(QRectF(505, 65, 760, 42), Qt.AlignLeft | Qt.AlignVCenter, f"REMOVED SHAKY FOOTAGE – {pct_int}%")
@@ -385,7 +393,7 @@ class ShakyFootageService:
                     sub_txt = f"Original Detected Region {time_str} – Camera Shake Cut from Timeline" if time_str else "Original Detected Region – Camera Shake Cut from Timeline"
                     p.drawText(QRectF(505, 110, 760, 32), Qt.AlignLeft | Qt.AlignVCenter, sub_txt)
 
-                    # Pill badge
+                    
                     pill = QRectF(1340, 80, 160, 56)
                     grad = QLinearGradient(pill.topLeft(), pill.bottomRight())
                     grad.setColorAt(0.0, QColor(39, 174, 96))
@@ -399,7 +407,7 @@ class ShakyFootageService:
                     p.drawText(pill, Qt.AlignCenter, "REMOVED")
 
                 else:
-                    # Caution Triangle Icon
+                    
                     triangle = QPainterPath()
                     triangle.moveTo(420, 134)
                     triangle.lineTo(455, 72)
@@ -414,7 +422,7 @@ class ShakyFootageService:
                     p.setBrush(QColor(21, 27, 38))
                     p.drawEllipse(QPointF(455, 124), 3.5, 3.5)
 
-                    # Title & Subtitle
+                    
                     p.setFont(QFont("Segoe UI", 26, QFont.Bold))
                     p.setPen(QColor(255, 255, 255))
                     p.drawText(QRectF(515, 65, 760, 42), Qt.AlignLeft | Qt.AlignVCenter, f"SHAKY FOOTAGE – {pct_int}%")
@@ -424,7 +432,7 @@ class ShakyFootageService:
                     sub_txt = f"Detected Shake Region {time_str} ({classification})" if time_str else f"Classification: {classification} (Camera Shake Exceeds Threshold)"
                     p.drawText(QRectF(515, 110, 760, 32), Qt.AlignLeft | Qt.AlignVCenter, sub_txt)
 
-                    # Pill badge
+                    
                     pill = QRectF(1340, 80, 160, 56)
                     grad = QLinearGradient(pill.topLeft(), pill.bottomRight())
                     grad.setColorAt(0.0, QColor(231, 76, 60))
@@ -490,10 +498,10 @@ class ShakyFootageService:
             time_str = f"{tl_start:.2f}–{tl_end:.2f}"
             title_text = region.get("title") or f"[⚠ SHAKY {pct_int}%] {time_str}"
 
-            # 1. Generate PNG visual indicator asset
+            
             img_path = self.generate_warning_image(shake_pct, classification, removed=False, time_str=time_str)
 
-            # 2. Register / retrieve project File
+            
             file_obj = None
             try:
                 for f in File.filter():
@@ -513,7 +521,7 @@ class ShakyFootageService:
             except Exception as f_ex:
                 logger.warning(f"Could not register File for label image: {f_ex}")
 
-            # 3. Build Clip data structure
+            
             clip_dict: Dict[str, Any] = {}
             try:
                 import smartedit
@@ -554,7 +562,7 @@ class ShakyFootageService:
             if label_clip.id:
                 self.last_created_clip_ids.append(label_clip.id)
 
-            # 4. Add timeline playhead Marker at region start
+            
             try:
                 app = _safe_app()
                 project = getattr(app, "project", None) if app else None
@@ -595,7 +603,7 @@ class ShakyFootageService:
         """
         Backwards-compatible helper: labels clips directly or maps them to regions.
         """
-        # If passed whole clip dicts without timeline_start, map to label_shaky_regions
+        
         regions = []
         for item in shaky_clips:
             if "timeline_start" in item:
@@ -628,7 +636,7 @@ class ShakyFootageService:
         app = _safe_app()
         window = getattr(app, "window", None) if app else None
 
-        # 1. Detect exact shaky regions
+        
         regions = self.analyze_timeline_shaky_regions(threshold=threshold)
 
         if not regions:
@@ -641,24 +649,24 @@ class ShakyFootageService:
                 "labeled_layer": None
             }
 
-        # 2. Begin atomic transaction
+        
         transaction_id = str(uuid.uuid4())
         self.last_transaction_id = transaction_id
         if app and hasattr(app, "updates") and app.updates:
             app.updates.transaction_id = transaction_id
 
         try:
-            # 3. Find topmost unused layer
+            
             target_layer = self.find_or_create_top_unused_layer()
 
-            # 4. Place visual markers on top unused layer
+            
             created_clips = self.label_shaky_regions(regions, target_layer)
 
         finally:
             if app and hasattr(app, "updates") and app.updates:
                 app.updates.transaction_id = None
 
-        # 5. Refresh timeline UI
+        
         if window:
             if hasattr(window, "refreshFrameSignal"):
                 window.refreshFrameSignal.emit()
@@ -706,14 +714,14 @@ class ShakyFootageService:
         app = _safe_app()
         window = getattr(app, "window", None) if app else None
 
-        # Stage 2: timeline clips are retrieved
+        
         print("[DEBUG] Retrieving timeline clips...")
         target_regions = regions
         if not target_regions:
             target_regions = getattr(self, "last_detected_regions", [])
 
         if not target_regions:
-            # Look for existing label clips on timeline
+            
             try:
                 for c in Clip.filter():
                     c_data = c.data if isinstance(c.data, dict) else {}
@@ -736,9 +744,13 @@ class ShakyFootageService:
                 pass
 
         if not target_regions:
-            # Stage 3 & 4: video analysis runs & shake regions are calculated
+            
             try:
                 timeline_clips = Clip.filter()
+                app = _safe_app()
+                if app and hasattr(app, "window") and hasattr(app.window, "selected_clips") and app.window.selected_clips:
+                    selected_ids = set(app.window.selected_clips)
+                    timeline_clips = [c for c in timeline_clips if str(c.id) in selected_ids]
             except Exception as ex:
                 logger.warning(f"Failed to query timeline clips: {ex}")
                 timeline_clips = []
@@ -747,7 +759,7 @@ class ShakyFootageService:
         else:
             print(f"[DEBUG] Using {len(target_regions)} previously detected/provided shaky region(s)")
 
-        # Stage 5 & 6: Validate timestamps and timeline coordinates
+        
         if not target_regions:
             print("[SHAKE] No shaky regions detected")
             return {
@@ -783,14 +795,14 @@ class ShakyFootageService:
             print(f"[SHAKE] region={s_start:.2f}s - {s_end:.2f}s")
             print(f"[SHAKE] score={score}%")
 
-        # Group by target clip_id
+        
         clips_to_regions: Dict[str, List[Dict[str, Any]]] = {}
         for r in target_regions:
             cid = r.get("clip_id")
             if cid:
                 clips_to_regions.setdefault(cid, []).append(r)
 
-        # Sort clips in descending order of initial timeline position (right-to-left)
+        
         sorted_clip_entries = []
         for clip_id, clip_regs in clips_to_regions.items():
             c_obj = Clip.get(id=clip_id)
@@ -799,7 +811,7 @@ class ShakyFootageService:
                 sorted_clip_entries.append((pos, clip_id, clip_regs))
         sorted_clip_entries.sort(key=lambda x: x[0], reverse=True)
 
-        # Atomic transaction for single-step Undo/Redo
+        
         transaction_id = str(uuid.uuid4())
         self.last_transaction_id = transaction_id
         if app and hasattr(app, "updates") and app.updates:
@@ -822,7 +834,7 @@ class ShakyFootageService:
                 c_tl_end = c_pos + c_dur
                 c_layer = int(c_data.get("layer", 1000000))
 
-                # Normalize, clamp, and merge overlapping shaky intervals
+                
                 merged_shaky: List[Tuple[float, float, float]] = []
                 sorted_regs = sorted(clip_regs, key=lambda x: float(x.get("timeline_start", 0.0)))
 
@@ -844,7 +856,7 @@ class ShakyFootageService:
                 if not merged_shaky:
                     continue
 
-                # Stage 7, 8, 9: original clip is split at shaky-region boundaries & shaky segment removed
+                
                 for (s_shaky, e_shaky, _) in merged_shaky:
                     print(f"[SPLIT] {clip_id} at {s_shaky:.2f}s")
                     print(f"[SPLIT] {clip_id} at {e_shaky:.2f}s")
@@ -853,7 +865,7 @@ class ShakyFootageService:
                 removed_count += len(merged_shaky)
                 affected_clips += 1
 
-                # Compute stable intervals: portions of the clip outside all shaky ranges
+                
                 stable_intervals: List[Tuple[float, float]] = []
                 curr = c_pos
                 for (s_shaky, e_shaky, _) in merged_shaky:
@@ -865,7 +877,7 @@ class ShakyFootageService:
 
                 total_shaky_dur = c_dur - sum(ei - si for (si, ei) in stable_intervals)
 
-                # Stage 10: remaining clips are repositioned/merged
+                
                 if not stable_intervals:
                     clip.delete()
                 else:
@@ -899,7 +911,7 @@ class ShakyFootageService:
 
                         next_pos = round(next_pos + duri, 4)
 
-                # Shift any subsequent clips and transitions on this layer to close the gap
+                
                 if close_gaps and total_shaky_dur > 0.02:
                     try:
                         for other_clip in Clip.filter(layer=c_layer):
@@ -919,7 +931,7 @@ class ShakyFootageService:
 
             print("[DEBUG] Remaining clips repositioned and merged")
 
-            # Update existing visual markers on top layer if any exist
+            
             try:
                 for c in Clip.filter():
                     c_dict = c.data if isinstance(c.data, dict) else {}
@@ -949,12 +961,12 @@ class ShakyFootageService:
                 pass
 
         finally:
-            # Stage 12: undo/redo state is updated
+            
             if app and hasattr(app, "updates") and app.updates:
                 app.updates.transaction_id = None
             print(f"[DEBUG] Undo/redo transaction {transaction_id} committed")
 
-        # Stage 11: timeline refreshes
+        
         if window:
             if hasattr(window, "refreshFrameSignal"):
                 window.refreshFrameSignal.emit()

@@ -37,7 +37,7 @@ class SnapHelper:
         self.widget = widget
         self.geometry = geometry
 
-    # ---- Helpers -----------------------------------------------------
+    
     def _h_offset(self) -> float:
         """Return current horizontal scroll offset in pixels."""
         view_w = self.widget.scrollbar_position[3] or 1.0

@@ -75,9 +75,9 @@ def inspect_media(path, max_width=0, max_height=0):
     try:
         return _inspect_with_reader(False)
     except Exception:
-        # Retry with eager inspection so libsmartedit can reject an incorrect
-        # lightweight reader choice during construction and fall back to the
-        # next candidate (for example, unknown-but-supported FFmpeg formats).
+        
+        
+        
         return _inspect_with_reader(True)
 
 
@@ -90,8 +90,8 @@ class SingleColumnProxyModel(QSortFilterProxyModel):
     def data(self, index, role=Qt.DisplayRole):
         """Get text data from the underlying source model (bypassing filter proxy)"""
         if index.column() == 0 and role in (Qt.DisplayRole, Qt.AccessibleTextRole):
-            # Get the actual text from the root source model (QStandardItemModel)
-            # by traversing through the proxy chain
+            
+            
             source_index = self.mapToSource(index)
             filter_proxy = self.sourceModel()
             if filter_proxy:
@@ -123,16 +123,16 @@ class FileFilterProxyModel(QSortFilterProxyModel):
                 or get_app().window.actionFilesShowAudio.isChecked() \
                 or get_app().window.actionFilesShowImage.isChecked() \
                 or filter_text:
-            # Fetch the file name
+            
             index = self.sourceModel().index(sourceRow, 0, sourceParent)
-            file_name = self.sourceModel().data(index)  # file name (i.e. MyVideo.mp4)
+            file_name = self.sourceModel().data(index)  
 
-            # Fetch the media_type
+            
             index = self.sourceModel().index(sourceRow, 3, sourceParent)
-            media_type = self.sourceModel().data(index)  # media type (i.e. video, image, audio)
+            media_type = self.sourceModel().data(index)  
 
             index = self.sourceModel().index(sourceRow, 2, sourceParent)
-            tags = self.sourceModel().data(index)  # tags (i.e. intro, custom, etc...)
+            tags = self.sourceModel().data(index)  
 
             if any([
                 get_app().window.actionFilesShowVideo.isChecked() and media_type != "video",
@@ -141,21 +141,21 @@ class FileFilterProxyModel(QSortFilterProxyModel):
             ]):
                 return False
 
-            # Match against regex pattern
+            
             regex = get_proxy_filter_regex(self)
             if not regex_is_empty(regex):
                 tag_text = tags or ""
                 return regex_matches(regex, file_name) or regex_matches(regex, tag_text)
             return True
 
-        # Continue running built-in parent filter logic
+        
         return super().filterAcceptsRow(sourceRow, sourceParent)
 
     def mimeData(self, indexes):
-        # Create MimeData for drag operation
+        
         data = QMimeData()
 
-        # Get list of selected file ids from indexes (more reliable across bindings)
+        
         ids = []
         seen_rows = set()
         for idx in indexes:
@@ -188,11 +188,11 @@ class FileFilterProxyModel(QSortFilterProxyModel):
         if urls:
             data.setUrls(urls)
 
-        # Return Mimedata
+        
         return data
 
     def get_file_index(self, file_id):
-        # Find the index in the proxy model based on the file ID
+        
         if file_id in self.model_owner.model_ids:
             return self.mapFromSource(QModelIndex(self.model_owner.model_ids[file_id]))
         return QModelIndex()
@@ -202,7 +202,7 @@ class FileFilterProxyModel(QSortFilterProxyModel):
             self.model_owner = kwargs["parent"]
             kwargs.pop("parent")
 
-        # Call base class implementation
+        
         super().__init__(**kwargs)
 
 
@@ -263,23 +263,23 @@ class FilesModel(QObject, updates.UpdateInterface):
             return "{} {}".format(tooltip, app._tr("(Optimized)"))
         return tooltip
 
-    # This method is invoked by the UpdateManager each time a change happens (i.e UpdateInterface)
+    
     def changed(self, action):
 
-        # Something was changed in the 'files' list
+        
         if action and ((len(action.key) >= 1 and action.key[0].lower() == "files") or action.type == "load"):
-            # Refresh project files model
+            
             if action.type == "insert":
-                # Don't clear the existing items if only inserting new things
+                
                 self.update_model(clear=False)
             elif action.type == "delete" and action.key[0].lower() == "files" and len(action.key) == 2:
-                # Delete a top-level file row only when the file object itself was deleted.
+                
                 self.update_model(clear=False, delete_file_id=action.key[1].get('id', ''))
             elif action.type in ("update", "delete") and action.key[0].lower() == "files":
-                # Update a single file (if found)
+                
                 self.update_model(clear=False, update_file_id=action.key[1].get('id', ''))
             else:
-                # Clear existing items. For full project loads, batch updates for faster UI rebuild.
+                
                 self.update_model(clear=True, progressive_ui=False)
 
     def update_model(self, clear=True, delete_file_id=None, update_file_id=None, progressive_ui=True):
@@ -288,38 +288,38 @@ class FilesModel(QObject, updates.UpdateInterface):
 
         self.ignore_updates = True
 
-        # Translations
+        
         _ = app._tr
 
-        # Delete a file (if delete_file_id passed in)
+        
         if delete_file_id in self.model_ids:
-            # Use the persistent index we stored to find the row
+            
             id_index = self.model_ids[delete_file_id]
 
-            # sanity check
+            
             if not id_index.isValid() or delete_file_id != id_index.data():
                 log.warning("Couldn't remove {} from model!".format(delete_file_id))
                 return
-            # Delete row from model
+            
             row_num = id_index.row()
             self.model.removeRows(row_num, 1, id_index.parent())
             self.model.submit()
             self.model_ids.pop(delete_file_id)
 
-        # Update a file (if update_file_id passed in)
+        
         if update_file_id in self.model_ids:
-            # Use the persistent index we stored to find the row
+            
             id_index = self.model_ids[update_file_id]
 
-            # sanity check
+            
             if not id_index.isValid() or update_file_id != id_index.data():
                 log.warning("Couldn't update {} in model!".format(update_file_id))
                 return
 
-            # lookup File object
+            
             f = File.get(id=update_file_id)
             if f:
-                # Update "tags" in model (if different)
+                
                 row_num = id_index.row()
                 if f.data.get("tags") != self.model.item(row_num, 2).text():
                     self.model.item(row_num, 2).setText(f.data.get("tags"))
@@ -327,26 +327,26 @@ class FilesModel(QObject, updates.UpdateInterface):
                 name = f.data.get("name", filename)
                 self.model.item(row_num, 0).setToolTip(self._tooltip_for_file(f, name))
 
-        # Clear all items
+        
         if clear:
             self.model_ids = {}
             self.model.clear()
 
-        # Add Headers (all 6 columns - last 3 are hidden but must exist for proper layout)
+        
         self.model.setHorizontalHeaderLabels([
             _("Thumb"), _("Name"), _("Tags"),
             "media_type", "path", "id"
         ])
 
-        # Get list of files in project
-        files = File.filter()  # get all files
+        
+        files = File.filter()  
 
-        # add item for each file
+        
         row_added_count = 0
         for file in files:
             id = file.data["id"]
             if id in self.model_ids and self.model_ids[id].isValid():
-                # Ignore files that already exist in model
+                
                 continue
 
             path, filename = os.path.split(file.data["path"])
@@ -356,72 +356,72 @@ class FilesModel(QObject, updates.UpdateInterface):
             row = []
             flags = Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled | Qt. ItemNeverHasChildren
 
-            # Append thumbnail
+            
             col = QStandardItem(thumb_icon, name)
             col.setToolTip(self._tooltip_for_file(file, name))
             col.setFlags(flags)
             col.setAccessibleText(name)
             row.append(col)
 
-            # Append Filename
+            
             col = QStandardItem(name)
             col.setFlags(flags | Qt.ItemIsEditable)
             col.setAccessibleText(name)
             row.append(col)
 
-            # Append Tags
+            
             col = QStandardItem(tags)
             col.setFlags(flags | Qt.ItemIsEditable)
             row.append(col)
 
-            # Append Media Type
+            
             col = QStandardItem(media_type)
             col.setFlags(flags)
             row.append(col)
 
-            # Append Path
+            
             col = QStandardItem(path)
             col.setFlags(flags)
             row.append(col)
 
-            # Append ID
+            
             col = QStandardItem(id)
             col.setFlags(flags | Qt.ItemIsUserCheckable)
             row.append(col)
 
-            # Append ROW to MODEL (if does not already exist in model)
+            
             if id not in self.model_ids:
                 self.model.appendRow(row)
-                # Link the file ID hash to that column of the table row by persistent index
+                
                 self.model_ids[id] = QPersistentModelIndex(row[5].index())
 
                 row_added_count += 1
                 if progressive_ui and row_added_count % 25 == 0:
-                    # Update every X items
+                    
                     get_app().processEvents(QEventLoop.ExcludeUserInputEvents)
 
-            # Refresh view/filtering incrementally during interactive updates (i.e. imports)
+            
             if progressive_ui:
                 get_app().window.resize_contents()
 
         self.ignore_updates = False
 
-        # Single refresh after bulk updates (i.e. opening a project)
+        
         if not progressive_ui:
             get_app().window.resize_contents()
 
-        # Emit signal when model is updated
+        
         self.ModelRefreshed.emit()
         self._rebuild_generation_placeholders()
 
     def add_files(self, files, image_seq_details=None, quiet=False,
                   prevent_image_seq=False, prevent_recent_folder=False):
-        # Access translations
+        
         app = get_app()
         settings = app.get_settings()
         _ = app._tr
 
-        # Make sure we're working with a list of files
+        
         if not isinstance(files, (list, tuple)):
             files = [files]
         scroll_to_files = []
@@ -430,70 +430,70 @@ class FilesModel(QObject, updates.UpdateInterface):
         for count, filepath in enumerate(files):
             (dir_path, filename) = os.path.split(filepath)
 
-            # Check for this path in our existing project data
+            
             new_file = File.get(path=filepath)
 
-            # If this file is already found, exit
+            
             if new_file:
-                # Still add the file (to be selected and scrolled to)
+                
                 scroll_to_files.append(new_file)
                 del new_file
                 continue
 
             try:
-                # Inspect the file with a lightweight temporary reader.
+                
                 file_data, _media_duration = inspect_media(
                     filepath,
                     max_width=IMPORT_READER_MAX_SIZE,
                     max_height=IMPORT_READER_MAX_SIZE,
                 )
 
-                # Determine media type
+                
                 file_data["media_type"] = get_media_type(file_data)
 
-                # Check for audio-only files
+                
                 if file_data.get("has_audio") and not file_data.get("has_video"):
-                    # Audio-only file should match the current project size and FPS
+                    
                     project = get_app().project
                     file_data["width"] = project.get("width")
                     file_data["height"] = project.get("height")
 
-                # Save new file to the project data
+                
                 new_file = File()
                 new_file.data = file_data
 
-                # Is this an image sequence / animation?
+                
                 seq_info = None
                 if not prevent_image_seq:
                     seq_info = image_seq_details or self.get_image_sequence_details(filepath)
 
                 if seq_info:
-                    # Update file with image sequence path & name
+                    
                     new_path = seq_info.get("path")
 
-                    # Load image sequence (to determine duration and video_length)
+                    
                     new_file.data, media_duration = inspect_media(
                         new_path,
                         max_width=IMPORT_READER_MAX_SIZE,
                         max_height=IMPORT_READER_MAX_SIZE,
                     )
                     if media_duration > 0.0:
-                        # Update file details
+                        
                         new_file.data["media_type"] = "video"
                         duration = new_file.data["duration"]
 
                         if seq_info and "fps" in seq_info and "length_multiplier" in seq_info:
-                            # Blender Titles specify their fps in seq_info
+                            
                             fps_num = seq_info.get("fps", {}).get("num", 25)
                             fps_den = seq_info.get("fps", {}).get("den", 1)
                             log.debug("Image Sequence using specified FPS: %s / %s" % (fps_num, fps_den))
                         else:
-                            # Get the project's fps, apply to the image sequence.
+                            
                             fps_num = get_app().project.get("fps").get("num", 30)
                             fps_den = get_app().project.get("fps").get("den", 1)
                             log.debug("Image Sequence using project FPS: %s / %s" % (fps_num, fps_den))
 
-                        # Adjust FPS (difference between 25 FPS and actual FPS)
+                        
                         duration *= 25.0 / (float(fps_num) / float(fps_den))
                         new_file.data["duration"] = duration
                         new_file.data["fps"] = {"num": fps_num, "den": fps_den}
@@ -502,23 +502,23 @@ class FilesModel(QObject, updates.UpdateInterface):
                         log.info(f"Imported '{new_path}' as image sequence with '{fps_num}/{fps_den}' FPS "
                                  f"and '{duration}' duration")
 
-                        # Remove any other image sequence files from the list we're processing
+                        
                         match_glob = "{}{}.{}".format(seq_info.get("base_name"), '[0-9]*', seq_info.get("extension"))
                         log.debug("Removing files from import list with glob: {}".format(match_glob))
                         for seq_file in glob.iglob(os.path.join(seq_info.get("folder_path"), match_glob)):
-                            # Don't remove the current file, or we mess up the for loop
+                            
                             if seq_file in files and seq_file != filepath:
                                 files.remove(seq_file)
                     else:
-                        # Failed to import image sequence
+                        
                         log.info(f"Failed to parse image sequence pattern {new_path}, ignoring...")
                         continue
 
                 if not seq_info:
-                    # Log our not-an-image-sequence import
+                    
                     log.info("Imported media file {}".format(filepath))
 
-                # Save file
+                
                 new_file.save()
                 scroll_to_files.append(new_file)
 
@@ -529,31 +529,31 @@ class FilesModel(QObject, updates.UpdateInterface):
                             }
                     app.window.statusBar.showMessage(message, 15000)
 
-                # Let the event loop run to update the status bar
+                
                 get_app().processEvents()
-                # Update the recent import path
+                
                 if not prevent_recent_folder:
                     settings.setDefaultPath(settings.actionType.IMPORT, dir_path)
 
             except Exception as ex:
-                # Log exception
+                
                 log.warning("Failed to import {}: {}".format(filepath, ex))
 
                 if not quiet and start_count == 1:
-                    # Show message box to user (if importing a single file)
+                    
                     app.window.invalidImage(filename)
 
-        # Reset list of ignored paths
+        
         self.ignore_image_sequence_paths = []
 
-        # Select all new files (clear previous selection)
+        
         self.selection_model.clearSelection()
         last_selected_index = QModelIndex()
         for file_object in scroll_to_files:
-            # Get the index of the newly added file in the proxy model
+            
             index = self.proxy_model.get_file_index(file_object.id)
             if index.isValid():
-                # Select & scroll to selection
+                
                 self.selection_model.select(index, QItemSelectionModel.Select | QItemSelectionModel.Rows)
                 get_app().window.filesView.scrollTo(
                     model_index_sibling_at_column(index, 0),
@@ -561,8 +561,8 @@ class FilesModel(QObject, updates.UpdateInterface):
                 )
                 last_selected_index = index
         if last_selected_index.isValid():
-            # Keep current index aligned with the newly selected file so actions
-            # (preview/properties/etc.) resolve to the expected item.
+            
+            
             self.selection_model.setCurrentIndex(last_selected_index, QItemSelectionModel.NoUpdate)
 
         message = _("Imported %(count)d files") % {"count": len(files) - 1}
@@ -571,10 +571,10 @@ class FilesModel(QObject, updates.UpdateInterface):
     def get_image_sequence_details(self, file_path):
         """Inspect a file path and determine if this is an image sequence"""
 
-        # Get just the file name
+        
         (dirName, fileName) = os.path.split(file_path)
 
-        # Image sequence imports are one per directory per run
+        
         if dirName in self.ignore_image_sequence_paths:
             return None
 
@@ -582,10 +582,10 @@ class FilesModel(QObject, updates.UpdateInterface):
         match = re.findall(r"(.*[^\d])?(0*)(\d+)\.(%s)" % "|".join(extensions), fileName, re.I)
 
         if not match:
-            # File name does not match an image sequence
+            
             return None
 
-        # Get the parts of image name
+        
         base_name = match[0][0]
         fixlen = match[0][1] > ""
         number = int(match[0][2])
@@ -594,33 +594,33 @@ class FilesModel(QObject, updates.UpdateInterface):
 
         full_base_name = os.path.join(dirName, base_name)
 
-        # Check for images which the file names have the different length
+        
         fixlen = fixlen or not (
             glob.glob("%s%s.%s" % (full_base_name, "[0-9]" * (digits + 1), extension))
             or glob.glob("%s%s.%s" % (full_base_name, "[0-9]" * ((digits - 1) if digits > 1 else 3), extension))
         )
 
-        # Check for previous or next image
+        
         for x in range(max(0, number - 100), min(number + 101, 50000)):
             if x != number and os.path.exists(
                "%s%s.%s" % (full_base_name, str(x).rjust(digits, "0") if fixlen else str(x), extension)):
-                break  # found one!
+                break  
         else:
-            # We didn't discover an image sequence
+            
             return None
 
-        # Found a sequence, ignore this path (no matter what the user answers)
-        # To avoid issues with overlapping/conflicting sets of files,
-        # we only attempt one image sequence match per directory
+        
+        
+        
         log.debug("Ignoring path for image sequence imports: {}".format(dirName))
         self.ignore_image_sequence_paths.append(dirName)
 
         log.info('Prompt user to import sequence starting from {}'.format(fileName))
         if not get_app().window.promptImageSequence(fileName):
-            # User said no, don't import as a sequence
+            
             return None
 
-        # generate file glob pattern (for this image sequence)
+        
         if not fixlen:
             zero_pattern = "%d"
         else:
@@ -628,7 +628,7 @@ class FilesModel(QObject, updates.UpdateInterface):
         pattern = "%s%s.%s" % (base_name, zero_pattern, extension)
         new_file_path = os.path.join(dirName, pattern)
 
-        # Yes, import image sequence
+        
         parameters = {
             "folder_path": dirName,
             "base_name": base_name,
@@ -645,9 +645,9 @@ class FilesModel(QObject, updates.UpdateInterface):
         """Recursively process QUrls from a QDropEvent"""
         media_paths = []
 
-        # Transaction — use caller's transaction_id when provided so the
-        # caller can group file imports with subsequent operations (e.g.
-        # clip creation on timeline drop) into a single undo step.
+        
+        
+        
         owns_transaction = transaction_id is None
         if owns_transaction:
             transaction_id = str(uuid.uuid4())
@@ -658,7 +658,7 @@ class FilesModel(QObject, updates.UpdateInterface):
             if not os.path.exists(filepath):
                 continue
             if filepath.endswith(".osp") and os.path.isfile(filepath):
-                # Auto load project passed as argument
+                
                 get_app().window.OpenProjectSignal.emit(filepath)
                 return True
             if os.path.isdir(filepath):
@@ -677,9 +677,9 @@ class FilesModel(QObject, updates.UpdateInterface):
             if owns_transaction:
                 get_app().updates.transaction_id = None
             return
-        # Import all new media files
-        # Preserve the incoming path order (selection/drop order) instead of
-        # forcing filename sorting.
+        
+        
+        
         log.debug("Importing file list: {}".format(media_paths))
         self.add_files(media_paths, quiet=import_quietly, prevent_image_seq=prevent_image_seq)
         if owns_transaction:
@@ -691,12 +691,12 @@ class FilesModel(QObject, updates.UpdateInterface):
         path, filename = os.path.split(file.data["path"])
         name = file.data.get("name", filename)
 
-        # Refresh thumbnail for updated file
+        
         self.ignore_updates = True
         m = self.model
 
         if file_id in self.model_ids:
-            # Look up stored index to ID column
+            
             id_index = self.model_ids[file_id]
             if not id_index.isValid():
                 return
@@ -704,7 +704,7 @@ class FilesModel(QObject, updates.UpdateInterface):
             thumb_source, _, _ = self._thumbnail_source_for_file(file, clear_cache=True)
             thumb_icon = self._icon_from_thumbnail_source(thumb_source)
 
-            # Update thumb for file
+            
             thumb_index = id_index.sibling(id_index.row(), 0)
             item = m.itemFromIndex(thumb_index)
             item.setIcon(thumb_icon)
@@ -712,19 +712,19 @@ class FilesModel(QObject, updates.UpdateInterface):
             item.setToolTip(self._tooltip_for_file(file, name))
             item.setAccessibleText(name)
 
-            # Update display name
+            
             text_index = id_index.sibling(id_index.row(), 1)
             item = m.itemFromIndex(text_index)
             item.setText(name)
 
-            # Emit signal when model is updated
+            
             self.ModelRefreshed.emit()
 
         self.ignore_updates = False
 
     def selected_file_ids(self):
         """ Get a list of file IDs for all selected files """
-        # Get the indexes for column 5 of all selected rows
+        
         selected = self.selection_model.selectedRows(5)
         ids = []
         for idx in selected:
@@ -743,8 +743,8 @@ class FilesModel(QObject, updates.UpdateInterface):
 
     def current_file_id(self):
         """ Get the file ID of the current files-view item, or the first selection """
-        # Prefer selected rows first, since currentIndex can become stale when
-        # switching between details/list views with separate selection models.
+        
+        
         selected_rows = self.selection_model.selectedRows(5)
         if selected_rows:
             selected_ids = set()
@@ -780,11 +780,11 @@ class FilesModel(QObject, updates.UpdateInterface):
     def value_updated(self, item):
         """ Table cell change event - when tags are updated on a file"""
         if item.column() == 2:
-            # Get updated tag value
+            
             tags_value = item.data(0)
             f = self.current_file()
             if f:
-                # Save tags to file object
+                
                 f.data["tags"] = tags_value
                 f.save()
 
@@ -794,7 +794,7 @@ class FilesModel(QObject, updates.UpdateInterface):
             return
         self._syncing_selection = True
         try:
-            # Map selected indexes from proxy_model to list_proxy_model
+            
             list_selection = QItemSelection()
             first_list_index = QModelIndex()
             for index in self.selection_model.selectedRows(0):
@@ -818,7 +818,7 @@ class FilesModel(QObject, updates.UpdateInterface):
             return
         self._syncing_selection = True
         try:
-            # Map selected indexes from list_proxy_model to proxy_model
+            
             tree_selection = QItemSelection()
             first_tree_index = QModelIndex()
             for index in self.list_selection_model.selectedRows(0):
@@ -840,19 +840,19 @@ class FilesModel(QObject, updates.UpdateInterface):
         self.generation_queue = generation_queue
         self.proxy_service = proxy_service
 
-        # Add self as listener to project data updates
-        # (undo/redo, as well as normal actions handled within this class all update the model)
+        
+        
         app = get_app()
         app.updates.add_listener(self)
 
-        # Create standard model
+        
         self.model = QStandardItemModel()
         self.model.setColumnCount(6)
         self.model_ids = {}
         self.ignore_updates = False
         self.ignore_image_sequence_paths = []
 
-        # Create proxy model (for sorting and filtering) - used by TreeView
+        
         self.proxy_model = FileFilterProxyModel(parent=self)
         self.proxy_model.setDynamicSortFilter(True)
         self.proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
@@ -860,23 +860,23 @@ class FilesModel(QObject, updates.UpdateInterface):
         self.proxy_model.setSourceModel(self.model)
         self.proxy_model.setSortLocaleAware(True)
 
-        # Create single-column proxy for ListView (wraps proxy_model for accessibility)
+        
         self.list_proxy_model = SingleColumnProxyModel()
         self.list_proxy_model.setSourceModel(self.proxy_model)
 
-        # Connect data changed signal
+        
         self.model.itemChanged.connect(self.value_updated)
 
-        # Create selection models for each view
+        
         self.selection_model = QItemSelectionModel(self.proxy_model)
         self.list_selection_model = QItemSelectionModel(self.list_proxy_model)
 
-        # Sync selections between the two selection models
+        
         self._syncing_selection = False
         self.selection_model.selectionChanged.connect(self._sync_tree_to_list_selection)
         self.list_selection_model.selectionChanged.connect(self._sync_list_to_tree_selection)
 
-        # Connect signal
+        
         app.window.FileUpdated.connect(self.update_file_thumbnail)
         app.window.refreshFilesSignal.connect(
             functools.partial(self.update_model, clear=False))
@@ -891,14 +891,14 @@ class FilesModel(QObject, updates.UpdateInterface):
             self.proxy_service.file_job_changed.connect(self._refresh_file_generation_display)
             self.proxy_service.queue_changed.connect(self._refresh_all_generation_displays)
 
-        # Call init for superclass QObject
+        
         super().__init__(*args)
 
-        # Attempt to load model testing interface, if requested
-        # (will only succeed with Qt 5.11+)
+        
+        
         if info.MODEL_TEST:
             try:
-                # Create model tester objects
+                
                 from qt_api import QAbstractItemModelTester
                 self.model_tests = []
                 for m in [self.proxy_model, self.model]:

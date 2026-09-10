@@ -35,7 +35,7 @@ from classes.logger import log
 from classes import info
 
 try:
-    from language import smartedit_lang  # noqa
+    from language import smartedit_lang  
     language_path = ":/locale/"
     log.debug("Using compiled translation resources")
 except ImportError:
@@ -46,87 +46,87 @@ except ImportError:
 def init_language():
     """ Find the current locale, and install the correct translators """
 
-    # Get app instance
+    
     app = QCoreApplication.instance()
 
-    # Setup of our list of translators and paths
+    
     translator_types = (
         {"type": 'QT',
-         "prefix": 'qt_',        # Older versions of Qt use this file (built-in translations)
+         "prefix": 'qt_',        
          "path": QLibraryInfo.location(QLibraryInfo.TranslationsPath)},
         {"type": 'QT',
-         "prefix": 'qtbase_',    # Newer versions of Qt use this file (built-in translations)
+         "prefix": 'qtbase_',    
          "path": QLibraryInfo.location(QLibraryInfo.TranslationsPath)},
         {"type": 'QT',
          "prefix": 'qt_',
-         "path": os.path.join(info.PATH, 'language')}, # Optional path where we package QT translations
+         "path": os.path.join(info.PATH, 'language')}, 
         {"type": 'QT',
          "prefix": 'qtbase_',
-         "path": os.path.join(info.PATH, 'language')}, # Optional path where we package QT translations
+         "path": os.path.join(info.PATH, 'language')}, 
         {"type": 'SmartEdit',
-         "prefix": 'SmartEdit_',  # Our custom translations
+         "prefix": 'SmartEdit_',  
          "path": language_path},
     )
 
-    # Determine the environment locale, or default to system locale name
+    
     locale_names = [os.environ.get('LANG', QLocale().system().name()),
                     os.environ.get('LOCALE', QLocale().system().name())
                     ]
 
-    # Get the user's configured language preference
+    
     settings = app.get_settings()
     if settings:
         preference_lang = settings.get('default-language')
     else:
         preference_lang = "Default"
 
-    # Output all languages detected from various sources
+    
     log.info("Qt Detected Languages: {}".format(QLocale().system().uiLanguages()))
     log.info("LANG Environment Variable: {}".format(os.environ.get('LANG', "")))
     log.info("LOCALE Environment Variable: {}".format(os.environ.get('LOCALE', "")))
     log.info("SmartEdit Preference Language: {}".format(preference_lang))
 
-    # Check if the language preference is something other than "Default"
+    
     if preference_lang == "en_US":
-        # Override language list with en_US, don't add to it
+        
         locale_names = [ "en_US" ]
     elif preference_lang != "Default":
-        # Prepend preference setting to list
+        
         locale_names.insert(0, preference_lang)
 
-    # If the user has used the --lang command line arg, override with that
-    # (We've already checked that it's in SUPPORTED_LANGUAGES)
+    
+    
     if info.CMDLINE_LANGUAGE:
         locale_names = [ info.CMDLINE_LANGUAGE ]
         log.info("Language overridden on command line, using: {}".format(info.CMDLINE_LANGUAGE))
 
-    # Default the locale to C, for number formatting
+    
     locale.setlocale(locale.LC_ALL, 'C')
 
-    # Loop through environment variables
+    
     found_language = False
     for locale_name in locale_names:
 
-        # Go through each translator and try to add for current locale
+        
         for type in translator_types:
             trans = QTranslator(app)
             if find_language_match(type["prefix"], type["path"], trans, locale_name):
-                # Install translation
+                
                 app.installTranslator(trans)
                 found_language = True
 
-        # Exit if found language for type: "SmartEdit"
+        
         if found_language:
             log.debug("Exiting translation system (since we successfully loaded: {})".format(locale_name))
             info.CURRENT_LANGUAGE = locale_name
             break
 
 
-# Try the full locale and base locale trying to find a valid path
-#  returns True when a match was found.
-#  pattern - a string expected to have one pipe to be filled by locale strings
-#  path - base path for file (pattern may contain more path)
-#
+
+
+
+
+
 def find_language_match(prefix, path, translator, locale_name):
     """ Match all combinations of locale, language, and country """
 
@@ -141,7 +141,7 @@ def find_language_match(prefix, path, translator, locale_name):
 def get_all_languages():
     """Get all language names and countries packaged with SmartEdit"""
 
-    # Loop through all supported language locale codes
+    
     all_languages = []
     for locale_name in info.SUPPORTED_LANGUAGES:
         try:
@@ -151,7 +151,7 @@ def get_all_languages():
         except Exception:
             log.debug('Failed to parse language for %s', locale_name)
 
-    # Return list
+    
     return all_languages
 
 

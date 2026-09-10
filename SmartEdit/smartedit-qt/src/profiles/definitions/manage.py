@@ -1,13 +1,13 @@
-﻿# Parse JSON profile definitions and provide some useful functions for managing profiles
-# used in SmartEdit.
-#
-# Args:
-#  - "generate": Generate a new set of profile files for SmartEdit (1 text file per profile)
-#  - "validate": Parse through all definitions and validate the math (aspect ratios, sample ratios, etc...)
-#  - "update": Update all JSON definition sample ratios
-#  - "preview": Using only JSON definitions, display all profiles to the screen
-#  - "display": Print all existing profiles to the screen
-#  - "doc": Print documentation markdown (used for manually updating our docs)
+s
+
+
+
+
+
+
+
+
+
 
 import re
 import os
@@ -70,7 +70,7 @@ def save_profile(definition_path, json_details):
         f1.write(formatted_json)
 
 
-# Check for arg value
+
 mode = ""
 if len(sys.argv) <= 1:
     print("Please pass a valid argument: 'generate', 'validate', 'update'")
@@ -78,30 +78,30 @@ if len(sys.argv) <= 1:
 else:
     mode = sys.argv[1]
 
-# Generate possible sample aspect ratios (1-100:1-100)
+
 SAMPLE_RATIOS = [(10, 11), (12, 11), (40, 33), (8, 9), (32, 27), (1, 1), (4, 3), (16, 9), (8, 5), (32, 15),
                  (16, 15), (16, 11), (64, 45), (23, 24), (9, 10), (6, 5), (24, 11), (20, 11), (24, 17), (32, 17), (32, 11),
                  (38, 27), (95, 66), (20, 17), (5, 6), (3, 4), (25, 32),
                  (59, 54), (59, 27), (15, 11), (59, 36)]
 
 FOUND_SAMPLE_RATIOS = []
-# for n in range(1, 1000):
-#     for m in range(1, 1000):
-#         SAMPLE_RATIOS.append((n, m))
+
+
+
 
 
 for profile_name in os.listdir(LEGACY_PROFILE_PATH):
     profile_path = os.path.join(LEGACY_PROFILE_PATH, profile_name)
     if not os.path.isdir(profile_path):
         profile = smartedit.Profile(profile_path)
-        # Only consider profiles with 'legacy' name
+        
         profile_key = profile.Key()
         if profile_key not in legacy_profiles:
             legacy_profiles[profile_key] = [(profile, profile_name)]
         else:
             legacy_profiles[profile_key].append((profile, profile_name))
 
-# Parse each definition *.json file in /definitions/ directory
+
 print("Reading JSON profile definitions")
 for definition in os.listdir(PATH):
     if definition.endswith(".json"):
@@ -112,10 +112,10 @@ for definition in os.listdir(PATH):
             profile_abr = json_details.get("abbreviation")
             profile_category = json_details.get("category")
 
-            # Loop through profiles
+            
             for p in json_details.get("profiles", []):
                 for r in p.get("fps", []):
-                    # Populate Profile object (for helper functions)
+                    
                     profile = smartedit.Profile()
                     profile.info.width = p.get("width")
                     profile.info.height = p.get("height")
@@ -127,7 +127,7 @@ for definition in os.listdir(PATH):
                     profile.info.pixel_ratio.den = r.get("sar").get("den")
                     profile.info.interlaced_frame = not r.get("progressive")
 
-                    # Verify accurate DAR
+                    
                     size = smartedit.Fraction(profile.info.width, profile.info.height)
                     dar = profile.info.display_ratio
                     size.Reduce()
@@ -154,24 +154,24 @@ for definition in os.listdir(PATH):
                                 r["notes"] = r["notes"].replace("Anamorphic", "").strip()
                             FOUND_SAMPLE_RATIOS.append(smallest_fraction)
                     else:
-                        # Add sample ratio
+                        
                         r["sar"] = {"num": 1, "den": 1}
 
                     profile_key = profile.Key()
 
-                    # Add profile to dict
-                    # We can have multiple matches for a single key though
+                    
+                    
                     if profile_key not in NEW_PROFILES:
                         NEW_PROFILES[profile_key] = [(p, r, profile_abr, profile_category)]
                     else:
                         NEW_PROFILES[profile_key].append((p, r, profile_abr, profile_category))
 
             if mode == "update":
-                # Save definition json
+                
                 save_profile(definition_path, json_details)
 
 if mode == "validate":
-    # Compare legacy and new profiles
+    
     unmatched = []
     matched = []
     for legacy_key in legacy_profiles.keys():
@@ -189,21 +189,21 @@ if mode == "validate":
         s = smartedit.Fraction(legacy[0][0].info.pixel_ratio.num, legacy[0][0].info.pixel_ratio.den)
         print(f" - {key} = {round(legacy[0][0].info.width * s.ToDouble())}x{legacy[0][0].info.height}")
 
-    # Compare new profiles and legacy profiles
+    
     unmatched = []
-    # for new in NEW_PROFILES.keys():
-    #     if new not in legacy_profiles.keys():
-    #         unmatched.append(new)
+    
+    
+    
     print(f"\nUnmatched New Profiles: {len(unmatched)}/{len(NEW_PROFILES.keys())}")
-    # for key in unmatched:
-    #     print(f" - {key}")
+    
+    
 
 if mode == "generate":
     unique_profile_names = {}
     for new_key in reversed(sorted(NEW_PROFILES.keys())):
         tags = []
         for p in NEW_PROFILES[new_key]:
-            # Populate Profile object (for helper functions)
+            
             profile = smartedit.Profile()
             profile.info.width = p[0].get("width")
             profile.info.height = p[0].get("height")
@@ -216,7 +216,7 @@ if mode == "generate":
             profile.info.interlaced_frame = not p[1].get("progressive")
             profile.info.spherical = p[0].get("spherical", False)
 
-            # Format file name for new profile
+            
             profile_abr = p[2]
             profile_notes = p[0].get("notes")
             fps_notes = p[1].get("notes")
@@ -233,7 +233,7 @@ if mode == "generate":
             if profile.info.fps.den != 1:
                 fps_string = f'{profile.info.fps.ToDouble():.04}'
 
-            # Move tags (NTSC/PAL first, Anamorphic last)
+            
             for first in ["SD", "HD", "NTSC", "PAL", "FHD", "UHD", "4K", "5K", "8K", "16K"]:
                 if first in tags:
                     tags.remove(first)
@@ -244,13 +244,13 @@ if mode == "generate":
                     tags.append(last)
 
             if "Vertical" in tags:
-                # Exception for vertical formats - we refer to the original width (i.e. 720p Vertical instead of 1280p)
+                
                 profile.info.description = f'{" ".join(tags)} {profile.info.width}{interlaced_string} {fps_string} fps'
             else:
-                # Non-vertical resolutions (normal)
+                
                 profile.info.description = f'{" ".join(tags)} {profile.info.height}{interlaced_string} {fps_string} fps'
 
-            # Track profile names for uniqueness
+            
             if profile.info.description not in unique_profile_names.keys():
                 unique_profile_names[profile.info.description] = [profile.Key()]
             elif profile.Key() not in unique_profile_names[profile.info.description]:
@@ -259,14 +259,14 @@ if mode == "generate":
             profile_name = profile.Key()
             profile_path = os.path.join(PROFILE_PATH, profile_name)
 
-        # Determine if "Anamorphic" is correctly set
+        
         if profile.info.pixel_ratio.ToFloat() != 1.0 and "Anamorphic" not in tags:
             print(f"Error: Anamorphic property is MISSING for {profile.Key()}")
         elif profile.info.pixel_ratio.ToFloat() == 1.0 and "Anamorphic" in tags:
             print(f"Error: Anamorphic property is NOT needed for {profile.Key()}")
 
-        # Create new profile file
-        # Check if spherical attribute should be included
+        
+        
         spherical_string = ""
         if hasattr(profile.info, "spherical") and profile.info.spherical == 1:
             spherical_string = "\nspherical=1"
@@ -282,23 +282,23 @@ sample_aspect_den={profile.info.pixel_ratio.den}
 display_aspect_num={profile.info.display_ratio.num}
 display_aspect_den={profile.info.display_ratio.den}{spherical_string}"""
 
-        # Write file
+        
         print(f"Generating profile file: {profile_name}")
         with open(profile_path, "w") as profile_file_object:
             profile_file_object.write(profile_body)
 
-    # Iterate through duplicate profile names (and give a unique descriptive name)
-    # For now, we'll add the DAR to the end of the description
+    
+    
     for profile_name, keys in unique_profile_names.items():
         if len(keys) > 1:
             for key in keys:
                 profile_path = os.path.join(PROFILE_PATH, key)
                 profile = smartedit.Profile(profile_path)
-                # Create unique name (since more than 2 profiles use the same name)
+                
                 unique_profile_name = f'{profile_name} | {profile.info.display_ratio.num}:{profile.info.display_ratio.den}'
                 print(f'Updating name for uniqueness: {unique_profile_name} in profile: {profile.Key()}')
 
-                # Write file with description updated for uniqueness
+                
                 with open(profile_path, "r") as read_file_object:
                     profile_body = read_file_object.read()
                     profile_body = profile_body.replace(profile_name, unique_profile_name)
@@ -306,11 +306,11 @@ display_aspect_den={profile.info.display_ratio.den}{spherical_string}"""
                         profile_file_object.write(profile_body)
 
 if mode == "preview":
-    # Print new profiles
+    
     print(f"\nNEW Profiles: {len(NEW_PROFILES.keys())}")
     for new_key in reversed(sorted(NEW_PROFILES.keys())):
         for p in NEW_PROFILES[new_key]:
-            # Populate Profile object (for helper functions)
+            
             profile = smartedit.Profile()
             profile.info.width = p[0].get("width")
             profile.info.height = p[0].get("height")
@@ -328,7 +328,7 @@ if mode == "preview":
             print(f'{profile.Key()}\t\t{profile.ShortName()}\t\t{profile.LongName()}\t\t{profile.LongNameWithDesc()}')
 
 if mode == "display":
-    # Print existing profiles
+    
     for profile_name in sorted(os.listdir(PROFILE_PATH)):
         profile_path = os.path.join(PROFILE_PATH, profile_name)
         if not os.path.isdir(profile_path):
@@ -344,8 +344,8 @@ if mode == "doc":
         if layout == "7":
             return "Surround"
 
-    # Print existing profiles
-    #   ==========  ==================
+    
+    
     dividing_line = "   %s  %s  %s  %s  %s  %s  %s  %s" % ("".ljust(45, "="), "".ljust(6, "="), "".ljust(6, "="),
                                                            "".ljust(6, "="), "".ljust(6, "="), "".ljust(6, "="),
                                                            "".ljust(10, "="), "".ljust(18, "="))
@@ -370,7 +370,7 @@ if mode == "doc":
                   f"{padded_ratio}  {padded_pixel_ratio}  {padded_interlaced}  {padded_sar_display_width}")
     print(dividing_line)
 
-    # Print existing presets
+    
     presets = []
     preset_types = []
     preset_type_names = {}
@@ -388,7 +388,7 @@ if mode == "doc":
             else:
                 project_profiles = ["All Profiles"]
 
-            # Get video and audio codec names (if any)
+            
             video_codec = ""
             if xmldoc.getElementsByTagName("videocodec")[0].childNodes:
                 video_codec = xmldoc.getElementsByTagName("videocodec")[0].childNodes[0].data

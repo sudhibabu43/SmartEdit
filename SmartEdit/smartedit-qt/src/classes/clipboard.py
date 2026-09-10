@@ -42,26 +42,26 @@ class ClipboardManager:
         """
         mime_data = QMimeData()
 
-        # Unpack if only a single item in a list
+        
         if isinstance(data, list) and len(data) == 1:
             data = data[0]
 
         try:
-            # If data is a single QueryObject, serialize its .data attribute
+            
             json_data = {}
             if isinstance(data, QueryObject):
                 json_data = json.dumps(data.data, indent=4)
-            # If data is a list of QueryObjects, serialize the list of .data attributes
+            
             elif isinstance(data, list) and all(isinstance(obj, QueryObject) for obj in data):
                 json_data = json.dumps([obj.data for obj in data], indent=4)
 
-            # Pickle the entire object (single or list) for the custom MIME format
+            
             pickled_data = pickle.dumps(data)
 
-            # Set the JSON representation of .data as the text
+            
             mime_data.setText(json_data)
 
-            # Set the pickled data in the custom MIME format
+            
             mime_data.setData(f"application/x-smartedit-generic", pickled_data)
 
         except (TypeError, AttributeError) as e:

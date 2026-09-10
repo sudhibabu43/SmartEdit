@@ -32,13 +32,13 @@ def style_to_dict(style: str) -> dict:
     """Explode an SVG node style= attribute string into a dict representation"""
     styledict = {}
     try:
-        # Fill the dict using key-value pairs produced by this comprehension
+        
         styledict.update(
-            # Make pairs of (property, value) by splitting on the first ':'
+            
             (a.split(':', 1))
-            # Using the list formed by splitting style on ';'
+            
             for a in style.split(';')
-            # Ignore any empty strings produced
+            
             if a
             )
         return styledict
@@ -50,15 +50,15 @@ def style_to_dict(style: str) -> dict:
 
 def dict_to_style(styledict: dict) -> str:
     """Turn an exploded style dictionary back into a string"""
-    # Glue the results of this comprehension together with ';' separators
+    
     try:
         style = ";".join([
-            # Produce a list of "key:value" strings
+            
             ":".join([k, v])
-            # For every {key: value} in styledict
+            
             for k, v in styledict.items()
             ])
-        # Don't forget the trailing semicolon!
+        
         return style + ';'
     except ValueError as ex:
         import json

@@ -34,7 +34,7 @@ import traceback
 from qt_api import QObject, QThread, QTimer, pyqtSlot, pyqtSignal, QCoreApplication, QImage
 from qt_api import QMessageBox
 from qt_api import unwrapinstance, wrapinstance, _is_android_runtime, QT_API
-import smartedit  # Python module for libsmartedit (required video editing module installed separately)
+import smartedit  
 
 from classes.app import get_app
 from classes.logger import log
@@ -48,7 +48,7 @@ class PreviewParent(QObject, UpdateInterface):
     def changed(self, action):
         """ This method is invoked by the UpdateManager each time a change happens (i.e UpdateInterface) """
 
-        # Ignore changes that don't affect libsmartedit
+        
         if action and len(action.key) >= 1 and action.key[0].lower() in ["files", "history", "markers", "layers", "scale", "profile", "sample_rate", "export_settings"]:
             return
 
@@ -56,36 +56,36 @@ class PreviewParent(QObject, UpdateInterface):
             return
 
         try:
-            # Keep track of max timeline frame # on any updates to the timeline.
+            
             self.timeline_max_length = max(1, int(get_app().window.timeline_sync.GetLastFrame() or 1))
             log.debug(f"Max timeline length/frames detected: {self.timeline_max_length}")
         except Exception as e:
             log.info("Error calculating max timeline length on PreviewParent: %s. %s" % (e, action.json(is_array=True)))
 
-    # Signal when the frame position changes in the preview player
+    
     def onPositionChanged(self, current_frame):
         timeline_last_frame = max(1, int(getattr(self, "timeline_max_length", 1) or 1))
         self.parent.movePlayhead(max(1, int(current_frame)))
 
-        # Check if we are at the end of the timeline
+        
         if self.worker.player.Mode() == smartedit.PLAYBACK_PLAY:
             loop_preview = bool(getattr(self.parent, "loop_playback", False))
             if self.worker.player.Speed() > 0.0 and current_frame >= timeline_last_frame:
                 if loop_preview:
-                    # Loop preview playback back to the beginning.
+                    
                     self.worker.Seek(1)
                 else:
-                    # Yes, pause the video
+                    
                     self.parent.PauseSignal.emit()
-                    # If the player got past the end of the project, go back.
+                    
                     self.worker.Seek(timeline_last_frame)
             if self.worker.player.Speed() < 0.0 and current_frame <= 1:
                 if loop_preview:
-                    # Loop rewind to the end frame.
+                    
                     self.worker.Seek(timeline_last_frame)
                 else:
-                    # If rewinding, and the player got past the first frame,
-                    # pause and go to frame 1
+                    
+                    
                     self.parent.PauseSignal.emit()
                     self.worker.Seek(1)
 
@@ -95,7 +95,7 @@ class PreviewParent(QObject, UpdateInterface):
         """Queue latest seek request for worker loop (non-blocking)."""
         self.worker.queue_seek(frame, start_preroll)
 
-    # Signal when the playback mode changes in the preview player (i.e PLAY, PAUSE, STOP)
+    
     def onModeChanged(self, current_mode):
         try:
             if current_mode == smartedit.PLAYBACK_PLAY:
@@ -103,22 +103,22 @@ class PreviewParent(QObject, UpdateInterface):
             else:
                 self.parent.SetPlayheadFollow(True)
         except AttributeError:
-            # Parent object doesn't need the playhead follow code
+            
             pass
 
-    # Signal when the playback encounters an error
+    
     def onError(self, error):
-        # Get translation object
+        
         _ = get_app()._tr
 
-        # Only JUCE audio errors bubble up here now
+        
         QMessageBox.warning(self.parent, _("Audio Error"), _("Please fix the following error and restart SmartEdit\n%s") % error)
 
     def Stop(self, wait_for_thread=True):
         """Disconnect preview parent from update manager and stop worker thread"""
         get_app().updates.disconnect_listener(self)
 
-        # Stop preview thread
+        
         self.worker.Stop()
         self.worker.kill()
         if self.background.isRunning():
@@ -130,7 +130,7 @@ class PreviewParent(QObject, UpdateInterface):
 
     @pyqtSlot(object, object)
     def Init(self, parent, timeline, video_widget, max_length=1):
-        # Important vars
+        
         self.parent = parent
         self.timeline = timeline
         try:
@@ -138,23 +138,23 @@ class PreviewParent(QObject, UpdateInterface):
         except (TypeError, ValueError):
             max_len = 1
 
-        # Dialog previews (Split File / Region) pass their own max_length and
-        # should not be clamped by the main timeline's last frame.
+        
+        
         self._use_timeline_sync_max = max_len <= 1
         if self._use_timeline_sync_max and getattr(get_app().window, "timeline_sync", None):
             self.timeline_max_length = max(1, int(get_app().window.timeline_sync.GetLastFrame() or 1))
         else:
             self.timeline_max_length = max_len
 
-        # Background Worker Thread (for preview video process)
+        
         self.background = QThread(self)
         self.background.setObjectName("preview_background")
-        self.worker = PlayerWorker()  # no parent!
+        self.worker = PlayerWorker()  
 
-        # Init worker variables
+        
         self.worker.Init(parent, timeline, video_widget)
 
-        # Hook up signals to Background Worker
+        
         self.worker.position_changed.connect(self.onPositionChanged)
         self.worker.mode_changed.connect(self.onModeChanged)
         if hasattr(self.parent, "_preview_ready"):
@@ -165,7 +165,7 @@ class PreviewParent(QObject, UpdateInterface):
         self.worker.finished.connect(self.background.quit)
         self.worker.error_found.connect(self.onError)
 
-        # Connect preview thread to main UI signals
+        
         self.parent.previewFrameSignal.connect(self.worker.previewFrame)
         self.parent.refreshFrameSignal.connect(self.worker.refreshFrame)
         self.parent.LoadFileSignal.connect(self.worker.LoadFile)
@@ -181,11 +181,11 @@ class PreviewParent(QObject, UpdateInterface):
             self.parent.RunScopeSignal.connect(self.worker.queue_scope_analysis)
             self.worker.scope_ready.connect(self.parent._on_scope_ready)
 
-        # Move Worker to new thread, and Start
+        
         self.worker.moveToThread(self.background)
         self.background.start()
 
-        # Add preview parent as listener for updates
+        
         get_app().updates.add_listener(self)
 
 
@@ -228,7 +228,7 @@ class PlayerWorker(QObject):
         self._pending_scope_request = None
         self._scope_analysis_active = False
 
-        # Create QtPlayer class from libsmartedit
+        
         self.player = smartedit.QtPlayer()
 
     def CheckAudioDevice(self):
@@ -242,17 +242,17 @@ class PlayerWorker(QObject):
             get_app().updates.update_untracked(["sample_rate"], value)
             project.has_unsaved_changes = previous_dirty
 
-        # Check audio init error
+        
         audio_error = self.player.GetError()
         if audio_error:
             log.warning('Audio initialization error: %s', audio_error)
             self.error_found.emit(audio_error)
 
-        # Check active sample rate from audio device
-        # Parse string as float ("48000.0" -> 48000   OR   NaN)
+        
+        
         detected_sample_rate = float(self.player.GetDefaultSampleRate())
         if detected_sample_rate and not math.isnan(detected_sample_rate) and detected_sample_rate > 0.0:
-            # Convert float to Integer
+            
             detected_sample_rate_int = round(detected_sample_rate)
 
             settings_sample_rate = int(s.get("default-samplerate") or 48000)
@@ -263,24 +263,24 @@ class PlayerWorker(QObject):
                                                   settings_sample_rate,
                                                   detected_sample_rate_int))
 
-                # Update default sample rate in settings
+                
                 s.set("default-samplerate", detected_sample_rate_int)
 
-                # Update current project's sample rate, so we don't have some crazy
-                # audio drift due to mis-matching sample rates
+                
+                
                 update_project_sample_rate_without_dirty(detected_sample_rate_int)
 
-        # Convert float 'settings' sample rate to Integer, if detected
+        
         if type(s.get("default-samplerate")) == float:
             if detected_sample_rate_int is None:
                 detected_sample_rate_int = round(s.get("default-samplerate"))
             s.set("default-samplerate", detected_sample_rate_int)
 
-        # Convert float 'project' sample rate to Integer, if detected
+        
         if type(project.get("sample_rate")) == float:
             update_project_sample_rate_without_dirty(round(project.get("sample_rate")))
 
-        # Check active audio device name and type from audio device
+        
         active_audio_device = self.player.GetCurrentAudioDevice()
         audio_device_value = f"{active_audio_device.get_name()}||{active_audio_device.get_type()}"
         if s.get("playback-audio-device") != audio_device_value:
@@ -291,7 +291,7 @@ class PlayerWorker(QObject):
                                                      audio_device_value))
             s.set("playback-audio-device", audio_device_value)
 
-            # Set libsmartedit settings
+            
             lib_settings = smartedit.Settings.Instance()
             lib_settings.PLAYBACK_AUDIO_DEVICE_NAME = active_audio_device.get_name()
             lib_settings.PLAYBACK_AUDIO_DEVICE_TYPE = active_audio_device.get_type()
@@ -301,45 +301,45 @@ class PlayerWorker(QObject):
         """ This method starts the video player """
         log.info("QThread Start Method Invoked")
 
-        # Init new player
+        
         self.initPlayer()
 
-        # Connect player to timeline reader
+        
         self.player.Reader(self.timeline)
         self.player.Play()
         self.player.Pause()
         self.ready.emit()
 
-        # Check for any Player initialization errors (only JUCE errors bubble up here now)
-        # But slightly delay, to allow for correct audio thread initialization with the
-        # correct number of channels and sample rate
+        
+        
+        
         QTimer.singleShot(1000, self.CheckAudioDevice)
 
-        # Main loop, waiting for frames to process
+        
         while self.is_running:
             seek_request = self._take_pending_seek()
             if seek_request is not None:
                 seek_frame, start_preroll = seek_request
                 self._apply_seek(seek_frame, start_preroll)
 
-            # Emit position changed signal (if needed)
+            
             if self.current_frame != self.player.Position():
                 self.current_frame = self.player.Position()
 
                 if not self.clip_path:
-                    # Emit position of overall timeline (don't emit this for clip previews)
+                    
                     self.position_changed.emit(self.current_frame)
 
-                    # TODO: Remove this hack and really determine what's blocking the main thread
-                    # Try and keep things responsive
+                    
+                    
                     QCoreApplication.processEvents()
 
-            # Emit mode changed signal (if needed)
+            
             if self.player.Mode() != self.current_mode:
                 self.current_mode = self.player.Mode()
                 self.mode_changed.emit(self.current_mode)
 
-            # wait for a small delay
+            
             time.sleep(0.005)
             QCoreApplication.processEvents()
 
@@ -350,7 +350,7 @@ class PlayerWorker(QObject):
     def initPlayer(self):
         log.debug("initPlayer")
 
-        # Get the address of the player's renderer (a QObject that emits signals when frames are ready)
+        
         self.renderer_address = self.player.GetRendererQObject()
         self.renderer = None
 
@@ -376,10 +376,10 @@ class PlayerWorker(QObject):
                 self.player.SetFrameCallback(cb_addr, 0)
                 log.info("Direct frame callback registered for video preview")
             elif _is_android_runtime():
-                # Pass widget directly; C++ delivers frames via QMetaObject::invokeMethod.
+                
                 self.player.SetQWidget(self.videoPreview)
             elif QT_API == "pyqt5":
-                # Pass raw pointer; connect C++ present() signal to Python slot.
+                
                 self.player.SetQWidget(unwrapinstance(self.videoPreview))
                 self.renderer = wrapinstance(self.renderer_address, QObject)
                 if self.renderer is not None:
@@ -395,20 +395,20 @@ class PlayerWorker(QObject):
 
     def previewFrame(self, number):
         """ Preview a certain frame """
-        # Mark frame number for processing
+        
         self.Seek(number)
 
     def refreshFrame(self):
         """ Refresh a certain frame """
-        # Selection/UI refresh signals can arrive during active playback.
-        # Avoid seeking while playing, which can perturb frame progression.
+        
+        
         if self.player.Mode() == smartedit.PLAYBACK_PLAY and self.player.Speed() != 0.0:
             return
 
-        # Always load back in the timeline reader
+        
         self.parent.LoadFileSignal.emit('')
 
-        # Refreshes should not trigger preroll/cache invalidation behavior.
+        
         refresh_frame = int(self.player.Position())
         self.Seek(refresh_frame, False)
 
@@ -559,7 +559,7 @@ class PlayerWorker(QObject):
     @pyqtSlot(str, bool)
     def LoadFilePreview(self, path=None, stretch=False):
         """Load a media file into the video player with optional stretch scaling."""
-        # Check to see if this path is already loaded
+        
         if path == self.clip_path:
             if self.reader_mode == "clip" and self.preview_stretch == bool(stretch):
                 return
@@ -575,31 +575,31 @@ class PlayerWorker(QObject):
 
         log.info("LoadFile %s" % path)
 
-        # Determine the current frame of the timeline (when switching to a clip)
+        
         seek_position = 1
         if path and not self.clip_path:
-            # Track the current frame
+            
             self.original_position = self.player.Position()
 
-        # If blank path, switch back to self.timeline reader
+        
         if not path:
-            # Return to self.timeline reader
+            
             log.debug("Set timeline reader again in player: %s" % self.timeline)
             self.player.Reader(self.timeline)
             self.reader_mode = "timeline"
             self.preview_stretch = False
 
-            # Clear clip reader reference
+            
             self.clip_reader = None
             self.clip_path = None
 
-            # Switch back to last timeline position
+            
             seek_position = self.original_position
         else:
-            # Create new timeline reader (to preview selected clip)
+            
             project = get_app().project
 
-            # Get some settings from the project
+            
             fps = project.get("fps")
             width = int(project.get("width"))
             height = int(project.get("height"))
@@ -610,7 +610,7 @@ class PlayerWorker(QObject):
             preview_width = getattr(getattr(timeline_sync, "timeline", None), "preview_width", 0)
             preview_height = getattr(getattr(timeline_sync, "timeline", None), "preview_height", 0)
 
-            # Create an instance of a libsmartedit Timeline object
+            
             self.clip_reader = smartedit.Timeline(width, height,
                                                  smartedit.Fraction(fps["num"], fps["den"]),
                                                  sample_rate, channels, channel_layout)
@@ -625,7 +625,7 @@ class PlayerWorker(QObject):
                 self.clip_reader.SetMaxSize(int(preview_width), int(preview_height))
 
             try:
-                # Add clip for current preview file
+                
                 new_clip = smartedit.Clip(path)
                 try:
                     if new_clip.Reader().info.has_video:
@@ -640,20 +640,20 @@ class PlayerWorker(QObject):
             except:
                 log.warning('Failed to load media file into video player: %s' % path)
 
-            # Assign new clip_reader
+            
             self.clip_path = path
             self.reader_mode = "clip"
             self.preview_stretch = bool(stretch)
 
-            # Keep track of previous clip readers (so we can Close it later)
+            
             self.previous_clips.append(new_clip)
             self.previous_clip_readers.append(self.clip_reader)
 
-            # Open and set reader
+            
             self.clip_reader.Open()
             self.player.Reader(self.clip_reader)
 
-        # Close and destroy old clip readers (leaving the 3 most recent)
+        
         while len(self.previous_clip_readers) > 3:
             log.debug('Removing old clips from preview: %s' % self.previous_clip_readers[0])
             previous_clip = self.previous_clips.pop(0)
@@ -661,7 +661,7 @@ class PlayerWorker(QObject):
             previous_reader = self.previous_clip_readers.pop(0)
             previous_reader.Close()
 
-        # Seek to frame 1, and resume speed
+        
         if not path:
             QTimer.singleShot(0, lambda: self.Seek(seek_position))
         else:
@@ -670,7 +670,7 @@ class PlayerWorker(QObject):
     def Play(self):
         """ Start playing the video player """
 
-        # Start playback
+        
         if self.parent.initialized:
             pending = self._take_pending_seek()
             if pending is not None:
@@ -681,14 +681,14 @@ class PlayerWorker(QObject):
     def Pause(self):
         """ Pause the video player """
 
-        # Pause playback
+        
         if self.parent.initialized:
             self.player.Pause()
 
     def Stop(self):
         """ Stop the video player and terminate the playback threads """
 
-        # Stop playback
+        
         if getattr(self, "player", None):
             self.player.Stop()
 
@@ -701,8 +701,8 @@ class PlayerWorker(QObject):
 
         now = time.monotonic()
 
-        # Drop immediate duplicate seeks (same frame + preroll) that can be
-        # generated by UI signal fan-out during scrubbing/commit boundaries.
+        
+        
         if (
             self._last_applied_seek_request == seek_request
             and (now - self._last_applied_seek_time) < 0.03
@@ -719,8 +719,8 @@ class PlayerWorker(QObject):
             seek_request = self._pending_seek
             self._pending_seek = None
             if seek_request is not None:
-                # Reset dedup key once the queued seek is consumed so future
-                # refreshes at the same frame can trigger another render.
+                
+                
                 self._last_queued_seek_request = None
             return seek_request
 
@@ -728,13 +728,13 @@ class PlayerWorker(QObject):
         try:
             self.player.Seek(frame, start_preroll)
         except TypeError:
-            # Backward compatibility with older libsmartedit builds exposing
-            # only Seek(frame).
+            
+            
             self.player.Seek(frame)
         self._last_applied_seek_request = (int(max(1, frame)), bool(start_preroll))
         self._last_applied_seek_time = time.monotonic()
-        # Force the main loop to publish a fresh position_changed event after
-        # each seek so timeline playheads stay in sync with queued seeks.
+        
+        
         self.current_frame = None
 
     @pyqtSlot(int)
@@ -757,6 +757,6 @@ class PlayerWorker(QObject):
     def Speed(self, new_speed):
         """ Set the speed of the video player """
 
-        # Set speed
+        
         if self.parent.initialized and self.player.Speed() != new_speed:
             self.player.Speed(new_speed)

@@ -33,12 +33,12 @@ class TestSilenceDetection(unittest.TestCase):
         silences = self.analyzer.detect_silence(self.sample_wav, top_db=25, min_silence_duration_sec=0.4)
         self.assertGreaterEqual(len(silences), 2)
 
-        # Gap 1 should be around ~1.8s - 3.2s
+        
         gap1_start, gap1_end = silences[0]
         self.assertAlmostEqual(gap1_start, 1.8, delta=0.3)
         self.assertAlmostEqual(gap1_end, 3.2, delta=0.3)
 
-        # Gap 2 should be around ~5.5s - 7.0s
+        
         gap2_start, gap2_end = silences[1]
         self.assertAlmostEqual(gap2_start, 5.5, delta=0.3)
         self.assertAlmostEqual(gap2_end, 7.0, delta=0.3)
@@ -50,7 +50,7 @@ class TestSilenceDetection(unittest.TestCase):
         self.assertIn("total_duration", result)
         self.assertAlmostEqual(result["total_duration"], 9.0, delta=0.2)
 
-        # Verify kept clips
+        
         kept = result["kept_clips"]
         self.assertEqual(len(kept), 3)
         for clip in kept:
@@ -58,17 +58,17 @@ class TestSilenceDetection(unittest.TestCase):
             self.assertTrue(clip["highlight"])
             self.assertGreater(clip["duration"], 0.5)
 
-        # Verify silent segments
+        
         silent = result["silent_segments"]
         self.assertEqual(len(silent), 2)
         for s in silent:
             self.assertGreaterEqual(s["duration"], 0.4)
 
-        # Verify cut points
+        
         cut_points = result["cut_points"]
         self.assertGreaterEqual(len(cut_points), 4)
 
-        # Verify statistics
+        
         stats = result["statistics"]
         self.assertAlmostEqual(stats["original_duration"], 9.0, delta=0.2)
         self.assertGreater(stats["silent_duration"], 1.5)

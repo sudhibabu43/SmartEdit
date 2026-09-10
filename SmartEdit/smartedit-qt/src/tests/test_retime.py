@@ -46,7 +46,7 @@ PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 if PATH not in sys.path:
     sys.path.append(PATH)
 
-from windows.views.retime import retime_clip  # noqa: E402
+from windows.views.retime import retime_clip  
 
 
 def keyframe(*frames):

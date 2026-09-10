@@ -31,7 +31,7 @@ import json
 import math
 import re
 import shutil
-import subprocess  # nosec B404 -- fixed argv only; shell execution is never used
+import subprocess  
 import sys
 import threading
 import time
@@ -647,8 +647,8 @@ class WebcamPreviewJob(QObject):
 
     def stop(self):
         self._stop.set()
-        # Camera GetFrame() can block in a native capture read. Close first to
-        # interrupt that read, then wait for the worker to finish.
+        
+        
         if self._reader:
             try:
                 self._reader.Close()
@@ -1697,7 +1697,7 @@ class AudioRecordingDockContent(QWidget):
         if camera_capture_backend_is_windows() or camera_capture_backend_is_mac():
             return fallback
         try:
-            result = subprocess.run(  # nosec B603 -- argv list, no shell
+            result = subprocess.run(  
                 ["v4l2-ctl", "--list-formats-ext", "-d", device],
                 check=True,
                 text=True,

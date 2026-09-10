@@ -96,7 +96,7 @@ class AudioAnalyzer:
             if len(y) == 0:
                 return []
 
-            # Find non-silent intervals using librosa split
+            
             non_silent_intervals = librosa.effects.split(
                 y,
                 top_db=top_db,
@@ -104,13 +104,13 @@ class AudioAnalyzer:
                 hop_length=hop_length
             )
 
-            # Convert non-silent sample indices to seconds
+            
             non_silent_sec = [
                 (float(start) / float(sr), float(end) / float(sr))
                 for start, end in non_silent_intervals
             ]
 
-            # Invert non-silent intervals to find silent regions
+            
             silences = []
             current_time = 0.0
 
@@ -163,7 +163,7 @@ class AudioAnalyzer:
             if len(y) == 0:
                 return self._empty_cut_result(total_duration)
 
-            # Find non-silent intervals (speech / active audio)
+            
             non_silent_intervals = librosa.effects.split(
                 y,
                 top_db=top_db,
@@ -171,14 +171,14 @@ class AudioAnalyzer:
                 hop_length=512
             )
 
-            # Convert to seconds
+            
             raw_kept = [
                 (float(start) / float(sr), float(end) / float(sr))
                 for start, end in non_silent_intervals
             ]
 
             if not raw_kept:
-                # Completely silent audio
+                
                 return {
                     "total_duration": total_duration,
                     "silent_segments": [{"start": 0.0, "end": total_duration, "duration": total_duration}],
@@ -201,7 +201,7 @@ class AudioAnalyzer:
                     }
                 }
 
-            # Apply padding and merge overlapping intervals
+            
             padded_kept = []
             for s, e in raw_kept:
                 ps = max(0.0, s - padding_sec)
@@ -215,12 +215,12 @@ class AudioAnalyzer:
                 else:
                     prev_s, prev_e = merged_kept[-1]
                     if s <= prev_e:
-                        # Overlapping or contiguous interval
+                        
                         merged_kept[-1][1] = max(prev_e, e)
                     else:
                         merged_kept.append([s, e])
 
-            # Build silent segments and kept clips
+            
             all_segments = []
             kept_clips = []
             silent_segments = []
@@ -234,7 +234,7 @@ class AudioAnalyzer:
                 start = round(start, 3)
                 end = round(end, 3)
 
-                # Check for silence before this clip
+                
                 if start - cur >= min_silence_duration_sec:
                     sil_dur = round(start - cur, 3)
                     silent_segments.append({
@@ -255,7 +255,7 @@ class AudioAnalyzer:
                     cut_points_set.add(start)
                     silence_idx += 1
 
-                # Kept speech/audio clip
+                
                 clip_dur = round(end - start, 3)
                 if clip_dur > 0.05:
                     kept_clips.append({
@@ -280,7 +280,7 @@ class AudioAnalyzer:
 
                 cur = max(cur, end)
 
-            # Check trailing silence
+            
             if total_duration - cur >= min_silence_duration_sec:
                 sil_dur = round(total_duration - cur, 3)
                 silent_segments.append({
@@ -337,17 +337,17 @@ class AudioAnalyzer:
         if not output_path:
             output_path = os.path.join(tempfile.gettempdir(), "smartedit_silence_demo.wav")
 
-        # Audio structure:
-        # 1. 0.0s - 1.8s: Speech burst 1 (440Hz harmonic tone + subtle modulation)
-        # 2. 1.8s - 3.2s: Silence gap 1 (1.4s dead air)
-        # 3. 3.2s - 5.5s: Speech burst 2 (520Hz tone)
-        # 4. 5.5s - 7.0s: Silence gap 2 (1.5s dead air)
-        # 5. 7.0s - 9.0s: Speech burst 3 (440Hz tone)
-        # Total duration = 9.0s, Silence = 2.9s (~32%)
+        
+        
+        
+        
+        
+        
+        
 
         def make_tone(duration, freq):
             t = np.linspace(0, duration, int(duration * sr), endpoint=False)
-            envelope = np.sin(np.pi * np.linspace(0, 1, len(t)))  # smooth ramp
+            envelope = np.sin(np.pi * np.linspace(0, 1, len(t)))  
             tone = 0.4 * np.sin(2 * np.pi * freq * t) + 0.15 * np.sin(4 * np.pi * freq * t)
             return tone * envelope
 

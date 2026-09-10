@@ -45,10 +45,10 @@ import smartedit, os, re, shutil
 _ = get_app()._tr
 
 def makeLegalFileName(s: str):
-    # Regex taken from django's slugify function
-    # https://github.com/django/django/blob/main/django/utils/text.py
+    
+    
     s = re.sub(r'[^\w\s-]', '', s.lower())
-    return s.strip() #clean leading or trailing spaces
+    return s.strip() 
 
 SEQUENCE_FORMAT_RE = re.compile(r"%(?:0\d+)?d")
 
@@ -91,8 +91,8 @@ def nameOfExport(file_obj) -> str:
         name = file_obj.data.get("name", backup_name)
         name = makeLegalFileName(name)
         name += f" [{format(file_obj.data.get('start'), '.2f')} - {format(file_obj.data.get('end'), '.2f')}]"
-        # When we support audio-only exports
-        # ext = "mp4" if file_obj.data.get("has_video") else "mp3"
+        
+        
         name += ".mp4"
         return name
     else:
@@ -140,7 +140,7 @@ def positiveInt(value, default: int) -> int:
     return value if value > 0 else default
 
 def setupWriter(clip, writer):
-    # Set video options
+    
     pr = clip.data.get("pixel_ratio", {"num": 1, "den": 1})
     pixel_ratio = smartedit.Fraction(pr.get("num"), pr.get("den"))
     fps = clip.data.get("fps", {"num": 30, "den": 1})
@@ -157,7 +157,7 @@ def setupWriter(clip, writer):
                            False,
                            22)
     writer.PrepareStreams()
-    # Set audio options
+    
     writer.SetAudioOptions(has_audio,
                            "aac",
                            positiveInt(clip.data.get("sample_rate"), 48000),
@@ -172,8 +172,8 @@ class clipExportWindow(QDialog):
     in a folder of the user's choosing"""
     ui_path = os.path.join(info.PATH, 'windows', 'ui', 'export-clips.ui')
 
-    exporting = False # Changes whether cancel button closes,
-        # or waits for export to close the writers
+    exporting = False 
+        
     canceled = False
 
     def __init__(self, export_clips_arg, *args, **kwargs):
@@ -196,7 +196,7 @@ class clipExportWindow(QDialog):
             QFileDialog.ShowDirsOnly,
         )
 
-        # if dialog is canceled, use default path
+        
         if chosen_destination:
             self.export_destination = chosen_destination
             settings.setDefaultPath(settings.actionType.EXPORT, self.export_destination)
@@ -210,7 +210,7 @@ class clipExportWindow(QDialog):
         self.cancel_button = QPushButton(_("Cancel"))
         self.cancel_button.clicked.connect(self._cancelButtonClicked)
 
-        # Make progress bar look like the one in the export dialog
+        
         from qt_api import QPalette
         p = QPalette()
         p.setColor(QPalette.Highlight, Qt.green)
@@ -231,7 +231,7 @@ class clipExportWindow(QDialog):
         clips = list(filter(isClip, self.file_objs))
         sequence_files = list(filter(isImageSequence, filter(notClip, self.file_objs)))
         files = [f for f in filter(notClip, self.file_objs) if not isImageSequence(f)]
-        # Total number of frames
+        
         self._updateDialogExportStarting()
         total_frames, frames_written = 0, 0
         for c in clips:
@@ -347,15 +347,15 @@ class clipExportWindow(QDialog):
     def _updateProgressBar(self, count: int, total: int):
         if total==0:
             log.info("Total:frames is 0")
-            # Only reason this should happen is if the only clip
-            # Has an error.
-                # I consider error'ed clips "done" so the user doesn't
-                # mistakenly wait on a progress bar.
+            
+            
+                
+                
             self.progressExportVideo.setValue(100)
-            return # Prevent division by zero
+            return 
         d = count - total
         if -2 <= d and 2 >= d:
-            # If within 2 frames of complete, show 100 percent.
+            
             self.progressExportVideo.setValue(100)
             return
         self.progressExportVideo.setValue(round((count/total) * 100))

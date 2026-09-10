@@ -38,59 +38,59 @@ from classes.path_utils import absolute_media_path, media_paths_equal
 class QueryObject:
     """ This class allows one or more project data objects to be queried """
 
-    # Cache detached project objects per update version
+    
     _cache_version = None
     _cache = {}
 
     def __init__(self):
         """ Constructor """
 
-        self.id = None  # Unique ID of object
-        self.key = None  # Key path to object in project data
-        self.data = None  # Data dictionary of object
-        self.parent = None  # Only used with effects (who belong to clips)
-        self.type = "insert"  # Type of operation needed to save
+        self.id = None  
+        self.key = None  
+        self.data = None  
+        self.parent = None  
+        self.type = "insert"  
 
     def save(self, OBJECT_TYPE):
         """ Save the object back to the project data store """
 
-        # Insert or Update this data into the project data store
+        
         if not self.id and self.type == "insert":
 
-            # Insert record, and Generate id
+            
             self.id = get_app().project.generate_id()
 
-            # save id in data (if attribute found)
+            
             self.data["id"] = json.loads(json.dumps(self.id))
 
-            # Set key (if needed)
+            
             if not self.key:
                 self.key = json.loads(json.dumps(OBJECT_TYPE.object_key))
                 self.key.append({"id": self.id})
 
-            # Insert into project data
+            
             get_app().updates.insert(json.loads(json.dumps(OBJECT_TYPE.object_key)), json.loads(json.dumps(self.data)))
 
-            # Mark record as 'update' now... so another call to this method won't insert it again
+            
             self.type = "update"
 
         elif self.id and self.type == "update":
 
-            # Update existing project data
+            
             get_app().updates.update(self.key, self.data)
 
     def delete(self, OBJECT_TYPE):
         """ Delete the object from the project data store """
 
-        # Delete if object found and not pending insert
+        
         if self.id and self.type == "update":
-            # Delete from project data store
+            
             get_app().updates.delete(self.key)
             self.type = "delete"
 
     def title(self):
         """ Get the translated display title of this item """
-        # Needs to be overwritten in each derived class
+        
         return None
 
     @classmethod
@@ -106,7 +106,7 @@ class QueryObject:
         object_cache = cls._cache.setdefault(OBJECT_TYPE.object_name, {})
         child_id = child.get("id")
 
-        # Cache deep copies by id; reuse within the same project version
+        
         cached = object_cache.get(child_id)
         if cached is None:
             cached = copy.deepcopy(child)
@@ -116,7 +116,7 @@ class QueryObject:
     def filter(OBJECT_TYPE, **kwargs):
         """ Take any arguments given as filters, and find a list of matching objects """
 
-        # Get a list of all objects of this type
+        
         parent = get_app().project.get(OBJECT_TYPE.object_key)
 
         if not parent:
@@ -124,14 +124,14 @@ class QueryObject:
 
         matching_objects = []
 
-        # Loop through all children objects
+        
         for child in parent:
 
-            # Protect against non-iterable/subscriptables
+            
             if not child:
                 continue
 
-            # Loop through all kwargs (and look for matches)
+            
             match = True
             for key, value in kwargs.items():
 
@@ -139,7 +139,7 @@ class QueryObject:
                     match = False
                     break
 
-                # Intersection Position
+                
                 if key == "intersect" and (
                     child.get("position", 0) > value
                     or child.get("position", 0) + (child.get("end", 0) - child.get("start", 0)) < value
@@ -147,7 +147,7 @@ class QueryObject:
                     match = False
 
 
-            # Add matched record
+            
             if match:
                 object = OBJECT_TYPE()
                 object.id = child["id"]
@@ -156,13 +156,13 @@ class QueryObject:
                 object.type = "update"
                 matching_objects.append(object)
 
-        # Return matching objects
+        
         return matching_objects
 
     def get(OBJECT_TYPE, **kwargs):
         """ Take any arguments given as filters, and find the first matching object """
 
-        # Look for matching objects
+        
         matching_objects = QueryObject.filter(OBJECT_TYPE, **kwargs)
 
         if matching_objects:
@@ -173,8 +173,8 @@ class QueryObject:
 
 class Clip(QueryObject):
     """ This class allows Clips to be queried, updated, and deleted from the project data. """
-    object_name = "clips"  # Derived classes should define this
-    object_key = [object_name]  # Derived classes should define this also
+    object_name = "clips"  
+    object_key = [object_name]  
 
     def save(self):
         """ Save the object back to the project data store """
@@ -206,8 +206,8 @@ class Clip(QueryObject):
 
 class Transition(QueryObject):
     """ This class allows Transitions (i.e. timeline effects) to be queried, updated, and deleted from the project data. """
-    object_name = "effects"  # Derived classes should define this
-    object_key = [object_name]  # Derived classes should define this also
+    object_name = "effects"  
+    object_key = [object_name]  
 
     def save(self):
         """ Save the object back to the project data store """
@@ -232,15 +232,15 @@ class Transition(QueryObject):
             return None
         fileBaseName = os.path.splitext(os.path.basename(path))[0]
 
-        # split the name into parts (looking for a number)
+        
         suffix_number = None
         name_parts = fileBaseName.split("_")
         if name_parts[-1].isdigit():
             suffix_number = name_parts[-1]
-        # get name of transition
+        
         item_name = fileBaseName.replace("_", " ").capitalize()
 
-        # replace suffix number with placeholder (if any)
+        
         if suffix_number:
             item_name = item_name.replace(suffix_number, "%s")
             item_name = get_app()._tr(item_name) % suffix_number
@@ -251,8 +251,8 @@ class Transition(QueryObject):
 
 class File(QueryObject):
     """ This class allows Files to be queried, updated, and deleted from the project data. """
-    object_name = "files"  # Derived classes should define this
-    object_key = [object_name]  # Derived classes should define this also
+    object_name = "files"  
+    object_key = [object_name]  
 
     def save(self):
         """ Save the object back to the project data store """
@@ -291,28 +291,28 @@ class File(QueryObject):
         """ Get relative path (based on the current working directory) """
 
         file_path = self.absolute_path()
-        # Convert path to relative (based on current working directory of Python)
+        
         return os.path.relpath(file_path, info.CWD)
 
     def profile(self):
         """ Get the profile of the file """
-        # Load file Json into Profile object
+        
         file_profile = smartedit.Profile()
         file_profile.SetJson(json.dumps(self.data))
 
         if file_profile.info.display_ratio.num == 1 and file_profile.info.display_ratio.den == 1:
-            # Some audio / image files have inaccurate DAR - calculate from size and pixel ratio
+            
             file_profile.info.display_ratio = smartedit.Fraction(round(file_profile.info.width * file_profile.info.pixel_ratio.ToFloat()), file_profile.info.height)
             file_profile.info.display_ratio.Reduce()
 
-        # Iterate through all possible profiles
+        
         for profile_folder in [info.USER_PROFILES_PATH, info.PROFILES_PATH]:
             for file in reversed(sorted(os.listdir(profile_folder))):
                 profile_path = os.path.join(profile_folder, file)
                 if os.path.isdir(profile_path):
                     continue
                 try:
-                    # Load Profile
+                    
                     profile = smartedit.Profile(profile_path)
                     if profile == file_profile:
                         return profile
@@ -323,8 +323,8 @@ class File(QueryObject):
 
 class Marker(QueryObject):
     """ This class allows Markers to be queried, updated, and deleted from the project data. """
-    object_name = "markers"  # Derived classes should define this
-    object_key = [object_name]  # Derived classes should define this also
+    object_name = "markers"  
+    object_key = [object_name]  
 
     def save(self):
         """ Save the object back to the project data store """
@@ -345,8 +345,8 @@ class Marker(QueryObject):
 
 class Track(QueryObject):
     """ This class allows Tracks to be queried, updated, and deleted from the project data. """
-    object_name = "layers"  # Derived classes should define this
-    object_key = [object_name]  # Derived classes should define this also
+    object_name = "layers"  
+    object_key = [object_name]  
 
     def save(self):
         """ Save the object back to the project data store """
@@ -373,8 +373,8 @@ class Track(QueryObject):
 
 class Effect(QueryObject):
     """ This class allows Effects to be queried, updated, and deleted from the project data. """
-    object_name = "effects"  # Derived classes should define this
-    object_key = [object_name]  # Derived classes should define this also
+    object_name = "effects"  
+    object_key = [object_name]  
 
     def save(self):
         """ Save the object back to the project data store """
@@ -387,25 +387,25 @@ class Effect(QueryObject):
     def filter(**kwargs):
         """ Take any arguments given as filters, and find a list of matching objects """
 
-        # Get a list of clips
+        
         clips = get_app().project.get("clips")
         matching_objects = []
 
-        # Loop through all clips
+        
         if clips:
             for clip in clips:
-                # Loop through all effects
+                
                 if "effects" in clip:
                     for child in clip["effects"]:
 
-                        # Loop through all kwargs (and look for matches)
+                        
                         match = True
                         for key, value in kwargs.items():
                             if key in child and child[key] != value:
                                 match = False
                                 break
 
-                        # Add matched record
+                        
                         if match:
                             object = Effect()
                             object.id = child["id"]
@@ -415,7 +415,7 @@ class Effect(QueryObject):
                             object.parent = clip
                             matching_objects.append(object)
 
-        # Return matching objects
+        
         return matching_objects
 
     def title(self):
@@ -424,7 +424,7 @@ class Effect(QueryObject):
 
     def get(**kwargs):
         """ Take any arguments given as filters, and find the first matching object """
-        # Look for matching objects
+        
         matching_objects = Effect.filter(**kwargs)
 
         if matching_objects:

@@ -60,17 +60,17 @@ class ChangelogModel():
         app = get_app()
         _ = app._tr
 
-        # Clear all items
+        
         if clear:
             log.info('cleared changelog model')
             self.model.clear()
 
-        # Add Headers
+        
         self.model.setHorizontalHeaderLabels(
             [_("Hash"), _("Date"), _("Author"), _("Subject")])
 
         for commit in self.commit_list:
-            # Get details of person
+            
             hash_str = commit.get("hash", "")
             date_str = commit.get("date", "")
             author_str = commit.get("author", "")
@@ -90,30 +90,30 @@ class ChangelogModel():
             col.setFlags(flags)
             row.append(col)
 
-            # Append website
+            
             col = QStandardItem(author_str)
             col.setToolTip(author_str)
             col.setFlags(flags)
             row.append(col)
 
-            # Append website
+            
             col = QStandardItem(subject_str)
             col.setToolTip(subject_str)
             col.setFlags(flags)
             row.append(col)
 
-            # Append row to model
+            
             self.model.appendRow(row)
 
     def __init__(self, commits, *args):
 
-        # Create standard model
+        
         self.app = get_app()
         self.model = ChangelogStandardItemModel()
         self.model.setColumnCount(4)
         self.commit_list = commits
 
-        # Create proxy model (for sorting and filtering)
+        
         self.proxy_model = ChangelogFilterProxyModel()
         self.proxy_model.setDynamicSortFilter(True)
         self.proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
@@ -121,5 +121,5 @@ class ChangelogModel():
         self.proxy_model.setSourceModel(self.model)
         self.proxy_model.setSortLocaleAware(True)
 
-        # Create selection model to share between views
+        
         self.selection_model = QItemSelectionModel(self.proxy_model)

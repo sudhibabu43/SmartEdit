@@ -11,7 +11,7 @@ PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 if PATH not in sys.path:
     sys.path.append(PATH)
 
-from classes.film_grain_presets import (  # noqa: E402
+from classes.film_grain_presets import (  
     FILM_GRAIN_PRESET_16MM_CLASSIC,
     FILM_GRAIN_PRESET_35MM_CLASSIC,
     FILM_GRAIN_PRESET_35MM_FINE,

@@ -252,8 +252,8 @@ class KeyframePanelPainter(BasePainter):
         add_rect = QRectF()
         can_add = isinstance(prop, dict) and not prop.get("placeholder")
         if can_add:
-            # Compute per paint. Caching this rect can leave stale icon positions
-            # when panel rows move between tracks during drag.
+            
+            
             add_rect = self.w._panel_add_icon_rect(label_rect)
 
         if draw_labels:

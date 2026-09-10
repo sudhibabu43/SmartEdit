@@ -31,11 +31,11 @@ import uuid
 class keyframe:
     """This class represents a media clip on the timeline."""
 
-    # ----------------------------------------------------------------------
+    
     def __init__(self, frame, height, width, x, y, alpha):
         """Constructor"""
 
-        # init variables for keyframe object
+        
         self.frame = frame
         self.height = height
         self.width = width

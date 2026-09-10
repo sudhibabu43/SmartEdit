@@ -25,7 +25,7 @@
  along with SmartEdit Library.  If not, see <http://www.gnu.org/licenses/>.
  """
 
-# idna encoding import required to prevent bug (unknown encoding: idna)
+
 import encodings.idna
 import base64
 import platform
@@ -48,10 +48,10 @@ try:
 except ModuleNotFoundError:
     distro = None
 
-# Get settings
+
 s = get_app().get_settings()
 
-# Determine OS version
+
 os_version = "X11; Linux %s" % platform.machine()
 os_distro = "None"
 try:
@@ -66,7 +66,7 @@ try:
         os_distro = "Windows %s" % "-".join(v)
 
     elif platform.system() == "Linux":
-        # Get the distro name and version (if any)
+        
         if distro:
             os_distro = "-".join(distro.linux_distribution()[0:2])
         else:
@@ -75,7 +75,7 @@ try:
 except Exception:
     log.debug("Error determining OS version", exc_info=1)
 
-# Build user-agent
+
 user_agent = "Mozilla/5.0 (%s) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.120 Safari/537.36" % os_version
 
 GA4_ENDPOINT = "https://www.google-analytics.com/mp/collect"
@@ -86,8 +86,8 @@ METRIC_QUEUE_MAX = 100
 METRIC_CONNECT_TIMEOUT = http_client.DEFAULT_CONNECT_TIMEOUT
 METRIC_READ_TIMEOUT = 3
 
-# Queue for metrics (incase things are disabled... just queue it up
-# incase the user enables metrics later
+
+
 metric_queue = []
 metric_queue_lock = threading.Lock()
 metric_worker_active = False
@@ -169,13 +169,13 @@ def send_metric(event):
     """Send anonymous GA4 Measurement Protocol events over HTTP."""
     global metric_worker_active
 
-    # Add to queue and *maybe* send if the user allows it
+    
     with metric_queue_lock:
         metric_queue.append(event)
         if len(metric_queue) > METRIC_QUEUE_MAX:
             metric_queue.pop(0)
 
-    # Check if the user wants to send metrics and errors
+    
     if not s.get("send_metrics"):
         return
     if not GA4_MID or not GA4_MPS:
@@ -227,7 +227,7 @@ def _send_metric_worker():
             _requeue_metrics(events_to_send)
             return
 
-        # Wait in the worker so startup/UI rendering never blocks on telemetry.
+        
         time.sleep(0.25)
 
 

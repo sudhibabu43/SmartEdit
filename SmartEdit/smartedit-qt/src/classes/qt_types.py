@@ -30,9 +30,9 @@
 from qt_api import QByteArray
 
 
-# Utility functions for handling qt types
 
-# QByteArray helpers
+
+
 def str_to_bytes(string):
     """ This is required to save Qt byte arrays into a base64 string (to save screen preferences) """
     return QByteArray.fromBase64(string.encode("utf-8"))

@@ -114,7 +114,7 @@ class PlayheadPainter(BasePainter):
                 )
             )
             if not icon_visible.isNull():
-                # Adjust source rect when partially clipped by the track labels.
+                
                 dx = icon_visible.x() - icon_rect.x()
                 source_rect = QRectF(
                     max(0.0, dx),

@@ -152,7 +152,7 @@ class TestEditingController(unittest.TestCase):
         mock_clip_filter.return_value = [mock_clip]
         mock_file_filter.return_value = []
 
-        # Mock video analyzer to report shaky
+        
         self.controller.video_analyzer.analyze_shaky_footage = MagicMock(return_value={
             "is_shaky": True,
             "shake_score": 0.85,
@@ -164,7 +164,7 @@ class TestEditingController(unittest.TestCase):
 
         self.assertFalse(plan.is_empty)
         self.assertEqual(len(plan.items), 2)
-        # Verify clip title was NOT changed during plan generation
+        
         self.assertEqual(mock_clip.data["title"], "Test Clip")
         mock_clip.save.assert_not_called()
 
@@ -203,7 +203,7 @@ class TestEditingController(unittest.TestCase):
             res = self.controller.apply_plan(plan)
             self.assertTrue(res["success"])
             self.assertIn("SHAKY FOOTAGE", res["message"])
-            # Verify original clip was NOT modified, saved, or deleted
+            
             orig_clip.save.assert_not_called()
             orig_clip.delete.assert_not_called()
             self.assertEqual(orig_clip.data["title"], "My Footage")
@@ -257,15 +257,15 @@ class TestEditingController(unittest.TestCase):
         self.assertTrue(res["success"])
         self.assertIn("Split and removed 1 shaky segment(s)", res["message"])
 
-        # 1. Left portion: [0.0, 5.0]
+        
         self.assertEqual(orig_clip.data["position"], 0.0)
         self.assertEqual(orig_clip.data["start"], 0.0)
         self.assertEqual(orig_clip.data["end"], 5.0)
         self.assertEqual(orig_clip.data["duration"], 5.0)
-        # Source video file path on disk remains untouched
+        
         self.assertEqual(orig_clip.data["reader"]["path"], "/videos/source_camera.mp4")
 
-        # 2. Right portion: [8.0, 20.0] was created via new Clip.save()
+        
         self.assertGreaterEqual(mock_clip_save.call_count, 1)
 
 

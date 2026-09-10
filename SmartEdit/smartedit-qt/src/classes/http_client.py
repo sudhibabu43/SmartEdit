@@ -181,7 +181,7 @@ def _download_file_once(url, output_path, progress_callback, timeout):
     if scheme == "https":
         kwargs["context"] = ssl_context()
 
-    with urllib.request.urlopen(request, **kwargs) as response:  # nosec B310 - URL scheme is restricted above.
+    with urllib.request.urlopen(request, **kwargs) as response:  
         total_size = response.headers.get("Content-Length")
         total_size = int(total_size) if total_size else 0
         downloaded_size = 0

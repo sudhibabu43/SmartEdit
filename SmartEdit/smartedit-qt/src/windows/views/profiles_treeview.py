@@ -40,10 +40,10 @@ class ProfilesTreeView(QTreeView):
     """ A ListView QWidget used on the credits window """
     def selectionChanged(self, selected, deselected):
         if deselected and deselected.first() and self.is_filter_running:
-            # Selection changed due to filtering... clear selections
+            
             self.selectionModel().clear()
         if not self.is_filter_running and selected and selected.first() and selected.first().indexes():
-            # Selection changed due to user selection or init of treeview
+            
             self.selected_profile_object = selected.first().indexes()[0].data(Qt.UserRole)
         super().selectionChanged(selected, deselected)
 
@@ -51,7 +51,7 @@ class ProfilesTreeView(QTreeView):
         """Handle row insertion and refresh view."""
         self.last_inserted_row_index = self.model().index(last, 0)
 
-        # Select the newly inserted row
+        
         if self.last_inserted_row_index.isValid():
             self.select_profile(self.last_inserted_row_index)
 
@@ -62,12 +62,12 @@ class ProfilesTreeView(QTreeView):
         self.model().setFilterRegularExpression(QRegularExpression(filter_text.lower()))
         self.model().sort(0, Qt.DescendingOrder)
 
-        # Format columns
+        
         self.sortByColumn(0, Qt.DescendingOrder)
         self.setColumnHidden(0, True)
         self.is_filter_running = False
 
-        # Update filter count
+        
         self.FilterCountChanged.emit(self.profiles_model.proxy_model.rowCount())
 
         if self.selectionModel().hasSelection():
@@ -97,7 +97,7 @@ class ProfilesTreeView(QTreeView):
         if not profile:
             return
 
-        # get translations
+        
         _ = get_app()._tr
 
         menu = StyledContextMenu(parent=self)
@@ -113,7 +113,7 @@ class ProfilesTreeView(QTreeView):
         duplicate_action.triggered.connect(lambda: get_app().window.actionProfileEdit_trigger(profile, duplicate=True, parent=self))
         menu.addAction(duplicate_action)
 
-        # Determine if the profile is user-created or not
+        
         if hasattr(profile, 'user_created') and profile.user_created:
             menu.addSeparator()
             edit_action = QAction(_("Edit"), self)
@@ -129,18 +129,18 @@ class ProfilesTreeView(QTreeView):
         menu.show_at(event)
 
     def __init__(self, dialog, profiles, *args):
-        # Invoke parent init
+        
         QTreeView.__init__(self, *args)
 
-        # Get a reference to the window object
+        
         self.parent = dialog
         self.win = get_app().window
 
-        # Get Model data
+        
         self.profiles_model = ProfilesModel(profiles)
         self.selected = []
 
-        # Setup header columns
+        
         self.is_filter_running = False
         self.setModel(self.profiles_model.proxy_model)
         self.setIndentation(0)
@@ -154,10 +154,10 @@ class ProfilesTreeView(QTreeView):
         self.last_inserted_row_index = None
         self.model().rowsInserted.connect(self.on_rows_inserted)
 
-        # Refresh view
+        
         self.profiles_model.update_model()
         QTimer.singleShot(50, self.refresh_view)
 
-        # Resize columns (initial data)
+        
         for column in range(self.columns):
             self.resizeColumnToContents(column)

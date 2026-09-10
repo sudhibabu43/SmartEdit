@@ -36,7 +36,7 @@ class KeyframeScaler:
         """Scale value by some factor, except for 1 (leave that alone)"""
         if value == 1.0:
             return value
-        # Round to nearest INT
+        
         return round(value * self._scale_factor)
 
     def _scale_points(self, prop: dict, scale_y = False):
@@ -77,16 +77,16 @@ class KeyframeScaler:
 
     def __call__(self, data: dict) -> dict:
         """Apply the stored scaling factor to a project data dict"""
-        # Look for keyframe objects in clips
+        
         for clip in data.get('clips', []):
             self._process_item(clip)
-            # Also update any effects applied to the clip
+            
             for effect in clip.get("effects", []):
                 self._process_item(effect)
-        # Look for keyframe objects in project effects (transitions)
+        
         for effect in data.get('effects', []):
             self._process_item(effect)
-        # return the scaled project data
+        
         return data
 
     def __init__(self, factor: float):

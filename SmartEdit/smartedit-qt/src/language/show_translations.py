@@ -39,13 +39,13 @@ if SRC_PATH not in sys.path:
 from qt_api import QCoreApplication, QTranslator
 
 
-# Get the absolute path of this project
+
 language_path = os.path.dirname(os.path.abspath(__file__))
 
-# Get app instance
+
 app = QCoreApplication(sys.argv)
 
-# Load POT template (all English strings)
+
 all_templates = ['SmartEdit.pot', 'SmartEdit_transitions.pot', 'SmartEdit_blender.pot']
 for template_name in all_templates:
     POT_source = open(os.path.join(language_path, 'SmartEdit', template_name)).read()
@@ -53,20 +53,20 @@ for template_name in all_templates:
 
     print("Scanning {} strings in all translation files...".format(len(all_strings)))
 
-    # Loop through folders/languages
+    
     for filename in fnmatch.filter(os.listdir(language_path), 'SmartEdit*.qm'):
         lang_code = filename[:-3]
-        # Install language
+        
         translator = QTranslator(app)
 
-        # Load translation
+        
         if translator.load(lang_code, language_path):
             app.installTranslator(translator)
 
             print("\n=================================================")
             print("Showing translations for {}".format(filename))
             print("=================================================")
-            # Loop through all test strings
+            
             for source_string in all_strings:
                 translated_string = app.translate("", source_string)
                 if source_string != translated_string:
@@ -77,5 +77,5 @@ for template_name in all_templates:
                         raise(Exception('Invalid string replacement found: "%s" vs "%s" [%s]' %
                               (translated_string, source_string, lang_code)))
 
-            # Remove translator
+            
             app.removeTranslator(translator)

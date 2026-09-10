@@ -202,7 +202,7 @@ QMessageBox QPushButton[dialogRole="destructive"] {
         from .styles import HumanityDarkTimelineTheme
         self.app.window.timeline.apply_theme(HumanityDarkTimelineTheme())
 
-        # Emit signal
+        
         self.app.window.ThemeChangedSignal.emit(self)
 
 class Retro(BaseTheme):
@@ -373,5 +373,5 @@ QComboBox {
         from .styles import RetroTimelineTheme
         self.app.window.timeline.apply_theme(RetroTimelineTheme())
 
-        # Emit signal
+        
         self.app.window.ThemeChangedSignal.emit(self)

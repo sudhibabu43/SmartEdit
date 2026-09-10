@@ -27,7 +27,7 @@
 
 import os
 
-# Try to get the security-patched XML functions from defusedxml
+
 try:
     from defusedxml import minidom as xml
 except ImportError:
@@ -60,15 +60,15 @@ class BlenderModel():
 
         _ = self.app._tr
 
-        # Clear all items
+        
         if clear:
             self.model_paths = {}
             self.model.clear()
 
-        # Add Headers
+        
         self.model.setHorizontalHeaderLabels([_("Thumb"), _("Name")])
 
-        # get a list of files in the application blender directory
+        
         blender_dir = os.path.join(info.PATH, "blender")
         icons_dir = os.path.join(blender_dir, "icons")
 
@@ -77,34 +77,34 @@ class BlenderModel():
             if path in self.model_paths:
                 continue
             if os.path.isfile(path) and ".xml" in file:
-                # load xml effect file
+                
                 xmldoc = xml.parse(path)
 
-                # Get column data for model
+                
                 title = xmldoc.getElementsByTagName("title")[0].childNodes[0].data
                 icon_name = xmldoc.getElementsByTagName("icon")[0].childNodes[0].data
                 icon_path = os.path.join(icons_dir, icon_name)
                 service = xmldoc.getElementsByTagName("service")[0].childNodes[0].data
                 xmldoc.unlink()
 
-                # Check for thumbnail path (in build-in cache)
+                
                 thumb_path = os.path.join(info.IMAGES_PATH, "cache",  "blender_{}".format(icon_name))
 
-                # Check built-in cache (if not found)
+                
                 if not os.path.exists(thumb_path):
-                    # Check user folder cache
+                    
                     thumb_path = os.path.join(info.CACHE_PATH, "blender_{}".format(icon_name))
 
-                # Check if thumb exists
+                
                 if not os.path.exists(thumb_path):
 
                     try:
-                        # Reload this reader
+                        
                         clip = smartedit.Clip(icon_path)
                         reader = clip.Reader()
                         reader.Open()
 
-                        # Save thumbnail
+                        
                         reader.GetFrame(0).Thumbnail(
                             thumb_path, 98, 64, "", "",
                             "#000", False, "png", 85, 0.0)
@@ -113,32 +113,32 @@ class BlenderModel():
                         log.info('Invalid blender image file: %s', icon_path)
                         continue
 
-                # Load icon (using display DPI)
+                
                 icon = QIcon()
                 icon.addFile(thumb_path)
 
                 row = []
                 flags = Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsUserCheckable
-                # Append thumbnail
+                
                 col = QStandardItem(self.app._tr(title))
                 col.setIcon(icon)
                 col.setToolTip(self.app._tr(title))
                 col.setFlags(flags)
                 row.append(col)
 
-                # Append Name
+                
                 col = QStandardItem(self.app._tr(title))
                 col.setData(self.app._tr(title), Qt.DisplayRole)
                 col.setFlags(flags)
                 row.append(col)
 
-                # Append Path
+                
                 col = QStandardItem(path)
                 col.setData(path, Qt.DisplayRole)
                 col.setFlags(flags)
                 row.append(col)
 
-                # Append Service
+                
                 col = QStandardItem(service)
                 col.setData(service, Qt.DisplayRole)
                 col.setFlags(flags)
@@ -147,18 +147,18 @@ class BlenderModel():
                 self.model.appendRow(row)
                 self.model_paths[path] = path
 
-                # Process events in QT (to keep the interface responsive)
+                
                 self.app.processEvents()
 
     def __init__(self, *args):
 
-        # Create standard model
+        
         self.app = get_app()
         self.model = QStandardItemModel()
         self.model.setColumnCount(3)
         self.model_paths = {}
 
-        # Create proxy model (for sorting and filtering)
+        
         self.proxy_model = BlenderFilterProxyModel()
         self.proxy_model.setDynamicSortFilter(True)
         self.proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
@@ -167,5 +167,5 @@ class BlenderModel():
         self.proxy_model.setSourceModel(self.model)
         self.proxy_model.setSortLocaleAware(True)
 
-        # Create selection model to share between views
+        
         self.selection_model = QItemSelectionModel(self.proxy_model)

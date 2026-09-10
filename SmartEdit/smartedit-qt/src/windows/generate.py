@@ -517,7 +517,7 @@ class GenerateMediaDialog(QDialog):
             sy2 = int(round((y2 / frame_h) * src_h))
             return {"x1": sx1, "y1": sy1, "x2": sx2, "y2": sy2}
 
-        # Normalize all frame annotations to source frame coordinates.
+        
         if isinstance(selection_payload, dict) and isinstance(selection_payload.get("frames"), dict):
             normalized_frames = {}
             for frame_key, frame_data in selection_payload.get("frames", {}).items():

@@ -80,10 +80,10 @@ class ThemeManager:
             from themes.cosmic.theme import CosmicTheme
             self.current_theme = CosmicTheme(self.app)
 
-        # Set name on theme instance
+        
         self.current_theme.name = theme_enum.value
 
-        # Apply theme
+        
         self.current_theme.apply_theme()
         return self.current_theme
 

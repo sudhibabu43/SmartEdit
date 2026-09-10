@@ -100,13 +100,13 @@ def draw_broadcast_hue_ring(painter, center, radius, ring_width, alpha=255):
         painter.drawLine(QPointF(x0, y0), QPointF(x1, y1))
     painter.restore()
 
-# ─── Persistent settings keys ────────────────────────────────────────────────
-_S_WAVE_MODE  = "scope-waveform-mode"     # luma|red|green|blue|rgb_overlay|rgb_parade
-_S_WAVE_COLOR = "scope-waveform-color"    # green|white|orange
-_S_HIST_CH    = "scope-histogram-channel" # rgba|luma|red|green|blue
-_S_HIST_SCALE = "scope-histogram-scale"   # log|linear
-_S_VEC_DISPLAY = "scope-vectorscope-display"  # colorized|density|intensity
-_S_VEC_ZOOM    = "scope-vectorscope-zoom"     # 100|200|400
+
+_S_WAVE_MODE  = "scope-waveform-mode"     
+_S_WAVE_COLOR = "scope-waveform-color"    
+_S_HIST_CH    = "scope-histogram-channel" 
+_S_HIST_SCALE = "scope-histogram-scale"   
+_S_VEC_DISPLAY = "scope-vectorscope-display"  
+_S_VEC_ZOOM    = "scope-vectorscope-zoom"     
 
 _VECTORSCOPE_HUE_LABELS = (
     ("R", 108.65, 360.0),
@@ -118,7 +118,7 @@ _VECTORSCOPE_HUE_LABELS = (
 )
 _vectorscope_geometry_cache = {}
 _vectorscope_intensity_lut = None
-_vectorscope_label_lut_cache = {}   # size → (6, size*size) float32 numpy array
+_vectorscope_label_lut_cache = {}   
 
 
 def N_(message):
@@ -221,8 +221,8 @@ def _build_vectorscope_label_lut(size):
     center = (size - 1) * 0.5
     ix = np.arange(size, dtype=np.float32)
     iy = np.arange(size, dtype=np.float32)
-    u_norm = (ix[np.newaxis, :] - center) / center   # (1,size) → broadcast (size,size)
-    v_norm = (center - iy[:, np.newaxis]) / center   # (size,1) → broadcast
+    u_norm = (ix[np.newaxis, :] - center) / center   
+    v_norm = (center - iy[:, np.newaxis]) / center   
     radius = np.minimum(np.sqrt(u_norm ** 2 + v_norm ** 2), 1.0)
     angle_deg = np.degrees(np.arctan2(v_norm, u_norm))
     lut = np.empty((6, size * size), dtype=np.float32)
@@ -250,9 +250,9 @@ def _vectorscope_label_scores(flat_density, size):
     total = float(arr.sum())
     if total <= 0.0:
         return [0.0] * 6
-    scores = lut @ arr        # (6,) weighted pixel sums
-    scores /= total           # average weight per pixel → nominally 0..1
-    np.sqrt(scores, out=scores)  # sqrt compresses dynamic range for better feel
+    scores = lut @ arr        
+    scores /= total           
+    np.sqrt(scores, out=scores)  
     np.clip(scores, 0.0, 1.0, out=scores)
     return scores.tolist()
 
@@ -352,7 +352,7 @@ def build_vectorscope_image(flat, size, zoom_factor, display):
     return QImage(bytes(buf), size, size, size * 3, QImage.Format_RGB888).copy()
 
 
-# ─── Waveform painter ────────────────────────────────────────────────────────
+
 
 class WaveformWidget(QWidget):
     """Luma / RGB waveform density heatmap painter."""
@@ -380,7 +380,7 @@ class WaveformWidget(QWidget):
         self._data = video_data
         self.update()
 
-    # ── helpers ──────────────────────────────────────────────────────────────
+    
 
     @staticmethod
     def _density_to_byte(count, max_val):
@@ -408,10 +408,10 @@ class WaveformWidget(QWidget):
                 buf[idx]     = r0 * t // 255
                 buf[idx + 1] = g0 * t // 255
                 buf[idx + 2] = b0 * t // 255
-        # Detach from the temporary Python buffer so paint reads stable pixels.
+        
         return QImage(bytes(buf), columns, bins, columns * 3, QImage.Format_RGB888).copy()
 
-    # ── paint ────────────────────────────────────────────────────────────────
+    
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -441,7 +441,7 @@ class WaveformWidget(QWidget):
                 if img:
                     painter.drawImage(QRect(i * band_w, 0, band_w, h), img)
 
-            # Thin dividers between bands
+            
             painter.setPen(QPen(QColor(50, 50, 50), 1))
             painter.drawLine(band_w,     0, band_w,     h)
             painter.drawLine(band_w * 2, 0, band_w * 2, h)
@@ -472,7 +472,7 @@ class WaveformWidget(QWidget):
                 painter.drawImage(self.rect(), img)
 
         else:
-            # Single-channel modes: luma, red, green, blue
+            
             rgb_map = {
                 "luma":  self._LUMA_COLORS.get(self._color, (0, 220, 80)),
                 "red":   (220,  60,  60),
@@ -484,7 +484,7 @@ class WaveformWidget(QWidget):
             if img:
                 painter.drawImage(self.rect(), img)
 
-        # IRE reference lines at 10 / 50 / 90 %
+        
         if self._ire:
             painter.setPen(QPen(QColor(60, 60, 60), 1, Qt.DashLine))
             for pct in (0.1, 0.5, 0.9):
@@ -492,7 +492,7 @@ class WaveformWidget(QWidget):
                 painter.drawLine(0, y, w, y)
 
 
-# ─── Histogram painter ───────────────────────────────────────────────────────
+
 
 class HistogramWidget(QWidget):
     """RGB + luma overlay histogram with channel and scale filters."""
@@ -583,7 +583,7 @@ class HistogramWidget(QWidget):
         painter.setCompositionMode(QPainter.CompositionMode_SourceOver)
 
 
-# ─── Vectorscope painter ─────────────────────────────────────────────────────
+
 
 class VectorscopeWidget(QWidget):
     """2D chroma density plot with a lightweight vectorscope graticule."""
@@ -826,7 +826,7 @@ class VectorscopeWidget(QWidget):
             painter.end()
 
 
-# ─── Audio meter painter ─────────────────────────────────────────────────────
+
 
 class AudioMeterWidget(QWidget):
     """Per-channel RMS/peak VU bars with clip indicator."""
@@ -893,7 +893,7 @@ class AudioMeterWidget(QWidget):
                 painter.fillRect(x, 0, bar_w, 5, QColor(255, 40, 40))
 
 
-# ─── Filter toolbar helpers ──────────────────────────────────────────────────
+
 
 def _make_combo(parent, items):
     """Create a QComboBox from a list of (data_key, display_label) tuples."""
@@ -913,7 +913,7 @@ def _restore_combo(combo, value):
             return
 
 
-# ─── Waveform dock content (painter + toolbar) ───────────────────────────────
+
 
 class WaveformDockContent(QWidget):
     """Waveform dock widget: filter toolbar above the waveform painter."""
@@ -958,7 +958,7 @@ class WaveformDockContent(QWidget):
         layout.addWidget(toolbar)
         layout.addWidget(self.waveform)
 
-        # Restore saved state
+        
         _restore_combo(self._mode_cb,  _get(_S_WAVE_MODE,  "luma"))
         _restore_combo(self._color_cb, _get(_S_WAVE_COLOR, "green"))
         self._sync_color_visibility()
@@ -997,7 +997,7 @@ class WaveformDockContent(QWidget):
         self.waveform.update_data(video_data)
 
 
-# ─── Histogram dock content (painter + toolbar) ──────────────────────────────
+
 
 class HistogramDockContent(QWidget):
     """Histogram dock widget: filter toolbar above the histogram painter."""

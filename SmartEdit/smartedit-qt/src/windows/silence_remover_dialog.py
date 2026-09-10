@@ -43,7 +43,7 @@ class TimelineSegmentBar(QWidget):
         w = self.width()
         h = self.height()
 
-        # Background track
+        
         bg_rect = QRectF(10, 25, w - 20, 36)
         painter.setBrush(QColor("#1e272e"))
         painter.setPen(QPen(QColor("#37474f"), 1))
@@ -59,7 +59,7 @@ class TimelineSegmentBar(QWidget):
         track_y = 25.0
         track_h = 36.0
 
-        # Draw time tick labels
+        
         painter.setFont(QFont("Segoe UI", 8))
         painter.setPen(QColor("#90a4ae"))
         num_ticks = min(8, max(4, int(self.total_duration)))
@@ -69,7 +69,7 @@ class TimelineSegmentBar(QWidget):
             painter.drawText(int(tx) - 15, 16, 30, 12, Qt.AlignCenter, f"{t:.1f}s")
             painter.drawLine(int(tx), 18, int(tx), 23)
 
-        # Draw each segment
+        
         for seg in self.segments:
             s = seg["start"]
             e = seg["end"]
@@ -82,19 +82,19 @@ class TimelineSegmentBar(QWidget):
             seg_rect = QRectF(x1, track_y, seg_w, track_h)
 
             if seg_type == "KEEP":
-                # Vibrant emerald green for kept clips
+                
                 painter.setBrush(QColor("#2e7d32"))
                 painter.setPen(QPen(QColor("#1b5e20"), 1))
                 painter.drawRoundedRect(seg_rect, 4, 4)
 
-                # Clip label if width permits
+                
                 if seg_w > 45:
                     painter.setPen(QColor("#ffffff"))
                     painter.setFont(QFont("Segoe UI", 9, QFont.Bold))
                     clip_idx = seg.get("clip_index", 1)
                     painter.drawText(seg_rect, Qt.AlignCenter, f"Clip #{clip_idx}\n{seg['duration']:.1f}s")
             else:
-                # Striped / darker red for silent sections
+                
                 painter.setBrush(QColor("#b71c1c"))
                 painter.setPen(QPen(QColor("#e57373"), 1, Qt.DashLine))
                 painter.drawRoundedRect(seg_rect, 4, 4)
@@ -104,7 +104,7 @@ class TimelineSegmentBar(QWidget):
                     painter.setFont(QFont("Segoe UI", 8))
                     painter.drawText(seg_rect, Qt.AlignCenter, f"CUT\n-{seg['duration']:.1f}s")
 
-            # Cut boundary indicator line
+            
             painter.setPen(QPen(QColor("#ffeb3b"), 2))
             painter.drawLine(int(x1), int(track_y), int(x1), int(track_y + track_h))
 
@@ -131,7 +131,7 @@ class SilenceRemoverDialog(QDialog):
         layout.setSpacing(12)
         layout.setContentsMargins(20, 20, 20, 20)
 
-        # Header banner
+        
         header_frame = QFrame()
         header_frame.setStyleSheet("""
             QFrame {
@@ -156,7 +156,7 @@ class SilenceRemoverDialog(QDialog):
         header_vbox.addWidget(desc_lbl)
         layout.addWidget(header_frame)
 
-        # File selection row
+        
         file_box = QHBoxLayout()
         file_box.addWidget(QLabel("Media File:"))
         self.path_edit = QPlainTextEdit()
@@ -186,7 +186,7 @@ class SilenceRemoverDialog(QDialog):
         file_box.addWidget(sample_btn)
         layout.addLayout(file_box)
 
-        # Parameter controls
+        
         param_frame = QFrame()
         param_frame.setStyleSheet("""
             QFrame {
@@ -198,7 +198,7 @@ class SilenceRemoverDialog(QDialog):
         """)
         param_layout = QHBoxLayout(param_frame)
 
-        # Threshold top_db
+        
         param_layout.addWidget(QLabel("Threshold (dB):"))
         self.top_db_spin = QSpinBox()
         self.top_db_spin.setRange(10, 60)
@@ -206,7 +206,7 @@ class SilenceRemoverDialog(QDialog):
         self.top_db_spin.setToolTip("Volume below peak to treat as silence. Higher = more sensitive.")
         param_layout.addWidget(self.top_db_spin)
 
-        # Min silence duration
+        
         param_layout.addWidget(QLabel("Min Silence (s):"))
         self.min_sil_spin = QDoubleSpinBox()
         self.min_sil_spin.setRange(0.1, 5.0)
@@ -215,7 +215,7 @@ class SilenceRemoverDialog(QDialog):
         self.min_sil_spin.setToolTip("Ignore pauses shorter than this duration.")
         param_layout.addWidget(self.min_sil_spin)
 
-        # Padding
+        
         param_layout.addWidget(QLabel("Speech Margin (s):"))
         self.padding_spin = QDoubleSpinBox()
         self.padding_spin.setRange(0.0, 0.5)
@@ -244,7 +244,7 @@ class SilenceRemoverDialog(QDialog):
         param_layout.addWidget(self.analyze_btn)
         layout.addWidget(param_frame)
 
-        # Visual Timeline Display
+        
         timeline_label = QLabel("Visual Timeline Representation:")
         timeline_label.setStyleSheet("font-weight: bold; color: #eceff1;")
         layout.addWidget(timeline_label)
@@ -252,7 +252,7 @@ class SilenceRemoverDialog(QDialog):
         self.timeline_widget = TimelineSegmentBar()
         layout.addWidget(self.timeline_widget)
 
-        # Summary statistics badges
+        
         self.stats_frame = QFrame()
         self.stats_frame.setStyleSheet("""
             QFrame {
@@ -280,7 +280,7 @@ class SilenceRemoverDialog(QDialog):
         stats_layout.addStretch()
         layout.addWidget(self.stats_frame)
 
-        # Cut Points & Clips Table
+        
         table_label = QLabel("Timeline Clips & Split Points:")
         table_label.setStyleSheet("font-weight: bold; color: #eceff1;")
         layout.addWidget(table_label)
@@ -307,7 +307,7 @@ class SilenceRemoverDialog(QDialog):
         """)
         layout.addWidget(self.table)
 
-        # Bottom buttons
+        
         btn_box = QHBoxLayout()
 
         copy_btn = QPushButton("📋 Copy Cut Points (JSON)")
@@ -364,17 +364,17 @@ class SilenceRemoverDialog(QDialog):
             )
             self.current_result = result
 
-            # Update timeline bar
+            
             self.timeline_widget.set_data(result["all_segments"], result["total_duration"])
 
-            # Update stats
+            
             stats = result["statistics"]
             self.lbl_orig.setText(f"Original: {stats['original_duration']:.2f}s")
             self.lbl_kept.setText(f"Kept ({stats['kept_clips_count']} clips): {stats['kept_duration']:.2f}s")
             self.lbl_silent.setText(f"Silence Cut: {stats['silent_duration']:.2f}s")
             self.lbl_saved.setText(f"Reduced: {stats['silence_percentage']:.1f}%")
 
-            # Update table
+            
             self._populate_table(result["all_segments"])
         except Exception as ex:
             log.error("Silence detection failed: %s", ex, exc_info=True)
@@ -397,7 +397,7 @@ class SilenceRemoverDialog(QDialog):
             item_dur = QTableWidgetItem(f"{seg['duration']:.2f}s")
             item_status = QTableWidgetItem("★ HIGHLIGHT & KEEP" if is_keep else "✂ CUT & REMOVE")
 
-            # Colors
+            
             if is_keep:
                 color = QColor("#81c784")
             else:

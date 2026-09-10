@@ -43,17 +43,17 @@ def _find_dock_tab_bars(root):
         return {}
 
     dock_titles = {dock.windowTitle() for dock in root.findChildren(QDockWidget)}
-    active_tabs = {}  # dock_title -> is_active
+    active_tabs = {}  
 
     for tab_bar in root.findChildren(QTabBar):
         if tab_bar.count() < 2:
             continue
         tabs = [tab_bar.tabText(i) for i in range(tab_bar.count())]
-        # Check if this tab bar contains dock titles
+        
         matching_titles = [t for t in tabs if t in dock_titles]
         if len(matching_titles) < 2:
             continue
-        # This is a dock tab bar - mark which dock is active
+        
         active_title = tab_bar.tabText(tab_bar.currentIndex())
         for title in matching_titles:
             active_tabs[title] = (title == active_title)
@@ -75,11 +75,11 @@ def _dock_is_active(root, dock, active_tabs=None):
 
     dock_title = dock.windowTitle()
 
-    # If we have pre-computed active tabs info, use it
+    
     if active_tabs is not None and dock_title in active_tabs:
         return active_tabs[dock_title]
 
-    # Fallback: check tab bars directly
+    
     for tab_bar in root.findChildren(QTabBar):
         if tab_bar.count() < 2:
             continue
@@ -317,7 +317,7 @@ def _process_dock_tab_bar(root, dock, titlebar_widgets, seen_tab_bars, excluded_
     if tab_bar is None or tab_bar in seen_tab_bars:
         return
     seen_tab_bars.add(tab_bar)
-    # Include dock tab bar in tab order so users can switch tabs with arrow keys
+    
     if tab_bar.focusPolicy() == Qt.NoFocus:
         tab_bar.setFocusPolicy(Qt.StrongFocus)
     titlebar_widgets.insert(0, tab_bar)
@@ -335,7 +335,7 @@ def _collect_dock_content_widgets(dock, content, root, toolbar_widgets,
 
     ordered_content = list(toolbar_widgets)
 
-    # Special handling for properties dock
+    
     if dock.objectName() == "dockProperties":
         for name in ("btnSelectionName", "txtPropertyFilter", "propertyTableView"):
             widget = dock.findChild(QWidget, name)
@@ -350,7 +350,7 @@ def _collect_dock_content_widgets(dock, content, root, toolbar_widgets,
         ) if content_layout else []
     )
 
-    # Add layout widgets and their focusable children
+    
     for widget in layout_widgets:
         if widget in ordered_content:
             continue
@@ -359,12 +359,12 @@ def _collect_dock_content_widgets(dock, content, root, toolbar_widgets,
             if child not in ordered_content and _is_focusable(child, root, include_hidden, include_disabled):
                 ordered_content.append(child)
 
-    # Append remaining focusables in geometry order
+    
     remaining = [w for w in all_focusables if w not in ordered_content]
     remaining.sort(key=lambda w: _position_key(w, root, 0, 8))
     ordered_content.extend(remaining)
 
-    # Deduplicate while preserving order
+    
     toolbar_set = set(toolbar_widgets)
     seen = set()
     content_widgets = []
@@ -385,23 +385,23 @@ def _collect_dock_groups(root, include_hidden, include_disabled):
     seen_tab_bars = set()
     excluded_widgets = set()
 
-    # Pre-compute which docks are active in tab bars
+    
     active_tabs = _find_dock_tab_bars(root)
 
     for index, dock in enumerate(root.findChildren(QDockWidget)):
         if not _dock_uses_auto_tab_order(dock):
             continue
         if not _dock_is_active(root, dock, active_tabs):
-            # Exclude all widgets from inactive docks and disable their focus
+            
             for widget in dock.findChildren(QWidget):
                 excluded_widgets.add(widget)
-                # Store original focus policy and set to NoFocus so Tab skips them
+                
                 if widget.focusPolicy() != Qt.NoFocus:
                     widget.setProperty("_original_focus_policy", widget.focusPolicy())
                     widget.setFocusPolicy(Qt.NoFocus)
             continue
 
-        # Restore focus policy for widgets in active docks
+        
         for widget in dock.findChildren(QWidget):
             original_policy = widget.property("_original_focus_policy")
             if original_policy is not None:
@@ -426,8 +426,8 @@ def _collect_dock_groups(root, include_hidden, include_disabled):
 
         group_widgets = titlebar_widgets + content_widgets
         if group_widgets:
-            # Use larger row tolerance for docks (100px) so docks on same visual row
-            # are grouped together regardless of tab bar height differences
+            
+            
             groups.append((_position_key(dock, root, index, 100), group_widgets))
 
     groups.sort(key=lambda item: item[0])
@@ -470,7 +470,7 @@ def apply_auto_tab_order(root, include_hidden=False, include_disabled=False, row
         try:
             widget._tab_order_key = (index, 0, 0, 0)
         except (AttributeError, RuntimeError):
-            pass  # Widget may not support dynamic attributes or may be deleted
+            pass  
 
     for first, second in zip(ordered_widgets, ordered_widgets[1:]):
         safe_set_tab_order(first, second)

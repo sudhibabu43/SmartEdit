@@ -67,7 +67,7 @@ class StreamFilter(logging.Filter):
         source = getattr(record, "source", "")
         return source != "stream"
 
-# Clamp log messages to a reasonable size to avoid giant lines
+
 MAX_LOG_MESSAGE_LENGTH = 2048
 
 
@@ -82,24 +82,24 @@ class TruncatingFormatter(logging.Formatter):
         return super().format(record)
 
 
-# Set up log formatters
+
 template = '%(levelname)s %(module)s: %(message)s'
 console_formatter = TruncatingFormatter(template)
 file_formatter = TruncatingFormatter('%(asctime)s ' + template, datefmt='%H:%M:%S')
 
-# Configure root logger for minimal logging
+
 logging.basicConfig(level=logging.ERROR)
 root_log = logging.getLogger()
 
-# Set up our top-level logging context
+
 log = root_log.getChild('SmartEdit')
 log.setLevel(info.LOG_LEVEL_FILE)
-# Don't pass messages on to root logger
+
 log.propagate = False
 
-#
-# Create rotating file handler
-#
+
+
+
 fh = None
 if os.path.exists(info.USER_PATH):
     log_path = os.path.join(info.USER_PATH, 'smartedit-qt.log')
@@ -108,26 +108,26 @@ if os.path.exists(info.USER_PATH):
             log_path, encoding="utf-8", maxBytes=25*1024*1024, backupCount=3
         )
     except OSError:
-        # Fall back silently if the log file cannot be created (e.g. during tests
-        # in read-only environments)
+        
+        
         fh = logging.NullHandler()
 
 if fh:
     fh.setLevel(info.LOG_LEVEL_FILE)
     fh.setFormatter(file_formatter)
-    # Only add the handler when it's a real logger (NullHandler is harmless)
+    
     log.addHandler(fh)
 else:
     fh = logging.NullHandler()
 
-#
-# Create typical stream handler which logs to stderr
-#
+
+
+
 sh = logging.StreamHandler(sys.stderr)
 sh.setLevel(info.LOG_LEVEL_CONSOLE)
 sh.setFormatter(console_formatter)
 
-# Filter out redirected output on console, to avoid duplicates
+
 filt = StreamFilter()
 sh.addFilter(filt)
 

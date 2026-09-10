@@ -64,11 +64,11 @@ def parse_changelog(changelog_path):
     changelog_list = []
     try:
         with codecs.open(changelog_path, 'r', encoding='utf_8') as changelog_file:
-            # Split changelog safely (since multiline regex fails to parse the windows line endings correctly)
-            # All our log files use unit line endings (even on Windows)
+            
+            
             change_log_lines = changelog_file.read().split("\n")
             for change in change_log_lines:
-                # Generate match object with fields from all matching lines
+                
                 match = changelog_regex.findall(change)
                 if match:
                     changelog_list.append({
@@ -91,14 +91,14 @@ class About(QDialog):
     releaseFound = pyqtSignal(str)
 
     def __init__(self):
-        # Create dialog class
+        
         super().__init__()
 
-        # Load UI from designer & init
+        
         ui_util.load_ui(self, self.ui_path)
         ui_util.init_ui(self)
 
-        # get translations
+        
         self.app = get_app()
         _ = self.app._tr
 
@@ -135,13 +135,13 @@ class About(QDialog):
             }
         """)
 
-        # Hide chnagelog button by default
+        
         self.btnchangelog.setVisible(False)
 
         projects = ['smartedit-qt', 'libsmartedit', 'libsmartedit-audio']
-        # Old paths
+        
         paths = [os.path.join(info.PATH, 'settings', '{}.log'.format(p)) for p in projects]
-        # New paths
+        
         paths.extend([os.path.join(info.PATH, 'resources', '{}.log'.format(p)) for p in projects])
         if any([os.path.exists(path) for path in paths]):
             self.btnchangelog.setVisible(True)
@@ -166,7 +166,7 @@ class About(QDialog):
             </div>
             ''' % (copyright_text)
 
-        # Set description and company labels
+        
         self.lblAboutDescription.setWordWrap(True)
         self.lblAboutDescription.setText(about_html)
         self.lblAboutCompany.setText(company_html)
@@ -197,31 +197,31 @@ class About(QDialog):
         """)
         self.copy_feedback_label.hide()
 
-        # set events handlers
+        
         self.btncredit.clicked.connect(self.load_credit)
         if hasattr(self, "btnlicense"):
             self.btnlicense.clicked.connect(self.load_license)
         self.btnchangelog.clicked.connect(self.load_changelog)
         self.btnCopyVersionInfo.clicked.connect(self.copy_version_info)
 
-        # Track metrics
+        
         track_metric_screen("about-screen")
 
-        # Connect signals
+        
         self.releaseFound.connect(self.display_release)
 
-        # Load release details from HTTP
+        
         self.get_current_release()
 
     def contextMenuEvent(self, event):
         """Handle right-click context menu."""
         menu = StyledContextMenu(parent=self)
 
-        # get translations
+        
         self.app = get_app()
         _ = self.app._tr
 
-        # Add "Copy Version Info" action
+        
         copy_action = menu.addAction(_("Copy Version Info"))
         action = menu.exec_(event.globalPos())
 
@@ -466,19 +466,19 @@ class About(QDialog):
                     )
                     log.info("Found current release: %s" % release_metadata)
                 except Exception as ex:
-                    # Release metadata only enriches the locally-installed version
-                    # information. A missing release (for example, a development
-                    # build whose version number looks final) or a network failure
-                    # must not prevent the About dialog from displaying its version.
+                    
+                    
+                    
+                    
                     log.warning("SmartEdit release details unavailable: %s", ex)
             else:
                 log.info("Skipping SmartEdit release details lookup for non-release version: %s", info.VERSION)
 
-            # get translations
+            
             self.app = get_app()
             _ = self.app._tr
 
-            # Look for frozen version info
+            
             frozen_version_label = ""
             version_path = os.path.join(info.PATH, "settings", "version.json")
             if os.path.exists(version_path):
@@ -501,7 +501,7 @@ class About(QDialog):
                                 log.warning("Failed to parse release date: %s", version_date, exc_info=1)
 
                         if release_metadata and frozen_git_SHA == release_metadata.get("sha", ""):
-                            # Remove -release-candidate... from build name
+                            
                             log.warning(
                                 "Official release detected with SHA (%s) for v%s" %
                                 (release_metadata.get("sha", ""), info.VERSION))
@@ -515,7 +515,7 @@ class About(QDialog):
                                     f' | <a href="{release_notes}" '
                                     f'style="text-decoration:none;color: #91C3FF;">{string_release_notes}</a>')
                         else:
-                            # Display current build name - unedited
+                            
                             if release_metadata:
                                 log.warning("Build SHA (%s) does not match an official release SHA (%s) for v%s" %
                                             (frozen_git_SHA, release_metadata.get("sha", ""), info.VERSION))
@@ -523,14 +523,14 @@ class About(QDialog):
                             if formatted_date:
                                 frozen_version_label += f"<br/>{string_release_date}: {formatted_date}"
 
-            # Init some variables
+            
             smartedit_qt_version = _("Version: %s") % info.VERSION
             libsmartedit_version = "%s" % smartedit.SMARTEDIT_VERSION_FULL
             version_text = f"{smartedit_qt_version} | {libsmartedit_version}"
             if frozen_version_label:
                 version_text += f"<br/>{frozen_version_label}"
 
-            # emit release found
+            
             self.releaseFound.emit(version_text)
 
         except Exception:
@@ -562,25 +562,25 @@ class License(QDialog):
     ui_path = os.path.join(info.PATH, 'windows', 'ui', 'license.ui')
 
     def __init__(self):
-        # Create dialog class
+        
         super().__init__()
 
-        # Load UI from designer
+        
         ui_util.load_ui(self, self.ui_path)
 
-        # Init Ui
+        
         ui_util.init_ui(self)
 
-        # get translations
+        
         self.app = get_app()
         _ = self.app._tr
 
-        # Init license
+        
         with open(os.path.join(info.RESOURCES_PATH, 'license.txt'), 'r') as my_license:
             text = my_license.read()
             self.textBrowser.append(text)
 
-        # Scroll to top
+        
         cursor = self.textBrowser.textCursor()
         cursor.setPosition(0)
         self.textBrowser.setTextCursor(cursor)
@@ -594,21 +594,21 @@ class Credits(QDialog):
 
     def __init__(self):
 
-        # Create dialog class
+        
         super().__init__()
 
-        # Load UI from designer
+        
         ui_util.load_ui(self, self.ui_path)
 
-        # Init Ui
+        
         ui_util.init_ui(self)
 
 
-        # get translations
+        
         self.app = get_app()
         _ = self.app._tr
 
-        # Update supporter button
+        
         supporter_text = _("Become a Supporter")
         supporter_html = '''
             <p align="center">
@@ -617,7 +617,7 @@ class Credits(QDialog):
             ''' % (info.website_language(), supporter_text)
         self.lblBecomeSupporter.setText(supporter_html)
 
-        # Get list of developers
+        
         developer_list = []
         with codecs.open(
                 os.path.join(info.RESOURCES_PATH, 'contributors.json'), 'r', 'utf_8'
@@ -631,18 +631,18 @@ class Credits(QDialog):
         self.txtDeveloperFilter.textChanged.connect(
             self.developersListView.filter_changed)
 
-        # Get string of translators for the current language
+        
         translator_credits = []
         unique_translators = []
         translator_credits_string = _("translator-credits").replace(
             "Launchpad Contributions:\n", ""
             ).replace("translator-credits", "")
         if translator_credits_string:
-            # Parse string into a list of dictionaries
+            
             translator_rows = translator_credits_string.split("\n")
             stripped_rows = [s.strip().capitalize() for s in translator_rows if "Template-Name:" not in s]
             for row in sorted(stripped_rows):
-                # Split each row into 2 parts (name and username)
+                
                 translator_parts = row.split("https://launchpad.net/")
                 if len(translator_parts) >= 2:
                     name = translator_parts[0].strip().title()
@@ -654,17 +654,17 @@ class Credits(QDialog):
                             "website": "https://launchpad.net/%s" % username
                             })
 
-            # Add translators listview
+            
             self.translatorsListView = CreditsTreeView(
                 translator_credits, columns=["website"])
             self.vboxTranslators.addWidget(self.translatorsListView)
             self.txtTranslatorFilter.textChanged.connect(
                 self.translatorsListView.filter_changed)
         else:
-            # No translations for this language, hide credits
+            
             self.tabCredits.removeTab(1)
 
-        # Get list of supporters
+        
         supporter_list = []
         with codecs.open(
                 os.path.join(info.RESOURCES_PATH, 'supporters.json'), 'r', 'utf_8'
@@ -672,7 +672,7 @@ class Credits(QDialog):
             supporter_string = supporter_file.read()
             supporter_list = json.loads(supporter_string)
 
-        # Add supporters listview
+        
         self.supportersListView = CreditsTreeView(
             supporter_list, columns=["website"])
         self.vboxSupporters.addWidget(self.supportersListView)
@@ -687,20 +687,20 @@ class Changelog(QDialog):
 
     def __init__(self):
 
-        # Create dialog class
+        
         super().__init__()
 
-        # Load UI from designer
+        
         ui_util.load_ui(self, self.ui_path)
 
-        # Init Ui
+        
         ui_util.init_ui(self)
 
 
-        # get translations
+        
         _ = get_app()._tr
 
-        # Connections to objects imported from .ui file
+        
         tab = {
             "smartedit-qt": self.tab_smartedit_qt,
             "libsmartedit": self.tab_libsmartedit,
@@ -712,7 +712,7 @@ class Changelog(QDialog):
             "libsmartedit-audio": self.vbox_libsmartedit_audio,
         }
 
-        # Update github link button
+        
         github_text = _("SmartEdit on GitHub")
         github_html = '''
             <p align="center">
@@ -721,7 +721,7 @@ class Changelog(QDialog):
             ''' % (github_text)
         self.lblGitHubLink.setText(github_html)
 
-        # Read changelog file for each project
+        
         for project in ['smartedit-qt', 'libsmartedit', 'libsmartedit-audio']:
             changelog_path = os.path.join(info.PATH, 'settings', '{}.log'.format(project))
             if os.path.exists(changelog_path):
@@ -731,12 +731,12 @@ class Changelog(QDialog):
                 changelog_list = None
             if changelog_list is None:
                 log.warn("Could not load changelog for {}".format(project))
-                # Hide the tab for this changelog
+                
                 tabindex = self.tabChangelog.indexOf(tab[project])
                 if tabindex >= 0:
                     self.tabChangelog.removeTab(tabindex)
                 continue
-            # Populate listview widget with changelog data
+            
             cl_treeview = ChangelogTreeView(
                 commits=changelog_list,
                 commit_url="https://github.com/SmartEdit/{}/commit/%s/".format(project))

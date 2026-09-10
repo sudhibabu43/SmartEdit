@@ -1,14 +1,14 @@
-# SmartEdit Package
-# ---------------------------------------------------------------------------
-# Merges two layers into a single namespace:
-#   Layer A - low-level SWIG C++ wrapper : loaded from  ../_libsmartedit.py
-#                                          +  ../_smartedit.pyd  (C ext)
-#                                          +  ../libsmartedit*.dll
-#   Layer B - high-level AI/analysis tools :  ./video_analysis.py
-#                                             ./audio_analysis.py
-#                                             ./prompt_interpreter.py
-#                                             ./rough_cut_generator.py
-# ---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
 
 import os as _os
 import sys as _sys
@@ -16,7 +16,7 @@ import sys as _sys
 _PKG_DIR = _os.path.dirname(_os.path.abspath(__file__))
 _SRC_DIR = _os.path.dirname(_PKG_DIR)
 
-# ---------- early DLL search path setup so _smartedit.pyd loads ----------
+
 if _SRC_DIR not in _sys.path:
     _sys.path.insert(0, _SRC_DIR)
 
@@ -45,10 +45,10 @@ if _os.name == "nt" and hasattr(_os, "add_dll_directory"):
     if r"C:\msys64\ucrt64\bin" not in _os.environ.get("PATH", ""):
         _os.environ["PATH"] = r"C:\msys64\ucrt64\bin;" + _os.environ.get("PATH", "")
 
-# ---------- Layer A: load the SWIG C++ wrapper module -----------------
+
 import _libsmartedit as _swig_mod
 
-# Merge every non-dunder / non-private SWIG symbol into THIS package.
+
 _THIS = _sys.modules[__name__]
 for _name in dir(_swig_mod):
     if _name.startswith("__") and _name.endswith("__"):
@@ -62,7 +62,7 @@ for _name in dir(_swig_mod):
     except Exception:
         pass
 
-# Also make the raw C extension available as smartedit._smartedit
+
 if not hasattr(_THIS, "_smartedit"):
     _ext = getattr(_swig_mod, "_smartedit", None)
     if _ext is not None:
@@ -70,10 +70,10 @@ if not hasattr(_THIS, "_smartedit"):
         if "_smartedit" not in _sys.modules:
             _sys.modules["_smartedit"] = _ext
 
-# Keep the SWIG wrapper also registered for any direct imports
+
 _sys.modules.setdefault("smartedit_swig", _swig_mod)
 
-# ---------- Layer B: Python helper modules inside this directory ------------
+
 from .video_analysis import VideoAnalyzer
 from .audio_analysis import AudioAnalyzer
 from .prompt_interpreter import PromptInterpreter

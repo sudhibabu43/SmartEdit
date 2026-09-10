@@ -36,14 +36,14 @@ class HiddenTitleBar(QWidget):
         self.dock_widget = dock_widget
         self.show_buttons = show_buttons
         self._tr = None
-        self.dragging = False  # Flag for dragging
+        self.dragging = False  
         self.start_pos = None
         self.setFocusPolicy(Qt.NoFocus)
 
-        # Set up a horizontal layout
+        
         layout = QHBoxLayout(self)
 
-        # Add a QLabel for the title (optional, based on title_text)
+        
         self.title_label = QLabel(title_text)
         self.title_label.setFocusPolicy(Qt.NoFocus)
         self.title_label.installEventFilter(self)
@@ -52,44 +52,44 @@ class HiddenTitleBar(QWidget):
         else:
             self.title_label.setObjectName("dock-title-handle")
 
-        # Add the QLabel to the layout
+        
         layout.addWidget(self.title_label)
 
-        # Keep title in sync with dock widget
+        
         self.dock_widget.windowTitleChanged.connect(self.update_title)
 
-        # Add a spacer to push buttons to the right
+        
         layout.addStretch()
 
         self.close_button = None
         self.undock_button = None
 
         if self.show_buttons:
-            # Add close and undock buttons
+            
             self.close_button = QPushButton()
             self.undock_button = QPushButton()
             self.close_button.setFocusPolicy(Qt.NoFocus)
             self.undock_button.setFocusPolicy(Qt.NoFocus)
 
-            # Set object names for styling via stylesheets
+            
             self.close_button.setObjectName("dock-close-button")
             self.undock_button.setObjectName("dock-float-button")
 
-            # Connect the buttons to the appropriate actions
+            
             self.close_button.clicked.connect(self.dock_widget.close)
             self.undock_button.clicked.connect(self.toggle_dock_state)
 
-            # Add buttons to the layout
+            
             layout.addWidget(self.undock_button)
             layout.addWidget(self.close_button)
 
-        # Set margins and height for the title bar
+        
         layout.setContentsMargins(0, 0, 0, 0)
         if title_text:
-            # Taller for title with bottom margin
+            
             self.setFixedHeight(40)
         else:
-            # Shorter for just drag handle + buttons (tabbed docks)
+            
             self.setFixedHeight(20)
         self._update_accessible_labels()
 
@@ -135,9 +135,9 @@ class HiddenTitleBar(QWidget):
     def toggle_dock_state(self):
         """Toggle between docked and floating states."""
         if self.dock_widget.isFloating():
-            # Restore the default title bar when docking
+            
             self.dock_widget.setFloating(False)
         else:
-            # Float the widget and apply custom title bar
+            
             self.dock_widget.setFloating(True)
         self._update_accessible_labels()

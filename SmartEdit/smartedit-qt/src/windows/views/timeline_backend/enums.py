@@ -63,7 +63,7 @@ class MenuAlign(Enum):
 
 class MenuAnimate(Enum):
     NONE = 0
-    # ── In ───────────────────────────────────────────────────────────────────
+    
     SLIDE_IN_LEFT = auto()
     SLIDE_IN_RIGHT = auto()
     SLIDE_IN_TOP = auto()
@@ -93,7 +93,7 @@ class MenuAnimate(Enum):
     BOUNCE_IN_LEFT = auto()
     BOUNCE_IN_RIGHT = auto()
     BOUNCE_IN_UP = auto()
-    # ── Out ──────────────────────────────────────────────────────────────────
+    
     SLIDE_OUT_LEFT = auto()
     SLIDE_OUT_RIGHT = auto()
     SLIDE_OUT_TOP = auto()
@@ -123,7 +123,7 @@ class MenuAnimate(Enum):
     BOUNCE_OUT_LEFT = auto()
     BOUNCE_OUT_RIGHT = auto()
     BOUNCE_OUT_UP = auto()
-    # ── Emphasis ─────────────────────────────────────────────────────────────
+    
     BOUNCE = auto()
     FLASH = auto()
     PULSE = auto()
@@ -135,7 +135,7 @@ class MenuAnimate(Enum):
     WOBBLE = auto()
     JELLO = auto()
     HEART_BEAT = auto()
-    # ── Camera ───────────────────────────────────────────────────────────────
+    
     CAM_PUSH_IN = auto()
     CAM_PULL_OUT = auto()
     CAM_PAN_AUTO = auto()
@@ -153,7 +153,7 @@ class MenuAnimate(Enum):
     KEN_BURNS_OUT_RIGHT_TO_LEFT = auto()
     KEN_BURNS_OUT_TOP_TO_BOTTOM = auto()
     KEN_BURNS_OUT_BOTTOM_TO_TOP = auto()
-    # ── Credits ──────────────────────────────────────────────────────────────
+    
     CREDITS_UP = auto()
     CREDITS_DOWN = auto()
 

@@ -44,7 +44,7 @@ class VideoAnalyzer:
     """
 
     def __init__(self, default_shake_threshold: float = 50.0):
-        # Default threshold is 50% (0-100 scale)
+        
         self.default_shake_threshold = default_shake_threshold if default_shake_threshold > 1.0 else default_shake_threshold * 100.0
 
     def get_effective_threshold(self, threshold: Optional[float] = None) -> float:
@@ -129,14 +129,14 @@ class VideoAnalyzer:
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
             duration = total_frames / source_fps if source_fps > 0 else 0.0
 
-            # Calculate frame step for downsampled analysis (e.g. 5 fps)
+            
             step = max(1, int(round(source_fps / sample_fps)))
             max_frames = int(min(total_frames, max_duration_sec * source_fps))
 
             prev_gray = None
             prev_points = None
-            velocities = []  # (dx, dy, timestamp)
-            jerks = []        # change in velocity (acceleration jitter)
+            velocities = []  
+            jerks = []        
             shaky_segments = []
 
             current_frame_idx = 0
@@ -146,7 +146,7 @@ class VideoAnalyzer:
                 if not ret or frame is None:
                     break
 
-                # Downscale to 320x180 for super-fast optical flow computation
+                
                 h, w = frame.shape[:2]
                 scale = 320.0 / max(w, 1)
                 small = cv2.resize(frame, (320, max(1, int(h * scale))), interpolation=cv2.INTER_AREA)
@@ -154,7 +154,7 @@ class VideoAnalyzer:
                 timestamp = current_frame_idx / source_fps
 
                 if prev_gray is not None:
-                    # Detect good tracking features if needed
+                    
                     if prev_points is None or len(prev_points) < 15:
                         prev_points = cv2.goodFeaturesToTrack(
                             prev_gray, maxCorners=100, qualityLevel=0.01, minDistance=10
@@ -177,7 +177,7 @@ class VideoAnalyzer:
                                 mean_dy = float(np.mean(displacements[:, 1]))
                                 velocities.append((mean_dx, mean_dy, timestamp))
 
-                                # Calculate jerk if we have previous velocity
+                                
                                 if len(velocities) >= 2:
                                     v1 = velocities[-2]
                                     v2 = velocities[-1]
@@ -212,25 +212,25 @@ class VideoAnalyzer:
                     "duration_sec": round(duration, 2)
                 }
 
-            # Normalize jerk magnitudes against standard shake baseline
+            
             jerk_values = [j[0] for j in jerks]
             median_jerk = float(np.median(jerk_values))
             p90_jerk = float(np.percentile(jerk_values, 90))
             
-            # High-frequency directional reversal count (jitter)
+            
             sign_reversals = 0
             for i in range(1, len(velocities) - 1):
                 if (velocities[i][0] * velocities[i-1][0] < 0) or (velocities[i][1] * velocities[i-1][1] < 0):
                     sign_reversals += 1
             reversal_ratio = sign_reversals / max(1, len(velocities) - 2)
 
-            # Combined shake score: combination of acceleration jitter and directional oscillation (0.0 to 1.0)
+            
             normalized_jerk = min(1.0, p90_jerk / 150.0)
             shake_score = round(min(1.0, max(0.0, 0.6 * normalized_jerk + 0.4 * reversal_ratio)), 3)
             shake_percentage = round(shake_score * 100.0, 1)
             classification = classify_shake(shake_percentage)
 
-            # Identify specific shaky time intervals and compute per-segment scores
+            
             interval_start = None
             interval_mags = []
             frame_thresh = (thresh_pct / 100.0) * 150.0
@@ -276,7 +276,7 @@ class VideoAnalyzer:
                         "classification": classify_shake(seg_pct)
                     })
 
-            # Check whether clip is shaky against threshold
+            
             is_shaky = (shake_percentage >= thresh_pct) or (len(shaky_segments) > 0 and shake_percentage >= thresh_pct * 0.7)
 
             return {
@@ -327,7 +327,7 @@ class VideoAnalyzer:
             src_start = float(seg.get("start", 0.0))
             src_end = float(seg.get("end", 0.0))
 
-            # Intersect with clip's active media range [clip_start, clip_end]
+            
             sub_start = max(src_start, clip_start)
             sub_end = min(src_end, effective_end)
 
@@ -375,7 +375,7 @@ class VideoAnalyzer:
         classification = classify_shake(shake_percentage)
         is_shaky = shake_percentage >= threshold
 
-        # If tagged shaky, provide realistic discrete shaky regions matching common handheld clips
+        
         shaky_segments = []
         if is_shaky:
             shaky_segments = [

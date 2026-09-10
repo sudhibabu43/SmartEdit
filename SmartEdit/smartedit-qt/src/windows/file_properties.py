@@ -32,7 +32,7 @@ from qt_api import (
     QDialog, QFileDialog, QDialogButtonBox, QPushButton,
     )
 
-# Python module for libsmartedit (required video editing module installed separately)
+
 import smartedit
 
 from uuid import uuid4
@@ -49,40 +49,40 @@ MAX_FPS_SPINBOX_VALUE = 2147483647
 class FileProperties(QDialog):
     """ File Properties Dialog """
 
-    # Path to ui file
+    
     ui_path = os.path.join(info.PATH, 'windows', 'ui', 'file-properties.ui')
 
     def __init__(self, file):
         self.file = file
 
-        # Create dialog class
+        
         super().__init__()
 
-        # Load UI from designer
+        
         ui_util.load_ui(self, self.ui_path)
 
-        # Init UI
+        
         ui_util.init_ui(self)
 
-        # get translations
+        
         app = get_app()
         _ = app._tr
 
-        # Get settings
+        
         self.s = app.get_settings()
 
-        # Track metrics
+        
         track_metric_screen("file-properties-screen")
 
-        # Add buttons to interface
+        
         self.update_button = QPushButton(_('Update'))
         self.buttonBox.addButton(self.update_button, QDialogButtonBox.AcceptRole)
         self.buttonBox.addButton(QPushButton(_('Cancel')), QDialogButtonBox.RejectRole)
 
-        # Dynamically load tabs from settings data
+        
         self.settings_data = self.s.get_all_settings()
 
-        # Initialize Form
+        
         self.channel_layout_choices = []
         self.initialize()
         self.txtFrameRateNum.valueChanged.connect(self.update_frame_rate_display)
@@ -92,24 +92,24 @@ class FileProperties(QDialog):
 
     def initialize(self):
         """Init all form elements / textboxes / etc..."""
-        # get translations
+        
         app = get_app()
         _ = app._tr
 
-        # Get file properties
+        
         filename = os.path.basename(self.file.data["path"])
         file_extension = os.path.splitext(filename)[1]
 
         tags = self.file.data.get("tags", "")
         name = self.file.data.get("name", filename)
 
-        # Populate fields
+        
         self.txtFileName.setText(name)
         self.txtTags.setText(tags)
         self.txtFilePath.setText(self.file.data["path"])
         self.btnBrowse.clicked.connect(self.browsePath)
 
-        # Populate video fields
+        
         self.txtFrameRateNum.setMaximum(MAX_FPS_SPINBOX_VALUE)
         self.txtFrameRateDen.setMaximum(MAX_FPS_SPINBOX_VALUE)
         self.txtWidth.setValue(self.file.data["width"])
@@ -123,15 +123,15 @@ class FileProperties(QDialog):
         self.txtPixelRatioNum.setValue(self.file.data["pixel_ratio"]["num"])
         self.txtPixelRatioDen.setValue(self.file.data["pixel_ratio"]["den"])
 
-        # Only allow FPS edits for image-sequence style paths.
+        
         fps_editable = "%" in str(self.file.data.get("path") or "")
         self.txtFrameRateNum.setEnabled(fps_editable)
         self.txtFrameRateDen.setEnabled(fps_editable)
 
-        # Initialize start/end textboxes
+        
         self.init_start_end_textboxes(self.file.data)
 
-        # Populate video & audio format
+        
         self.txtVideoFormat.setText(file_extension.replace(".", ""))
         self.txtVideoCodec.setText(self.file.data["vcodec"])
         self.txtAudioCodec.setText(self.file.data["acodec"])
@@ -140,10 +140,10 @@ class FileProperties(QDialog):
         self.txtVideoBitRate.setValue(int(self.file.data["video_bit_rate"]))
         self.txtAudioBitRate.setValue(int(self.file.data["audio_bit_rate"]))
 
-        # Populate output field
+        
         self.txtOutput.setText(json.dumps(self.file.data, sort_keys=True, indent=2))
 
-        # Add channel layouts
+        
         selected_channel_layout_index = 0
         current_channel_layout = 0
         if self.file.data["has_audio"]:
@@ -162,10 +162,10 @@ class FileProperties(QDialog):
             if current_channel_layout == layout[0]:
                 selected_channel_layout_index = channel_layout_index
 
-        # Select matching channel layout
+        
         self.cboChannelLayout.setCurrentIndex(selected_channel_layout_index)
 
-        # Load the interlaced options
+        
         self.cboInterlaced.clear()
         self.cboInterlaced.addItem(_("Yes"), "Yes")
         self.cboInterlaced.addItem(_("No"), "No")
@@ -174,7 +174,7 @@ class FileProperties(QDialog):
         else:
             self.cboInterlaced.setCurrentIndex(1)
 
-        # Switch to 1st page
+        
         self.toolBox.setCurrentIndex(0)
 
     def update_frame_rate_display(self):
@@ -220,77 +220,77 @@ class FileProperties(QDialog):
         if 'end' not in file_object.keys():
             self.txtEndFrame.setValue(int(file_object["video_length"]))
         else:
-            # End times are stored as the first frame *after* the clip ends,
-            # so convert to an inclusive frame number without adding 1.
+            
+            
             self.txtEndFrame.setValue(round(float(file_object["end"]) * fps_float))
 
     def verifyPath(self, new_path):
         """If the path has changed, verify that path is valid, and
         update duration, video_length, media_type, etc..."""
 
-        # If this path could be an image sequence, get that info and prompt user.
+        
         seq_info = get_app().window.files_model.get_image_sequence_details(new_path)
         get_app().window.files_model.ignore_image_sequence_paths = []
 
-        # create the proper path for an image sequence
+        
         if seq_info:
-            # Override new_path with image sequence glob pattern
+            
             new_path = seq_info.get("path")
             self.file.data["media_type"] = "video"
 
-        # Open image sequence with Clip object (to determine metadata)
+        
         clip = smartedit.Clip(new_path)
         if clip and clip.info.duration > 0.0:
-            # Make sure a clip can be created, then change the video length and path
+            
             self.txtFilePath.setText(new_path)
             self.txtFileName.setText(os.path.basename(new_path))
             self.file.data = json.loads(clip.Reader().Json())
             if not seq_info:
                 self.file.data["media_type"] = get_media_type(self.file.data)
 
-            # Initialize start/end textboxes
+            
             self.init_start_end_textboxes(self.file.data)
         else:
             log.info(f"Given path '{new_path}' was not a valid path... ignoring")
 
     def browsePath(self):
-        # get translations
+        
         app = get_app()
         _ = app._tr
 
         starting_folder, filename = os.path.split(self.file.data["path"])
         new_path = QFileDialog.getOpenFileName(None, _("Locate media file: %s") % filename, starting_folder)[0]
 
-        # don't update if dialog was canceled
+        
         if new_path:
-            # verify path is valid (and prompt for image sequence if detected)
+            
             self.verifyPath(new_path)
 
-            # re-init form
+            
             self.initialize()
 
     def accept(self):
         new_path = self.txtFilePath.text()
         if new_path and self.file.data.get("path") != new_path:
-            # If path changed, verify path is valid (and prompt for image sequence if detected)
+            
             self.verifyPath(new_path)
 
-        # Update file details
+        
         self.file.data["name"] = self.txtFileName.text()
         self.file.data["tags"] = self.txtTags.text()
         
-        # Determine if FPS changed
+        
         fps_float = self.txtFrameRateNum.value() / self.txtFrameRateDen.value()
         if self.file.data["fps"]["num"] != self.txtFrameRateNum.value() or \
                 self.file.data["fps"]["den"] != self.txtFrameRateDen.value():
             original_fps_float = float(self.file.data["fps"]["num"]) / float(self.file.data["fps"]["den"])
-            # Update file 'fps' and 'video_timebase'
+            
             self.file.data["fps"]["num"] = self.txtFrameRateNum.value()
             self.file.data["fps"]["den"] = self.txtFrameRateDen.value()
             self.file.data["video_timebase"]["num"] = self.txtFrameRateDen.value()
             self.file.data["video_timebase"]["den"] = self.txtFrameRateNum.value()
 
-            # Scale 'start' and 'end' properties by FPS difference
+            
             fps_diff = original_fps_float / fps_float
             self.file.data["duration"] *= fps_diff
             if "start" in self.file.data:
@@ -298,24 +298,24 @@ class FileProperties(QDialog):
             if "end" in self.file.data:
                 self.file.data["end"] *= fps_diff
 
-        # Scale 'start' and 'end' file attributes (if changed)
+        
         elif self.txtStartFrame.value() != 1 or self.txtEndFrame.value() != int(self.file.data["video_length"]):
-            # Scale 'start' and 'end' properties by FPS difference
+            
             self.file.data["start"] = (self.txtStartFrame.value() - 1) / fps_float
-            # End frames are inclusive, so convert to the time *after* the last frame
+            
             self.file.data["end"] = self.txtEndFrame.value() / fps_float
 
-        # Transaction id to group all updates together
+        
         tid = str(uuid4())
         get_app().updates.transaction_id = tid
 
-        # Save file object
+        
         self.file.save()
 
-        # Update file info & thumbnail
+        
         get_app().window.FileUpdated.emit(self.file.id)
 
-        # Update related clips
+        
         for clip in Clip.filter(file_id=self.file.id):
             clip.data["reader"] = self.file.data
             clip.data["duration"] = self.file.data["duration"]
@@ -323,17 +323,17 @@ class FileProperties(QDialog):
                 clip.data["end"] = clip.data["duration"]
             clip.save()
 
-            # Emit thumbnail update signal (to update timeline thumb image)
+            
             thumbnail_frame = (clip.data["start"] * fps_float) + 1
             get_app().window.ThumbnailUpdated.emit(clip.id, thumbnail_frame)
 
-        # Done grouping transactions
+        
         get_app().updates.transaction_id = None
 
-        # Accept dialog
+        
         super(FileProperties, self).accept()
 
     def reject(self):
 
-        # Cancel dialog
+        
         super(FileProperties, self).reject()

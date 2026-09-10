@@ -33,7 +33,7 @@ from qt_api import pyqtSignal, QTimer, QSize
 from qt_api import Qt, QEvent
 from qt_api import QIcon
 from qt_api import QDialog, QMessageBox, QSizePolicy, QSlider, QToolButton, QLineEdit
-import smartedit  # Python module for libsmartedit (required video editing module installed separately)
+import smartedit  
 
 from classes import info, ui_util, time_parts
 from classes.app import get_app
@@ -48,10 +48,10 @@ from windows.video_widget import VideoWidget
 class Cutting(QDialog):
     """ Cutting Dialog """
 
-    # Path to ui file
+    
     ui_path = os.path.join(info.PATH, 'windows', 'ui', 'cutting.ui')
 
-    # Signals for preview thread
+    
     previewFrameSignal = pyqtSignal(int)
     refreshFrameSignal = pyqtSignal()
     LoadFileSignal = pyqtSignal(str)
@@ -83,13 +83,13 @@ class Cutting(QDialog):
         self._close_after_shutdown = False
         self.loop_playback = bool(preview)
 
-        # Create dialog class
+        
         super().__init__()
 
-        # Load UI from designer
+        
         ui_util.load_ui(self, self.ui_path)
 
-        # Init UI
+        
         ui_util.init_ui(self)
         self.setWindowFlags(
             (self.windowFlags() & ~Qt.Dialog)
@@ -99,10 +99,10 @@ class Cutting(QDialog):
         )
         self.setSizeGripEnabled(True)
 
-        # Track metrics
+        
         track_metric_screen("cutting-screen")
 
-        # Keep track of file object
+        
         self.file = file
         self.source_reader_data = dialog_preview_reader_data(file, prefer_proxy=False)
         self.proxy_reader_data = dialog_preview_reader_data(file, prefer_proxy=True)
@@ -123,7 +123,7 @@ class Cutting(QDialog):
         self.end_frame = self.video_length
         self.end_image = None
 
-        # If preview, hide cutting controls
+        
         if preview:
             self.lblInstructions.setVisible(False)
             self.widgetControls.setVisible(False)
@@ -133,27 +133,27 @@ class Cutting(QDialog):
         if float(file.data.get("start", 0.0)) > 0.0:
             self.start_frame = round(file.data.get("start", 0) * self.fps) + 1
 
-            # Remember the previous start property (on init)
+            
             self.previous_start = self.file.data.get("start", 0.0)
         if float(file.data.get("end", 0.0)) > 0.0:
             self.end_frame = round(file.data.get("end", 0) * self.fps)
             self.video_length = (self.end_frame - self.start_frame) + 1
 
-        # Set clip start / end
+        
         clip_start = file.data.get("start", 0.0)
         clip_end = file.data.get("end", file.data.get("duration", 0.0))
 
-        # Open video file with Reader
+        
         log.info(self.file_path)
 
-        # Add Video Widget
+        
         self.videoPreview = VideoWidget(watch_project=False)
         self.videoPreview.win = self
         self.videoPreview.setObjectName("videoPreview")
         self.videoPreview.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.verticalLayout.insertWidget(0, self.videoPreview)
 
-        # Set max size of video preview (for speed)
+        
         viewport_rect = self.videoPreview.centeredViewport(self.videoPreview.width(), self.videoPreview.height())
 
         try:
@@ -164,14 +164,14 @@ class Cutting(QDialog):
                 self.file_path)
             return
 
-        # Start the preview thread
+        
         self.initialized = False
         self.transforming_clip = False
         self.preview_parent = PreviewParent()
         self.preview_parent.Init(self, self.r, self.videoPreview, self.video_length)
         self.preview_thread = self.preview_parent.worker
 
-        # Set slider constraints
+        
         self.sliderIgnoreSignal = False
         self.sliderVideo.setMinimum(1)
         self.sliderVideo.setMaximum(self.video_length)
@@ -180,10 +180,10 @@ class Cutting(QDialog):
         if self.is_preview_mode:
             self._build_preview_repeat_button()
 
-        # Initialize first frame display.
-        # For cutting mode, preserve the legacy two-step seek refresh.
-        # For preview mode, avoid the seek/pause startup hack so autoplay
-        # isn't fighting initialization pauses.
+        
+        
+        
+        
         if self.is_preview_mode:
             self.sliderIgnoreSignal = True
             self.sliderVideo.setValue(1)
@@ -192,7 +192,7 @@ class Cutting(QDialog):
             QTimer.singleShot(500, functools.partial(self.sliderVideo.setValue, 2))
             QTimer.singleShot(600, functools.partial(self.sliderVideo.setValue, 1))
 
-        # Connect signals
+        
         self.actionPlay.triggered.connect(self.actionPlay_Triggered)
         self.btnPlay.clicked.connect(self.btnPlay_clicked)
         self.sliderVideo.valueChanged.connect(self.sliderVideo_valueChanged)
@@ -203,7 +203,7 @@ class Cutting(QDialog):
         self.btnAddClip.clicked.connect(self.btnAddClip_clicked)
         self.txtName.installEventFilter(self)
         self.sliderVideo.installEventFilter(self)
-        # Timer to ensure final preview update
+        
         self.slider_timer = QTimer(self)
         self.slider_timer.setInterval(100)
         self.slider_timer.setSingleShot(True)
@@ -449,13 +449,13 @@ class Cutting(QDialog):
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.KeyPress and obj is self.txtName:
-            # Handle ENTER key to create new clip
+            
             if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
                 if self.btnAddClip.isEnabled():
                     self.btnAddClip_clicked()
                     return True
         if event.type() == QEvent.MouseButtonPress and isinstance(obj, QSlider):
-            # Handle QSlider click, jump to cursor position
+            
             if event.button() == Qt.LeftButton:
                 min_val = obj.minimum()
                 max_val = obj.maximum()
@@ -469,7 +469,7 @@ class Cutting(QDialog):
         return super().eventFilter(obj, event)
 
     def actionPlay_Triggered(self):
-        # Trigger play button (This action is invoked from the preview thread, so it must exist here)
+        
         self.btnPlay.click()
 
     def frame_to_timestamp(self, frame_number):
@@ -497,24 +497,24 @@ class Cutting(QDialog):
     def movePlayhead(self, frame_number):
         """Update the playhead position"""
 
-        # Keep slider drag native; ignore async playhead pushes while dragging.
+        
         if self.sliderVideo.isSliderDown():
             self.lblVideoTime.setText(self.frame_to_timestamp(self.sliderVideo.value()))
             return
 
-        # Move slider to correct frame position
+        
         self.sliderIgnoreSignal = True
         self.sliderVideo.setValue(frame_number)
         self.sliderIgnoreSignal = False
 
-        # Update label
+        
         self.lblVideoTime.setText(self.frame_to_timestamp(frame_number))
 
     def btnPlay_clicked(self, force=None):
         log.info("btnPlay_clicked")
 
         if force is None and self._preview_autoplay_active:
-            # Respect explicit user input (don't keep forcing startup autoplay).
+            
             self._preview_autoplay_active = False
 
         if force == "pause":
@@ -525,7 +525,7 @@ class Cutting(QDialog):
         if self.btnPlay.isChecked():
             log.info('play (icon to pause)')
             ui_util.setup_icon(self, self.btnPlay, "actionPlay", "media-playback-pause")
-            # In non-loop mode, replay from the beginning when currently at end.
+            
             if not self.loop_playback:
                 try:
                     current_pos = int(self.preview_thread.player.Position())
@@ -536,10 +536,10 @@ class Cutting(QDialog):
             self.PlaySignal.emit()
         else:
             log.info('pause (icon to play)')
-            ui_util.setup_icon(self, self.btnPlay, "actionPlay", "media-playback-start")  # to default
+            ui_util.setup_icon(self, self.btnPlay, "actionPlay", "media-playback-start")  
             self.PauseSignal.emit()
 
-        # Send focus back to toolbar
+        
         self.sliderVideo.setFocus()
 
     def _start_preview_autoplay(self):
@@ -556,9 +556,9 @@ class Cutting(QDialog):
             and getattr(self.videoPreview, "delayed_resize_timer", None) is not None
             and self.videoPreview.delayed_resize_timer.isActive()
         ):
-            # Let preview resize/max-size settling finish before forcing the
-            # first autoplay attempt, otherwise startup can pause/clear the
-            # preview cache mid-play and produce an audible glitch.
+            
+            
+            
             QTimer.singleShot(120, lambda: Cutting._start_preview_autoplay(self))
             return
         if self._preview_autoplay_attempts >= 30:
@@ -574,8 +574,8 @@ class Cutting(QDialog):
         if not self.is_preview_mode:
             return
         if getattr(self, "preview_thread", None):
-            # Startup preview should show frame 1 immediately without waiting for
-            # preroll/cache work before the first autoplay attempt.
+            
+            
             self.preview_thread.Seek(1, False)
         else:
             self.SeekSignal.emit(1)
@@ -587,7 +587,7 @@ class Cutting(QDialog):
         paused_mode = getattr(smartedit, "PLAYBACK_PAUSED", getattr(smartedit, "PLAYBACK_PAUSE", None))
         stop_mode = getattr(smartedit, "PLAYBACK_STOPPED", getattr(smartedit, "PLAYBACK_STOP", None))
 
-        # Keep the play button state visually in sync with current playback mode.
+        
         if mode == play_mode and not self.btnPlay.isChecked():
             self.btnPlay.setChecked(True)
             ui_util.setup_icon(self, self.btnPlay, "actionPlay", "media-playback-pause")
@@ -603,10 +603,10 @@ class Cutting(QDialog):
     def sliderVideo_valueChanged(self, new_frame):
         if self.preview_thread and not self.sliderIgnoreSignal:
             log.info('sliderVideo_valueChanged')
-            # Pause video and update preview immediately
+            
             self.btnPlay_clicked(force="pause")
             self.previewFrameSignal.emit(new_frame)
-            # Start timer to ensure preview updates after dragging stops
+            
             self.slider_timer.start()
 
     def sliderVideo_timeout(self):
@@ -626,35 +626,35 @@ class Cutting(QDialog):
         """Start of clip button was clicked"""
         _ = get_app()._tr
 
-        # Pause video
+        
         self.btnPlay_clicked(force="pause")
 
-        # Get the current frame
+        
         current_frame = self.sliderVideo.value()
 
-        # Check if starting frame less than end frame
+        
         if self.btnEnd.isEnabled() and current_frame >= self.end_frame:
-            # Handle exception
+            
             msg = QMessageBox()
             msg.setText(_("Please choose valid 'start' and 'end' values for your clip."))
             msg.exec_()
             return
 
-        # remember frame #
+        
         self.start_frame = current_frame
 
-        # Save thumbnail image
+        
         self.start_image = os.path.join(info.USER_PATH, 'thumbnail', '%s.png' % self.start_frame)
         self.r.GetFrame(self.start_frame).Thumbnail(self.start_image, 160, 90, '', '', '#000000', True, 'png', 85)
 
-        # Set CSS on button
+        
         self.btnStart.setStyleSheet('background-image: url(%s);' % self.start_image.replace('\\', '/'))
 
-        # Enable end button
+        
         self.btnEnd.setEnabled(True)
         self.btnClear.setEnabled(True)
 
-        # Send focus back to toolbar
+        
         self.sliderVideo.setFocus()
 
         log.info('btnStart_clicked, current frame: %s' % self.start_frame)
@@ -663,34 +663,34 @@ class Cutting(QDialog):
         """End of clip button was clicked"""
         _ = get_app()._tr
 
-        # Pause video
+        
         self.btnPlay_clicked(force="pause")
 
-        # Get the current frame
+        
         current_frame = self.sliderVideo.value()
 
-        # Check if ending frame greater than start frame
+        
         if current_frame <= self.start_frame:
-            # Handle exception
+            
             msg = QMessageBox()
             msg.setText(_("Please choose valid 'start' and 'end' values for your clip."))
             msg.exec_()
             return
 
-        # remember frame #
+        
         self.end_frame = current_frame
 
-        # Save thumbnail image
+        
         self.end_image = os.path.join(info.USER_PATH, 'thumbnail', '%s.png' % self.end_frame)
         self.r.GetFrame(self.end_frame).Thumbnail(self.end_image, 160, 90, '', '', '#000000', True, 'png', 85)
 
-        # Set CSS on button
+        
         self.btnEnd.setStyleSheet('background-image: url(%s);' % self.end_image.replace('\\', '/'))
 
-        # Enable create button
+        
         self.btnAddClip.setEnabled(True)
 
-        # Send focus back to toolbar
+        
         self.sliderVideo.setFocus()
 
         log.info('btnEnd_clicked, current frame: %s' % self.end_frame)
@@ -699,12 +699,12 @@ class Cutting(QDialog):
         """Clear the current clip and reset the form"""
         log.info('btnClear_clicked')
 
-        # Reset form
+        
         self.clearForm()
 
     def clearForm(self):
         """Clear all form controls"""
-        # Clear buttons
+        
         self.start_frame = 1
         self.end_frame = 1
         self.start_image = ''
@@ -712,10 +712,10 @@ class Cutting(QDialog):
         self.btnStart.setStyleSheet('background-image: None;')
         self.btnEnd.setStyleSheet('background-image: None;')
 
-        # Clear text
+        
         self.txtName.setText('')
 
-        # Disable buttons
+        
         self.btnEnd.setEnabled(False)
         self.btnAddClip.setEnabled(False)
         self.btnClear.setEnabled(False)
@@ -724,11 +724,11 @@ class Cutting(QDialog):
         """Add the selected clip to the project"""
         log.info('btnAddClip_clicked')
 
-        # Remove unneeded attributes
+        
         if 'name' in self.file.data:
             self.file.data.pop('name')
 
-        # Save new file
+        
         self.file.id = None
         self.file.key = None
         self.file.type = 'insert'
@@ -758,10 +758,10 @@ class Cutting(QDialog):
             self.file.data['name'] = f"{base} ({start_timestamp} to {end_timestamp})"
         self.file.save()
 
-        # Move to next frame
+        
         self.sliderVideo.setValue(self.end_frame + 1)
 
-        # Reset form
+        
         self.clearForm()
 
     def _finalize_preview_shutdown(self):
@@ -793,7 +793,7 @@ class Cutting(QDialog):
             super().reject()
 
     def _shutdown_preview(self, close_dialog=False):
-        # Stop playback and preview worker safely (used by ESC/reject and close).
+        
         if close_dialog:
             self._close_after_shutdown = True
 

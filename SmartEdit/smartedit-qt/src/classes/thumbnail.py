@@ -41,12 +41,12 @@ from classes.app import get_app
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 
-# Regex for parsing URLs: (examples)
-#  http://127.0.0.1:33723/thumbnails/9ATJTBQ71V/1/path/no-cache/
-#  http://127.0.0.1:33723/thumbnails/9ATJTBQ71V/1/path/
-#  http://127.0.0.1:33723/thumbnails/9ATJTBQ71V/1/path
-#  http://127.0.0.1:33723/thumbnails/9ATJTBQ71V/1/
-#  http://127.0.0.1:33723/thumbnails/9ATJTBQ71V/1
+
+
+
+
+
+
 REGEX_THUMBNAIL_URL = re.compile(r"/thumbnails/(?P<file_id>.+?)/(?P<file_frame>\d+)/*(?P<only_path>path)?/*(?P<no_cache>no-cache)?")
 THUMBNAIL_CACHE_VERSION = "20260327170000"
 THUMBNAIL_CACHE_VERSION_TS = datetime.strptime(
@@ -161,12 +161,12 @@ def GenerateThumbnailFromFrame(frame, thumb_path, width, height, mask, overlay, 
 def GetThumbPath(file_id, thumbnail_frame, clear_cache=False, attempts=1):
     """Get thumbnail path by invoking HTTP thumbnail request"""
 
-    # Clear thumb cache (if requested)
+    
     thumb_cache = ""
     if clear_cache:
         thumb_cache = "no-cache/"
 
-    # Connect to thumbnail server and get image
+    
     thumb_server_details = get_app().window.http_server_thread.server_address
     thumb_address = "http://%s:%s/thumbnails/%s/%s/path/%s" % (
         thumb_server_details[0],
@@ -190,7 +190,7 @@ def GetThumbPath(file_id, thumbnail_frame, clear_cache=False, attempts=1):
             r = None
 
         if r is not None and r.ok and r.text:
-            # Update thumbnail path to real one
+            
             return r.text
 
         if r is not None:
@@ -216,7 +216,7 @@ def GenerateThumbnail(file_path, thumb_path, thumbnail_frame, width, height, mas
     except Exception:
         scale = 1.0
 
-    # Create thumbnail folder (if needed)
+    
     parent_path = os.path.dirname(thumb_path)
     if not os.path.exists(parent_path):
         os.mkdir(parent_path)
@@ -257,17 +257,17 @@ def GenerateThumbnail(file_path, thumb_path, thumbnail_frame, width, height, mas
                     reader.Close()
                 except Exception:
                     pass
-        # Return False only when an exception is handled in caller.
+        
 
     for inspect_reader in (False, True):
         try:
             if _render_with_reader(file_path, thumbnail_frame, inspect_reader):
                 return
         except RuntimeError:
-            # retry once with eager inspection if lightweight reader did not work
+            
             continue
 
-    # Any failure opening the reader (i.e. file missing or corrupt) use placeholder thumbnail
+    
     not_found_path = os.path.join(info.IMAGES_PATH, "NotFound.svg")
     try:
         _render_with_reader(not_found_path, 1, False)
@@ -329,7 +329,7 @@ class httpThumbnailServerThread(Thread):
         initial_port = self.find_free_port()
         for attempt in range(3):
             try:
-                # Configure server address and port for our HTTP thumbnail server
+                
                 self.server_address = ('127.0.0.1', initial_port + attempt)
                 log.debug("Attempting to start thumbnail server listening on port %s", self.server_address)
                 self.thumbServer = httpThumbnailServer(self.server_address, httpThumbnailHandler)
@@ -338,12 +338,12 @@ class httpThumbnailServerThread(Thread):
                 break
 
             except Exception as ex:
-                # Silently track each exception
-                # Return full list of exceptions (from each attempt, if no attempt is successful)
+                
+                
                 exceptions.append(f"{self.server_address} {ex}")
 
         if exceptions:
-            # Return full list of attempts + exceptions if we failed to make a connection
+            
             raise httpThumbnailException("\n".join(exceptions))
 
 
@@ -362,51 +362,51 @@ class httpThumbnailHandler(BaseHTTPRequestHandler):
         """ Process each GET request and return a value (image or file path)"""
         mask_path = os.path.join(info.IMAGES_PATH, "mask.png")
 
-        # Parse URL
+        
         url_output = REGEX_THUMBNAIL_URL.match(self.path)
         if url_output and len(url_output.groups()) == 4:
-            # Path is expected to have 3 matched components (third is optional though)
-            #   /thumbnails/FILE-ID/FRAME-NUMBER/   or
-            #   /thumbnails/FILE-ID/FRAME-NUMBER/path/  or
-            #   /thumbnails/FILE-ID/FRAME-NUMBER/no-cache/  or
-            #   /thumbnails/FILE-ID/FRAME-NUMBER/path/no-cache/
+            
+            
+            
+            
+            
             self.send_response_only(200)
         else:
             self.send_error(404)
             return
 
-        # Get URL parts
+        
         file_id = url_output.group('file_id')
         file_frame = int(url_output.group('file_frame'))
         only_path = url_output.group('only_path')
         no_cache = url_output.group('no_cache')
 
         try:
-            # Look up file data
+            
             file = File.get(id=file_id)
 
-            # Ensure file location is an absolute path
+            
             file_path = file.absolute_path()
         except AttributeError:
-            # Couldn't match file ID
+            
             log.debug("No ID match, returning 404")
             self.send_error(404)
             return
 
-        # Send headers
+        
         if not only_path:
             self.send_header('Content-type', 'image/png')
         else:
             self.send_header('Content-type', 'text/html; charset=utf-8')
         self.end_headers()
 
-        # Locate thumbnail
+        
         thumb_path = ThumbnailPathForFrame(file_id, file_frame)
         if not os.path.exists(thumb_path) and file_frame == 1:
-            # Try ID with no frame # (for backwards compatibility)
+            
             thumb_path = os.path.join(info.THUMBNAIL_PATH, "%s.png" % file_id)
         if not os.path.exists(thumb_path) and file_frame != 1:
-            # Try with ID and frame # in filename (for backwards compatibility)
+            
             thumb_path = os.path.join(info.THUMBNAIL_PATH, "%s-%s.png" % (file_id, file_frame))
 
         if not os.path.exists(thumb_path) and not no_cache:
@@ -421,7 +421,7 @@ class httpThumbnailHandler(BaseHTTPRequestHandler):
                     thumb_path = rounded_thumb_path
 
         if not os.path.exists(thumb_path) or no_cache or ThumbnailCacheIsStale(thumb_path):
-            # Generate thumbnail (since we can't find it)
+            
             thumb_width = info.LIST_ICON_SIZE.width()
             thumb_height = info.LIST_ICON_SIZE.height()
             GenerateThumbnail(
@@ -433,7 +433,7 @@ class httpThumbnailHandler(BaseHTTPRequestHandler):
                 mask_path,
                 "")
 
-        # Send message back to client
+        
         if os.path.exists(thumb_path):
             if only_path:
                 self.wfile.write(bytes(thumb_path, "utf-8"))
@@ -441,7 +441,7 @@ class httpThumbnailHandler(BaseHTTPRequestHandler):
                 with open(thumb_path, 'rb') as f:
                     self.wfile.write(f.read())
 
-        # Pause processing of request (since we don't currently use thread pooling, this allows
-        # the threads to be processed without choking the CPU as much
-        # TODO: Make HTTPServer work with a limited thread pool and remove this sleep() hack.
+        
+        
+        
         time.sleep(0.01)

@@ -9,11 +9,11 @@ import os
 import sys
 
 try:
-    import classes  # noqa: F401
+    import classes  
 except ImportError:
-    # When running from a source checkout (for example via unittest discovery),
-    # ensure the repository's ``src`` directory is on sys.path so ``classes``
-    # can be imported without installing the package.
+    
+    
+    
     checkout_src = os.path.abspath(
         os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir)
     )
@@ -24,19 +24,19 @@ except ImportError:
         sys.path.insert(0, checkout_src)
 
     try:
-        import classes  # noqa: F401
+        import classes  
     except ImportError:
         try:
             import smartedit_qt
 
-            # Prefer SMARTEDIT_PATH if upstream defines it, else use package dir
+            
             pkg_dir = getattr(smartedit_qt, "SMARTEDIT_PATH", None) or os.path.dirname(
                 smartedit_qt.__file__
             )
             if pkg_dir and pkg_dir not in sys.path:
                 sys.path.insert(0, pkg_dir)
 
-            import classes  # noqa: F401
+            import classes  
         except Exception:
-            # Let the original ImportError surface from downstream imports
+            
             pass

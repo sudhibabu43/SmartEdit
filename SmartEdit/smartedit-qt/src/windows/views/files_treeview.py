@@ -169,7 +169,7 @@ class FilesTreeView(NameColumnKeyboardSearchMixin, QTreeView):
 
     def contextMenuEvent(self, event):
 
-        # Set context menu mode
+        
         app = get_app()
         self.win = app.window
         _ = app._tr
@@ -182,7 +182,7 @@ class FilesTreeView(NameColumnKeyboardSearchMixin, QTreeView):
         else:
             self.selectionModel().setCurrentIndex(index, QItemSelectionModel.NoUpdate)
 
-        # Build menu
+        
         menu = StyledContextMenu(parent=self)
 
         add_bound_action(menu, self.win, "actionImportFiles", _("Import Files..."), "actionImportFiles_trigger")
@@ -220,17 +220,17 @@ class FilesTreeView(NameColumnKeyboardSearchMixin, QTreeView):
         add_bound_action(menu, self.win, "actionThumbnailView", _("Thumbnail View"), "actionThumbnailView_trigger")
 
         if index.isValid():
-            # Look up the model item and our unique ID
+            
             model = index.model()
 
-            # Look up file_id from 5th column of row
+            
             id_index = index.sibling(index.row(), 5)
             file_id = model.data(id_index, Qt.DisplayRole)
 
-            # If a valid file selected, show file related options
+            
             menu.addSeparator()
 
-            # Add edit title option (if svg file)
+            
             file = File.get(id=file_id)
             if not file:
                 menu.popup(event.globalPos())
@@ -247,13 +247,13 @@ class FilesTreeView(NameColumnKeyboardSearchMixin, QTreeView):
             menu.addSeparator()
             add_bound_action(menu, self.win, "actionAdd_to_Timeline", _("Add to Timeline"), "actionAdd_to_Timeline_trigger")
 
-            # Add Profile menu
+            
             profile_menu = StyledContextMenu(title=_("Choose Profile"), parent=self)
             profile_icon = get_app().window.actionProfile.icon()
             profile_missing_icon = QIcon(":/icons/Humanity/actions/16/list-add.svg")
             profile_menu.setIcon(profile_icon)
 
-            # Get file's profile
+            
             file_profile = file.profile()
             if file_profile.info.description:
                 action = profile_menu.addAction(profile_icon, file_profile.info.description)
@@ -268,7 +268,7 @@ class FilesTreeView(NameColumnKeyboardSearchMixin, QTreeView):
             add_bound_action(menu, self.win, "actionRemove_from_Project", _("Remove from Project"), "actionRemove_from_Project_trigger")
             menu.addSeparator()
 
-        # Show menu
+        
         menu.show_at(event)
 
     def mousePressEvent(self, event):
@@ -278,10 +278,10 @@ class FilesTreeView(NameColumnKeyboardSearchMixin, QTreeView):
         super().mousePressEvent(event)
 
     def mouseDoubleClickEvent(self, event):
-        # Get the index of the item at the click position
+        
         index = self.indexAt(event.pos())
         if index.column() == 0:
-            # If column 0 (thumbnail) is double-clicked, trigger the custom actions
+            
             if modifiers_has(get_app().keyboardModifiers(), Qt.ShiftModifier):
                 get_app().window.actionSplitFile.trigger()
             elif modifiers_has(get_app().keyboardModifiers(), Qt.ControlModifier):
@@ -292,7 +292,7 @@ class FilesTreeView(NameColumnKeyboardSearchMixin, QTreeView):
             super(FilesTreeView, self).mouseDoubleClickEvent(event)
 
     def dragEnterEvent(self, event):
-        # If dragging urls onto widget, accept
+        
         if event.mimeData().hasUrls():
             event.setDropAction(Qt.CopyAction)
             event.accept()
@@ -300,16 +300,16 @@ class FilesTreeView(NameColumnKeyboardSearchMixin, QTreeView):
     def startDrag(self, supportedActions):
         """ Override startDrag method to display custom icon """
 
-        # Get first column indexes for all selected rows
+        
         selected = self.selectionModel().selectedRows(0)
         selected = [idx for idx in selected if not _is_generation_placeholder(idx.sibling(idx.row(), 5).data(Qt.DisplayRole))]
 
-        # Check if there are any selected items
+        
         if not selected:
             log.warning("No draggable items found in model!")
             return False
 
-        # Get icons from up to 3 selected items
+        
         icons = []
         for i in range(min(3, len(selected))):
             current = selected[i]
@@ -317,77 +317,77 @@ class FilesTreeView(NameColumnKeyboardSearchMixin, QTreeView):
             if icon:
                 icons.append(icon.pixmap(self.drag_item_size))
 
-        # If no icons were retrieved, abort the drag
+        
         if not icons:
             log.warning("No valid icons found for dragging!")
             return False
 
-        # Calculate the total width of the composite pixmap including gaps
-        gap = 1  # 1 pixel gap between icons
+        
+        gap = 1  
         total_width = (self.drag_item_size.width() * len(icons)) + (gap * (len(icons) - 1))
 
-        # Create a composite pixmap to hold the icons in a row
+        
         composite_pixmap = QPixmap(total_width, self.drag_item_size.height())
-        composite_pixmap.fill(Qt.transparent)  # Start with a transparent background
+        composite_pixmap.fill(Qt.transparent)  
 
-        # Use a QPainter to draw the icons in a row with 1 pixel gap between them
+        
         painter = QPainter(composite_pixmap)
         for idx, icon_pixmap in enumerate(icons):
-            x_offset = idx * (self.drag_item_size.width() + gap)  # Position each icon with a gap
+            x_offset = idx * (self.drag_item_size.width() + gap)  
             painter.drawPixmap(int(x_offset), 0, icon_pixmap)
         painter.end()
 
-        # Start the drag operation
+        
         drag = QDrag(self)
 
-        # Combine all selected items into the mime data
+        
         mime_data = self.model().mimeData(selected)
         drag.setMimeData(mime_data)
 
-        # Set the composite pixmap for the drag operation
+        
         drag.setPixmap(composite_pixmap)
 
-        # Set the hot spot to the center of the composite pixmap
+        
         drag.setHotSpot(composite_pixmap.rect().center())
 
-        # Start a transaction so all clips are grouped for a single undo
+        
         tid = str(uuid.uuid4())
         get_app().updates.transaction_id = tid
 
-        # Execute the drag operation
+        
         exec_fn = getattr(drag, "exec", None) or getattr(drag, "exec_", None)
         if exec_fn is None:
             raise AttributeError("QDrag has no exec_/exec method")
         exec_fn(supportedActions)
         clear_override_cursor()
 
-        # End transaction
+        
         get_app().updates.transaction_id = None
 
-    # Without defining this method, the 'copy' action doesn't show with cursor
+    
     def dragMoveEvent(self, event):
         event.accept()
 
-    # Handle a drag and drop being dropped on widget
+    
     def dropEvent(self, event):
         if not event.mimeData().hasUrls():
-            # Nothing we're interested in
+            
             event.ignore()
             return
         event.accept()
-        # Use try/finally so we always reset the cursor
+        
         try:
-            # Set cursor to waiting
+            
             get_app().setOverrideCursor(QCursor(Qt.WaitCursor))
 
             qurl_list = event.mimeData().urls()
             log.info("Processing drop event for {} urls".format(len(qurl_list)))
             self.files_model.process_urls(qurl_list)
         finally:
-            # Restore cursor
+            
             get_app().restoreOverrideCursor()
 
-    # Forward file-add requests to the model, for legacy code (previous API)
+    
     def add_file(self, filepath):
         self.files_model.add_files(filepath)
 
@@ -402,15 +402,15 @@ class FilesTreeView(NameColumnKeyboardSearchMixin, QTreeView):
         self.resize_contents()
 
     def resize_contents(self):
-        # Get size of widget
+        
         thumbnail_width = 80
         tags_width = 75
 
-        # Resize thumbnail and tags column
+        
         self.header().resizeSection(0, thumbnail_width)
         self.header().resizeSection(2, tags_width)
 
-        # Set stretch mode on certain columns
+        
         self.header().setStretchLastSection(False)
         self.header().setSectionResizeMode(1, QHeaderView.Stretch)
         self.header().setSectionResizeMode(2, QHeaderView.Interactive)
@@ -424,7 +424,7 @@ class FilesTreeView(NameColumnKeyboardSearchMixin, QTreeView):
         if item.column() not in (1, 2):
             return
 
-        # Determine what was changed
+        
         file_id_item = self.files_model.model.item(item.row(), 5)
         name_item = self.files_model.model.item(item.row(), 1)
         tags_item = self.files_model.model.item(item.row(), 2)
@@ -438,7 +438,7 @@ class FilesTreeView(NameColumnKeyboardSearchMixin, QTreeView):
         name = name_item.text()
         tags = tags_item.text()
 
-        # Get file object and update friendly name and tags attribute
+        
         f = File.get(id=file_id)
         if not f:
             return
@@ -446,31 +446,31 @@ class FilesTreeView(NameColumnKeyboardSearchMixin, QTreeView):
         if "tags" in f.data or tags:
             f.data.update({"tags": tags})
 
-        # Save File
+        
         f.save()
 
-        # Update file thumbnail
+        
         self.win.FileUpdated.emit(file_id)
 
     def __init__(self, model, *args):
-        # Invoke parent init
+        
         super().__init__(*args)
 
-        # Get a reference to the window object
+        
         self.win = get_app().window
 
-        # Get Model data
+        
         self.files_model = model
         self.setModel(self.files_model.proxy_model)
 
-        # Remove the default selection model and wire up to the shared one
+        
         self.selectionModel().deleteLater()
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionModel(self.files_model.selection_model)
         self.setSortingEnabled(True)
-        # Keep "sortable" behavior available from the header, but do not apply
-        # an initial forced sort so new imports keep insertion order by default.
+        
+        
         self.header().setSortIndicator(-1, Qt.AscendingOrder)
         self.files_model.proxy_model.sort(-1)
         self.setItemDelegate(FilesTreeProgressDelegate(self))
@@ -479,7 +479,7 @@ class FilesTreeView(NameColumnKeyboardSearchMixin, QTreeView):
         self.setDragEnabled(True)
         self.setDropIndicatorShown(True)
 
-        # Setup header columns and layout
+        
         self.setIconSize(info.TREE_ICON_SIZE)
         self.setIndentation(0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -489,5 +489,5 @@ class FilesTreeView(NameColumnKeyboardSearchMixin, QTreeView):
 
         self.files_model.ModelRefreshed.connect(self.refresh_view)
 
-        # setup filter events
+        
         self.files_model.model.itemChanged.connect(self.value_updated)

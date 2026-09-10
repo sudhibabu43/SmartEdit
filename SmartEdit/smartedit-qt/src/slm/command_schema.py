@@ -19,7 +19,7 @@ class ActionType:
     LABEL_SHAKY = "label_shaky"
     ROUGH_CUT = "rough_cut"
     DELETE_SHAKY = "delete_shaky"
-    REMOVE_SHAKY = "delete_shaky"  # Alias for delete_shaky
+    REMOVE_SHAKY = "delete_shaky"  
     TRIM_TO_DURATION = "trim_to_duration"
 
     ALL_ACTIONS = {
@@ -66,7 +66,7 @@ class CommandSchemaValidator:
         """
         if isinstance(raw_data, str):
             try:
-                # Find JSON block if response contains surrounding markdown or text
+                
                 text = raw_data.strip()
                 if "```json" in text:
                     text = text.split("```json")[1].split("```")[0].strip()
@@ -88,7 +88,7 @@ class CommandSchemaValidator:
             for act in raw_actions:
                 if isinstance(act, str):
                     clean_act = act.strip().lower()
-                    # Normalize known action aliases
+                    
                     if clean_act in {"silence", "remove_silences", "silence_removal", "cut_silence"}:
                         clean_act = ActionType.REMOVE_SILENCE
                     elif clean_act in {"arrange", "reorder", "order_clips", "sort_clips", "arrange_timeline"}:
@@ -107,12 +107,12 @@ class CommandSchemaValidator:
                     if clean_act in ActionType.ALL_ACTIONS and clean_act not in actions:
                         actions.append(clean_act)
                 elif isinstance(act, dict):
-                    # Handle object-style action: {"action": "remove_silence"}
+                    
                     action_name = act.get("action", "")
                     if action_name in ActionType.ALL_ACTIONS and action_name not in actions:
                         actions.append(action_name)
 
-        # Logical inference: If user wants to label or delete shaky, they also need to detect shaky
+        
         if ActionType.LABEL_SHAKY in actions and ActionType.DETECT_SHAKY not in actions:
             actions.insert(actions.index(ActionType.LABEL_SHAKY), ActionType.DETECT_SHAKY)
         if ActionType.DELETE_SHAKY in actions and ActionType.DETECT_SHAKY not in actions:

@@ -30,7 +30,7 @@ import os
 from qt_api import QObject, QMimeData, Qt, QSortFilterProxyModel, QModelIndex, pyqtSignal
 from qt_api import QStandardItemModel, QStandardItem, QIcon
 from qt_api import QMessageBox
-import smartedit  # Python module for libsmartedit (required video editing module installed separately)
+import smartedit  
 
 from classes import info
 from classes.logger import log
@@ -44,10 +44,10 @@ class EmojiStandardItemModel(QStandardItemModel):
         QStandardItemModel.__init__(self)
 
     def mimeData(self, indexes):
-        # Create MimeData for drag operation
+        
         data = QMimeData()
 
-        # Get list of all selected file ids
+        
         files = []
         for item in indexes:
 
@@ -56,7 +56,7 @@ class EmojiStandardItemModel(QStandardItemModel):
         data.setText(json.dumps(files))
         data.setHtml("clip")
 
-        # Return Mimedata
+        
         return data
 
 
@@ -74,25 +74,25 @@ class EmojisModel(QObject):
 
         _ = app._tr
 
-        # Clear all items
+        
         if clear:
             self.model_paths = {}
             self.model.clear()
             self.emoji_groups.clear()
 
-        # Add Headers
+        
         self.model.setHorizontalHeaderLabels([_("Name")])
 
-        # Get emoji metadata
+        
         emoji_metadata_path = os.path.join(info.PATH, "emojis", "data", "openmoji-optimized.json")
         with open(emoji_metadata_path, 'r', encoding="utf-8") as f:
             emoji_lookup = json.load(f)
 
-        # get a list of files in the SmartEdit /emojis directory
+        
         emojis_dir = os.path.join(info.PATH, "emojis", "color", "svg")
         emoji_paths = [{"type": "common", "dir": emojis_dir, "files": os.listdir(emojis_dir)}, ]
 
-        # Add optional user-defined transitions folder
+        
         if os.path.exists(info.EMOJIS_PATH) and os.listdir(info.EMOJIS_PATH):
             emoji_paths.append({"type": "user", "dir": info.EMOJIS_PATH, "files": os.listdir(info.EMOJIS_PATH)})
 
@@ -104,41 +104,41 @@ class EmojisModel(QObject):
                 path = os.path.join(dir, filename)
                 fileBaseName = os.path.splitext(filename)[0]
 
-                # Skip hidden files (such as .DS_Store, etc...)
+                
                 if filename[0] == "." or "thumbs.db" in filename.lower():
                     continue
 
-                # get name of transition
+                
                 emoji = emoji_lookup.get(fileBaseName, {})
                 emoji_name = _(emoji.get("annotation", fileBaseName).capitalize())
                 emoji_group_name = _(emoji.get("group", "user").split('-')[0].capitalize())
                 emoji_group_id = emoji.get("group", "user")
                 emoji_group_tuple = (emoji_group_name, emoji_group_id)
 
-                # Track unique emoji groups
+                
                 if emoji_group_tuple not in self.emoji_groups:
                     self.emoji_groups.append(emoji_group_tuple)
 
-                # Check for thumbnail path (in build-in cache)
+                
                 thumb_path = os.path.join(info.IMAGES_PATH, "cache",  "{}.png".format(fileBaseName))
 
-                # Check built-in cache (if not found)
+                
                 if not os.path.exists(thumb_path):
-                    # Check user folder cache
+                    
                     thumb_path = os.path.join(info.CACHE_PATH, "{}.png".format(fileBaseName))
 
-                # Generate thumbnail (if needed)
+                
                 if not os.path.exists(thumb_path):
 
                     try:
-                        # Reload this reader
+                        
                         clip = smartedit.Clip(path)
                         reader = clip.Reader()
 
-                        # Open reader
+                        
                         reader.Open()
 
-                        # Save thumbnail
+                        
                         reader.GetFrame(0).Thumbnail(
                             thumb_path, 75, 75,
                             os.path.join(info.IMAGES_PATH, "mask.png"),
@@ -148,7 +148,7 @@ class EmojisModel(QObject):
                         clip.Close()
 
                     except Exception:
-                        # Handle exception
+                        
                         log.info('Invalid emoji image file: %s' % filename)
                         msg = QMessageBox()
                         msg.setText(_("{} is not a valid image file.".format(filename)))
@@ -157,7 +157,7 @@ class EmojisModel(QObject):
 
                 row = []
 
-                # Set emoji data
+                
                 col = QStandardItem("Name")
                 col.setIcon(QIcon(thumb_path))
                 col.setText(emoji_name)
@@ -166,15 +166,15 @@ class EmojisModel(QObject):
                 col.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsUserCheckable | Qt.ItemIsDragEnabled)
                 row.append(col)
 
-                # Append filterable group name
+                
                 col = QStandardItem(emoji_group_name)
                 row.append(col)
 
-                # Append filterable group id
+                
                 col = QStandardItem(emoji_group_id)
                 row.append(col)
 
-                # Append ROW to MODEL (if does not already exist in model)
+                
                 if path not in self.model_paths:
                     self.model.appendRow(row)
                     self.model_paths[path] = path
@@ -194,7 +194,7 @@ class EmojisModel(QObject):
 
     def __init__(self, *args):
 
-        # Create standard model
+        
         super().__init__(*args)
         self.app = get_app()
         self.model = EmojiStandardItemModel()
@@ -202,7 +202,7 @@ class EmojisModel(QObject):
         self.model_paths = {}
         self.emoji_groups = []
 
-        # Create proxy models (for grouping, sorting and filtering)
+        
         self.group_model = QSortFilterProxyModel()
         self.group_model.setDynamicSortFilter(True)
         self.group_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
@@ -219,11 +219,11 @@ class EmojisModel(QObject):
         self.proxy_model.setSortLocaleAware(True)
         self.proxy_model.setFilterKeyColumn(-1)
 
-        # Attempt to load model testing interface, if requested
-        # (will only succeed with Qt 5.11+)
+        
+        
         if info.MODEL_TEST:
             try:
-                # Create model tester objects
+                
                 from qt_api import QAbstractItemModelTester
                 self.model_tests = []
                 for m in [self.proxy_model, self.group_model, self.model]:

@@ -23,16 +23,16 @@ class TestPromptInterpreter(unittest.TestCase):
         self.assertTrue(result["filters"]["remove_shaky"])
         self.assertFalse(result["filters"]["remove_blur"])
 
-        # Backwards compatibility flat keys
+        
         self.assertTrue(result["remove_silence"])
         self.assertTrue(result["remove_shaky"])
 
-        # Action list verification
+        
         action_names = [a["action"] for a in result["actions"]]
         self.assertIn("remove_silence", action_names)
         self.assertIn("remove_shaky", action_names)
 
-        # JSON string output validation
+        
         json_str = self.interpreter.interpret_to_json(prompt)
         parsed = json.loads(json_str)
         self.assertEqual(parsed["filters"]["remove_silence"], True)
@@ -44,7 +44,7 @@ class TestPromptInterpreter(unittest.TestCase):
         self.assertTrue(self.interpreter.interpret_prompt("Trim silent sections")["filters"]["remove_silence"])
         self.assertTrue(self.interpreter.interpret_prompt("No silence please")["filters"]["remove_silence"])
 
-        # Negation tests
+        
         self.assertFalse(self.interpreter.interpret_prompt("Don't remove silence")["filters"]["remove_silence"])
         self.assertFalse(self.interpreter.interpret_prompt("Keep silence and pauses")["filters"]["remove_silence"])
 
@@ -54,7 +54,7 @@ class TestPromptInterpreter(unittest.TestCase):
         self.assertTrue(self.interpreter.interpret_prompt("Stabilize the video")["filters"]["remove_shaky"])
         self.assertTrue(self.interpreter.interpret_prompt("Drop unstable clips")["filters"]["remove_shaky"])
 
-        # Negation tests
+        
         self.assertFalse(self.interpreter.interpret_prompt("Keep shaky camera shake for documentary look")["filters"]["remove_shaky"])
         self.assertFalse(self.interpreter.interpret_prompt("Don't filter shaky")["filters"]["remove_shaky"])
 

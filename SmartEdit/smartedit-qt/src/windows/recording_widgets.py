@@ -14,7 +14,7 @@ import ctypes.util
 import os
 import re
 import shutil
-import subprocess  # nosec B404 -- fixed argv only; shell execution is never used
+import subprocess  
 import sys
 
 from qt_api import (
@@ -196,9 +196,9 @@ class RegionSelectorOverlay(QDialog):
         self.setFocus(Qt.ActiveWindowFocusReason)
 
     def eventFilter(self, watched, event):
-        # The Windows tool window can briefly lose focus while its parent is
-        # hidden. Catch Escape anywhere in this application while the modal
-        # picker is active, rather than depending on child/window focus.
+        
+        
+        
         if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Escape:
             self.reject()
             return True
@@ -308,7 +308,7 @@ def pick_screen_region(parent=None, capture_geometry=None, overlay_geometry=None
 
 def x11_root_size():
     try:
-        result = subprocess.run(  # nosec B603 -- fixed argv list, no shell
+        result = subprocess.run(  
             ["xwininfo", "-root"],
             check=True,
             text=True,
@@ -646,7 +646,7 @@ def _mac_visible_windows():
     CG, CF = _mac_define_signatures()
     if not CG or not CF:
         return []
-    options = (1 << 0) | (1 << 4)  # On-screen only, excluding desktop elements.
+    options = (1 << 0) | (1 << 4)  
     window_array = CG.CGWindowListCopyWindowInfo(options, 0)
     if not window_array:
         return []
@@ -860,10 +860,10 @@ def windows_virtual_screen_geometry():
     if not sys.platform.startswith("win"):
         return 0, 0, None, None
     user32 = _windows_user32()
-    x = int(user32.GetSystemMetrics(76))      # SM_XVIRTUALSCREEN
-    y = int(user32.GetSystemMetrics(77))      # SM_YVIRTUALSCREEN
-    width = int(user32.GetSystemMetrics(78))  # SM_CXVIRTUALSCREEN
-    height = int(user32.GetSystemMetrics(79)) # SM_CYVIRTUALSCREEN
+    x = int(user32.GetSystemMetrics(76))      
+    y = int(user32.GetSystemMetrics(77))      
+    width = int(user32.GetSystemMetrics(78))  
+    height = int(user32.GetSystemMetrics(79)) 
     return x, y, width, height
 
 
@@ -1010,8 +1010,8 @@ def _windows_physical_point_to_qt(x, y):
         top = int(monitor["y"])
         width = int(monitor["width"])
         height = int(monitor["height"])
-        # Window rectangles use exclusive right/bottom edges, so accept the
-        # outer desktop boundary as well as ordinary points inside a monitor.
+        
+        
         if left <= x <= left + width and top <= y <= top + height:
             logical = _windows_region_overlay_geometry(
                 (left, top, width, height))
@@ -1061,8 +1061,8 @@ def _windows_window_rect(hwnd):
     rect = wintypes.RECT()
     dwmapi = _windows_dwmapi()
     if dwmapi is not None:
-        # DWMWA_EXTENDED_FRAME_BOUNDS gives visual bounds without the invisible
-        # resize border on modern Windows.
+        
+        
         if dwmapi.DwmGetWindowAttribute(hwnd, 9, ctypes.byref(rect), ctypes.sizeof(rect)) == 0:
             return rect
     if user32.GetWindowRect(hwnd, ctypes.byref(rect)):
@@ -1088,9 +1088,9 @@ def _windows_pick_window_at(x, y, excluded_hwnd=None):
     def enum_proc(hwnd, _lparam):
         if not user32.IsWindowVisible(hwnd) or user32.IsIconic(hwnd):
             return True
-        # The selector itself covers the desktop and is the first top-level
-        # hit. Do not exclude the entire current process: users must be able
-        # to select SmartEdit's main window for recording.
+        
+        
+        
         if excluded_hwnd and _windows_hwnd_value(hwnd) == excluded_hwnd:
             return True
         title = _windows_window_title(hwnd)
@@ -1226,7 +1226,7 @@ def pick_x11_window_with_xdotool():
     if not shutil.which("xdotool"):
         return None
     try:
-        selected = subprocess.run(  # nosec B603 -- fixed argv list, no shell
+        selected = subprocess.run(  
             ["xdotool", "selectwindow"],
             check=True,
             text=True,
@@ -1236,7 +1236,7 @@ def pick_x11_window_with_xdotool():
         window_id = selected.stdout.strip()
         if not re.fullmatch(r"(?:0[xX][0-9a-fA-F]+|[0-9]+)", window_id):
             return None
-        geometry = subprocess.run(  # nosec B603 -- validated ID, argv list, no shell
+        geometry = subprocess.run(  
             ["xdotool", "getwindowgeometry", "--shell", window_id],
             check=True,
             text=True,
@@ -1268,7 +1268,7 @@ def pick_x11_window_with_xdotool():
 
 def pick_x11_window_with_xwininfo():
     try:
-        result = subprocess.run(  # nosec B603 -- fixed argv list, no shell
+        result = subprocess.run(  
             ["xwininfo"],
             check=True,
             text=True,
@@ -1292,9 +1292,9 @@ def pick_x11_window_with_xwininfo():
         if not match and key != "border":
             return None
         parsed[key] = int(match.group(1)) if match else 0
-    # xwininfo reports width/height for the window interior, but X11 border
-    # pixels can be outside that rectangle. Capture the interior by offsetting
-    # the origin inward while preserving the reported content size.
+    
+    
+    
     parsed["x"] += parsed["border"]
     parsed["y"] += parsed["border"]
     log.info(

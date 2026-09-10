@@ -72,7 +72,7 @@ class PromptInputTextEdit(QPlainTextEdit):
         return super().viewportEvent(event)
 
     def keyPressEvent(self, event):
-        # Enter (without Shift) runs AI
+        
         if event.key() in (Qt.Key_Return, Qt.Key_Enter) and not (event.modifiers() & Qt.ShiftModifier):
             self.returnPressed.emit()
             event.accept()
@@ -100,7 +100,7 @@ class SLMAssistantPanel(QDockWidget):
         self._setup_ui()
 
     def _setup_ui(self):
-        # Wrap panel inside a QScrollArea so it fits all dock heights smoothly
+        
         scroll = QScrollArea(self)
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
@@ -111,14 +111,14 @@ class SLMAssistantPanel(QDockWidget):
         scroll.setWidget(main_container)
         self.setWidget(scroll)
 
-        # Consistent panel padding (14px on all sides, standard 12-16px range)
+        
         root_layout = QVBoxLayout(main_container)
         root_layout.setContentsMargins(14, 14, 14, 14)
         root_layout.setSpacing(14)
 
-        # -------------------------------------------------------------
-        # 1. Header Banner
-        # -------------------------------------------------------------
+        
+        
+        
         header_frame = QFrame()
         header_frame.setObjectName("slmHeaderFrame")
         header_frame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
@@ -133,10 +133,10 @@ class SLMAssistantPanel(QDockWidget):
         header_layout.setContentsMargins(10, 8, 10, 8)
         header_layout.setSpacing(3)
 
-        # Section Header: slightly larger/bold as requested
+        
         title_label = QLabel("🤖 SLM Video Editing Assistant")
         title_label.setStyleSheet("font-size: 13px; font-weight: bold; color: #4da6ff;")
-        # Body text: regular weight
+        
         desc_label = QLabel("Describe editing changes in natural language. AI plans the edits for your review.")
         desc_label.setStyleSheet("font-size: 11px; font-weight: normal; color: #9ab4d0;")
         desc_label.setWordWrap(True)
@@ -145,9 +145,9 @@ class SLMAssistantPanel(QDockWidget):
         header_layout.addWidget(desc_label)
         root_layout.addWidget(header_frame)
 
-        # -------------------------------------------------------------
-        # 2. Natural Language Input Area
-        # -------------------------------------------------------------
+        
+        
+        
         input_box_frame = QFrame()
         input_box_frame.setObjectName("slmInputFrame")
         input_box_frame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
@@ -155,12 +155,12 @@ class SLMAssistantPanel(QDockWidget):
         input_box_layout.setContentsMargins(0, 0, 0, 0)
         input_box_layout.setSpacing(6)
 
-        # Label: regular weight as requested ("regular weight for body text and labels")
+        
         input_title = QLabel("Type Natural Language Instruction:")
         input_title.setStyleSheet("font-size: 11px; font-weight: normal; color: #b8c7d6;")
         input_box_layout.addWidget(input_title)
 
-        # Text input box: sits close (6px) to label, 6px rounded border, clear focus state
+        
         self.prompt_input = PromptInputTextEdit()
         self.prompt_input.setPlaceholderText(
             "Type your instruction here (Press Enter to analyze)...\ne.g. 'Remove silence, arrange the clips, and label shaky footage'"
@@ -184,10 +184,10 @@ class SLMAssistantPanel(QDockWidget):
         self.prompt_input.returnPressed.connect(self.on_run_ai)
         input_box_layout.addWidget(self.prompt_input)
 
-        # Spacing before suggestion chips: 6px
+        
         input_box_layout.addSpacing(2)
 
-        # Quick Suggestion Chips (even spacing, consistent 26px height, no stretch or misalignment)
+        
         chips_scroll = QScrollArea()
         chips_scroll.setWidgetResizable(True)
         chips_scroll.setFixedHeight(28)
@@ -242,10 +242,10 @@ class SLMAssistantPanel(QDockWidget):
         chips_scroll.setWidget(chips_container)
         input_box_layout.addWidget(chips_scroll)
 
-        # Spacing before Run button: 6px
+        
         input_box_layout.addSpacing(2)
 
-        # Run AI Button (consistent height 34px, modern primary action)
+        
         self.btn_run_ai = QPushButton("⚡ Run AI / Analyze Plan")
         self.btn_run_ai.setFixedHeight(34)
         self.btn_run_ai.setStyleSheet("""
@@ -275,9 +275,9 @@ class SLMAssistantPanel(QDockWidget):
 
         root_layout.addWidget(input_box_frame)
 
-        # -------------------------------------------------------------
-        # 3. Status Area
-        # -------------------------------------------------------------
+        
+        
+        
         self.status_bar_frame = QFrame()
         self.status_bar_frame.setObjectName("slmStatusFrame")
         self.status_bar_frame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
@@ -318,9 +318,9 @@ class SLMAssistantPanel(QDockWidget):
 
         root_layout.addWidget(self.status_bar_frame)
 
-        # -------------------------------------------------------------
-        # 4. Human-in-the-Loop Result & Suggestion Area
-        # -------------------------------------------------------------
+        
+        
+        
         result_group_frame = QFrame()
         result_group_frame.setObjectName("slmResultFrame")
         result_group_frame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
@@ -328,12 +328,12 @@ class SLMAssistantPanel(QDockWidget):
         result_group_layout.setContentsMargins(0, 0, 0, 0)
         result_group_layout.setSpacing(6)
 
-        # Section Header: slightly larger/bold as requested
+        
         result_title = QLabel("Proposed AI Plan & Suggestions:")
         result_title.setStyleSheet("font-size: 12px; font-weight: bold; color: #e1e9f2;")
         result_group_layout.addWidget(result_title)
 
-        # AI Plan Preview Box (Checklist)
+        
         self.plan_preview = QLabel("No plan generated yet. Run AI to see proposed changes.")
         self.plan_preview.setStyleSheet("""
             QLabel {
@@ -350,10 +350,10 @@ class SLMAssistantPanel(QDockWidget):
         self.plan_preview.setTextFormat(Qt.RichText)
         result_group_layout.addWidget(self.plan_preview)
 
-        # Spacing before JSON preview: 8px
+        
         result_group_layout.addSpacing(4)
 
-        # Structured JSON Command Preview Box (regular weight for label)
+        
         json_title = QLabel("Structured Editing Command (SLM Output – Read Only):")
         json_title.setStyleSheet("font-size: 11px; font-weight: normal; color: #7f93a6;")
         result_group_layout.addWidget(json_title)
@@ -377,9 +377,9 @@ class SLMAssistantPanel(QDockWidget):
 
         root_layout.addWidget(result_group_frame)
 
-        # -------------------------------------------------------------
-        # 5. Action Control Buttons: [Apply Changes], [Reject], [Undo]
-        # -------------------------------------------------------------
+        
+        
+        
         btn_action_layout = QHBoxLayout()
         btn_action_layout.setContentsMargins(0, 0, 0, 0)
         btn_action_layout.setSpacing(8)
@@ -474,7 +474,7 @@ class SLMAssistantPanel(QDockWidget):
 
         root_layout.addLayout(btn_action_layout)
 
-        # Add expanding stretch at bottom so content is packed tightly without stretching widgets
+        
         root_layout.addStretch(1)
 
     def _set_prompt(self, text: str):
@@ -500,7 +500,7 @@ class SLMAssistantPanel(QDockWidget):
         self.progress_bar.show()
 
         try:
-            # Run via background worker
+            
             self.worker = SLMAnalysisWorker(self.parser, self.controller, prompt)
             self.worker.statusSignal.connect(lambda s: self._update_status(s, state="busy"))
             self.worker.planReadySignal.connect(self._on_plan_ready)
@@ -522,10 +522,10 @@ class SLMAssistantPanel(QDockWidget):
         self.prompt_input.setReadOnly(False)
         self.progress_bar.hide()
 
-        # Update JSON Preview
+        
         self.json_preview.setPlainText(plan.command.to_json(indent=2))
 
-        # Update Human-in-the-Loop Plan Preview
+        
         self.plan_preview.setText(plan.to_preview_text())
 
         if not plan.is_empty and len(plan.items) > 0:

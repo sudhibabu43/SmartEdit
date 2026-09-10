@@ -68,7 +68,7 @@ class PropertyDelegate(QItemDelegate):
 
         super().__init__(parent, *args, **kwargs)
 
-        # pixmaps for curve icons
+        
         self.curve_pixmaps = {
             smartedit.BEZIER: QIcon(":/curves/keyframe-%s.png" % smartedit.BEZIER).pixmap(20, 20),
             smartedit.LINEAR: QIcon(":/curves/keyframe-%s.png" % smartedit.LINEAR).pixmap(20, 20),
@@ -80,14 +80,14 @@ class PropertyDelegate(QItemDelegate):
         try:
             painter.setRenderHint(QPainter.Antialiasing)
 
-            # Get data model and selection
+            
             model = self.model
             row = model.itemFromIndex(index).row()
             selected_label = model.item(row, 0)
             selected_value = model.item(row, 1)
             cur_property = selected_label.data()
 
-            # Get min/max values for this property
+            
             property_type = cur_property[1]["type"]
             property_max = cur_property[1]["max"]
             property_min = cur_property[1]["min"]
@@ -95,19 +95,19 @@ class PropertyDelegate(QItemDelegate):
             points = cur_property[1]["points"]
             interpolation = cur_property[1]["interpolation"]
 
-            # Calculate percentage value
+            
             if property_type in ["float", "int"]:
-                # Get the current value
+                
                 current_value = QLocale().system().toDouble(selected_value.text())[0]
 
-                # Shift my range to be positive
+                
                 if property_min < 0.0:
                     property_shift = 0.0 - property_min
                     property_min += property_shift
                     property_max += property_shift
                     current_value += property_shift
 
-                # Calculate current value as % of min/max range
+                
                 min_max_range = float(property_max) - float(property_min)
                 if abs(min_max_range) <= 1e-12:
                     value_percent = 0.0
@@ -116,7 +116,7 @@ class PropertyDelegate(QItemDelegate):
             else:
                 value_percent = 0.0
 
-            # Get theme colors
+            
             if get_app().theme_manager:
                 theme = get_app().theme_manager.get_current_theme()
                 if not theme:
@@ -127,16 +127,16 @@ class PropertyDelegate(QItemDelegate):
             else:
                 log.warning("No ThemeManager loaded yet. Skip rendering properties widget.")
 
-            # set background color
+            
             painter.setPen(QPen(Qt.NoPen))
             if property_type == "color":
-                # Color keyframe
+                
                 red = int(cur_property[1]["red"]["value"])
                 green = int(cur_property[1]["green"]["value"])
                 blue = int(cur_property[1]["blue"]["value"])
                 painter.setBrush(QColor(red, green, blue))
             else:
-                # Normal Keyframe
+                
                 state_selected = getattr(QStyle, "State_Selected", None)
                 if state_selected is None:
                     state_flag = getattr(QStyle, "StateFlag", None)
@@ -148,7 +148,7 @@ class PropertyDelegate(QItemDelegate):
                     painter.setBrush(background_color)
 
             if readonly:
-                # Set text color for read only fields
+                
                 painter.setPen(QPen(get_app().window.palette().color(QPalette.Disabled, QPalette.Text)))
             else:
                 path = QPainterPath()
@@ -156,18 +156,18 @@ class PropertyDelegate(QItemDelegate):
                 painter.fillPath(path, background_color)
                 painter.drawPath(path)
 
-                # Render mask rectangle
+                
                 painter.setBrush(QBrush(QColor("#000000")))
                 mask_rect = QRectF(option.rect)
                 mask_rect.setWidth(option.rect.width() * value_percent)
                 painter.setClipRect(mask_rect, Qt.IntersectClip)
 
-                # gradient for value box
+                
                 gradient = QLinearGradient(QPointF(option.rect.topLeft()), QPointF(option.rect.topRight()))
                 gradient.setColorAt(0, foreground_color)
                 gradient.setColorAt(1, foreground_color)
 
-                # Render progress
+                
                 painter.setBrush(gradient)
                 path = QPainterPath()
                 value_rect = QRectF(option.rect)
@@ -177,13 +177,13 @@ class PropertyDelegate(QItemDelegate):
                 painter.setClipping(False)
 
                 if points > 1:
-                    # Draw interpolation icon on top
+                    
                     painter.drawPixmap(
                         int(option.rect.x() + option.rect.width() - 30.0),
                         int(option.rect.y() + 4),
                         self.curve_pixmaps[interpolation])
 
-                # Set text color
+                
                 painter.setPen(QPen(Qt.white))
 
             value = index.data(Qt.DisplayRole)
@@ -280,7 +280,7 @@ class PropertiesTableView(QTableView):
 
         result = self.edit(index, QAbstractItemView.EditKeyPressed, event)
 
-        # For numeric keys, clobber the existing value with the typed character
+        
         if result and is_numeric:
             from qt_api import QTimer
             typed_char = event.text()
@@ -290,7 +290,7 @@ class PropertiesTableView(QTableView):
                     editor.setText(typed_char)
                     editor.setCursorPosition(len(typed_char))
                 elif editor and hasattr(editor, 'lineEdit'):
-                    # For QSpinBox/QDoubleSpinBox
+                    
                     editor.lineEdit().setText(typed_char)
                     editor.lineEdit().setCursorPosition(len(typed_char))
             QTimer.singleShot(0, set_initial_value)
@@ -298,21 +298,21 @@ class PropertiesTableView(QTableView):
         return result
 
     def event(self, event):
-        # Intercept ShortcutOverride so these keys don't trigger global shortcuts
-        # when this view has focus
+        
+        
         if event.type() == QEvent.ShortcutOverride and self.hasFocus():
             key = event.key()
             if key in (Qt.Key_Period, Qt.Key_Comma, Qt.Key_Up, Qt.Key_Down,
                        Qt.Key_Space, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Escape):
                 event.accept()
                 return True
-        # otherwise, default processing
+        
         return super().event(event)
 
     def closeEditor(self, editor, hint):
         """Handle editor closing - restore focus to label column."""
         super().closeEditor(editor, hint)
-        # Restore focus to column 0 (label column) for visible focus indicator
+        
         current_row = self.currentIndex().row()
         if current_row >= 0:
             self.setCurrentIndex(self.clip_properties_model.model.index(current_row, 0))
@@ -321,16 +321,16 @@ class PropertiesTableView(QTableView):
         if self._start_edit_on_key(event):
             return
 
-        # Handle SPACE/ENTER for dropdown properties
+        
         key = event.key()
         if key in (Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space):
             index = self.currentIndex()
             if index.isValid():
-                # Ensure we're on the value column
+                
                 if index.column() != 1:
                     index = index.sibling(index.row(), 1)
 
-                # Check if this is a dropdown/choice property
+                
                 model = self.clip_properties_model.model
                 label_item = model.item(index.row(), 0)
                 if label_item and label_item.data() and isinstance(label_item.data(), tuple):
@@ -339,7 +339,7 @@ class PropertiesTableView(QTableView):
                     property_type = cur_property[1].get("type", "")
 
                     if has_choices or property_type in ["color", "font"]:
-                        # Show context menu at the center of the value cell
+                        
                         rect = self.visualRect(index)
                         center = rect.center()
                         global_pos = self.viewport().mapToGlobal(center)
@@ -350,7 +350,7 @@ class PropertiesTableView(QTableView):
 
     def _show_property_menu_at(self, index, global_pos):
         """Show the property context menu at a specific position."""
-        # Create a fake event object that provides the position we want
+        
         class FakeEvent:
             def __init__(self, gpos, lpos):
                 self._global_pos = gpos
@@ -495,13 +495,13 @@ class PropertiesTableView(QTableView):
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
-        # Get data model and selection
+        
         model = self.clip_properties_model.model
         posf = _event_posf(event)
         pos = posf.toPoint()
 
-        # Show resize cursor only over slider-type value cells (float/int, not read-only).
-        # When not dragging (hover only), update cursor and return — don't touch drag state.
+        
+        
         idx = self.indexAt(pos)
         show_slider_cursor = False
         if idx.isValid() and idx.column() == 1:
@@ -520,7 +520,7 @@ class PropertiesTableView(QTableView):
         if not self.mouse_pressed:
             return
 
-        # Do not change selected row during mouse move
+        
         if self.lock_selection and self.prev_row:
             row = self.prev_row
         else:
@@ -538,24 +538,24 @@ class PropertiesTableView(QTableView):
             self.selected_label = model.item(row, 0)
             self.selected_item = model.item(row, 1)
 
-        # Verify label has not been deleted
+        
         if (self.selected_label and isdeleted(self.selected_label)) or \
                 (self.selected_item and isdeleted(self.selected_item)):
             log.debug("Property has been deleted, skipping")
             self.selected_label = None
             self.selected_item = None
 
-        # Is the user dragging on the value column
+        
         if self.selected_label and self.selected_item and \
                 self.selected_label.data() and type(self.selected_label.data()) == tuple:
-            # Ignore undo/redo history temporarily (to avoid a huge pile of undo/redo history)
+            
             get_app().updates.ignore_history = True
 
-            # Disable video caching during drag (for performance), but not during playback
+            
             if not self._is_playing():
                 smartedit.Settings.Instance().ENABLE_PLAYBACK_CACHING = False
 
-            # Get the position of the cursor and % value
+            
             value_column_x = self.columnViewportPosition(1)
             cursor_value = posf.x() - value_column_x
             value_column_width = self.columnWidth(1)
@@ -563,7 +563,7 @@ class PropertiesTableView(QTableView):
                 return
             cursor_value_percent = cursor_value / value_column_width
 
-            # Get data from selected item
+            
             try:
                 cur_property = self.selected_label.data()
             except Exception:
@@ -581,31 +581,31 @@ class PropertiesTableView(QTableView):
             property_min = cur_property[1]["min"]
             readonly = cur_property[1]["readonly"]
 
-            # Bail if readonly
+            
             if readonly:
                 return
 
-            # For numeric values, apply percentage within parameter's allowable range
+            
             if property_type in ["float", "int"] and property_name != "Track":
 
                 if self.previous_x == -1:
-                    # Start tracking movement (init diff_length and previous_x)
+                    
                     self.diff_length = 10
                     self.previous_x = posf.x()
 
-                # Calculate # of pixels dragged
+                
                 drag_diff = self.previous_x - posf.x()
 
-                # update previous x
+                
                 self.previous_x = posf.x()
 
-                # Ignore small initial movements
+                
                 if abs(drag_diff) < self.diff_length:
-                    # Lower threshold to 0 incrementally, to guarantee it'll eventually be exceeded
+                    
                     self.diff_length = max(0, self.diff_length - 1)
                     return
 
-                # Threshold cleared — start/continue transaction on first actual value change
+                
                 if (
                     not self.transaction_id
                     and not self.clip_properties_model.ignore_update_signal
@@ -613,28 +613,28 @@ class PropertiesTableView(QTableView):
                     self.start_transaction(self.selected_item)
                 self.update_in_progress = True
 
-                # Compute size of property's possible values range
+                
                 min_max_range = float(property_max) - float(property_min)
 
                 if min_max_range < 1000.0:
-                    # Small range - use cursor to calculate new value as percentage of total range
+                    
                     self.new_value = property_min + (min_max_range * cursor_value_percent)
                 else:
-                    # range is unreasonably long (such as position, start, end, etc.... which can be huge #'s)
+                    
 
-                    # Get the current value and apply fixed adjustments in response to motion
+                    
                     if self.new_value is None:
                         self.new_value = QLocale().system().toDouble(self.selected_item.text())[0]
                     step = 1.0 if property_type == "int" else 0.50
 
                     if drag_diff > 0:
-                        # Move to the left by a small amount
+                        
                         self.new_value -= step
                     elif drag_diff < 0:
-                        # Move to the right by a small amount
+                        
                         self.new_value += step
 
-                # Clamp value between min and max (just incase user drags too big)
+                
                 self.new_value = max(property_min, self.new_value)
                 self.new_value = min(property_max, self.new_value)
 
@@ -644,10 +644,10 @@ class PropertiesTableView(QTableView):
                     else:
                         self.new_value = math.ceil(self.new_value - 0.5)
 
-                # Update value of this property
+                
                 self.clip_properties_model.value_updated(self.selected_item, -1, self.new_value)
 
-                # Repaint
+                
                 self.viewport().update()
 
     def leaveEvent(self, event):
@@ -655,7 +655,7 @@ class PropertiesTableView(QTableView):
         super().leaveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        # Inform UpdateManager to accept updates, and only store our final update
+        
         event.accept()
         get_app().updates.ignore_history = False
         self.mouse_pressed = False
@@ -665,7 +665,7 @@ class PropertiesTableView(QTableView):
         if self.update_in_progress:
             self.finalize_transaction()
 
-        # Get data model and selection
+        
         model = self.clip_properties_model.model
         pos = _event_posf(event).toPoint()
         row = self.indexAt(pos).row()
@@ -673,14 +673,14 @@ class PropertiesTableView(QTableView):
             self.selected_label = model.item(row, 0)
             self.selected_item = model.item(row, 1)
 
-        # Allow new selection and prepare to set minimum move threshold
+        
         self.lock_selection = False
         self.previous_x = -1
         self.new_value = None
 
     @pyqtSlot(QColor)
     def color_callback(self, newColor: QColor):
-        # Set the new color keyframe
+        
         if newColor.isValid():
             log.debug(f"Color callback received: {newColor.name()}, Alpha: {newColor.alpha()}")
             if not self.clip_properties_model.ignore_update_signal:
@@ -694,10 +694,10 @@ class PropertiesTableView(QTableView):
     def doubleClickedCB(self, model_index):
         """Double click handler for the property table"""
 
-        # Get translation object
+        
         _ = get_app()._tr
 
-        # Get data model and selection
+        
         model = self.clip_properties_model.model
 
         row = model_index.row()
@@ -709,19 +709,19 @@ class PropertiesTableView(QTableView):
             property_type = cur_property[1]["type"]
 
             if property_type == "color":
-                # Get current value of color
+                
                 red = cur_property[1]["red"]["value"]
                 green = cur_property[1]["green"]["value"]
                 blue = cur_property[1]["blue"]["value"]
-                # Get alpha value (if present) or default to fully opaque
+                
                 alpha = cur_property[1].get("alpha", {}).get("value", 255)
 
-                # Show color dialog with alpha support
+                
                 try:
-                    # Create color with alpha
+                    
                     currentColor = QColor(int(red), int(green), int(blue), int(alpha))
                 except (ValueError, TypeError):
-                    # Default to opaque red if conversion fails
+                    
                     currentColor = QColor(255, 0, 0, 255)
 
                 ColorPicker(
@@ -730,15 +730,15 @@ class PropertiesTableView(QTableView):
                 return
 
             elif property_type == "font":
-                # Get font from user
+                
                 current_font_name = cur_property[1].get("memo", "sans")
                 current_font = QFont(current_font_name)
                 font, ok = get_font_dialog_selection(current_font, self.win, _("Change Font"))
 
-                # Update font
+                
                 if ok and font:
                     fontinfo = QFontInfo(font)
-                    # TODO: pass font details to value_updated so we can set multiple values
+                    
                     font_details = { "font_family": fontinfo.family(),
                                      "font_style": fontinfo.styleName(),
                                      "font_weight": fontinfo.weight(),
@@ -754,23 +754,23 @@ class PropertiesTableView(QTableView):
     def caption_text_updated(self, new_caption_text, caption_model_row):
         """Caption text has been updated in the caption editor, and needs saving"""
         if caption_model_row is None:
-            # Ignore blank selections
+            
             return
 
         caption_model_label = caption_model_row[0]
         caption_model_value = caption_model_row[1]
 
-        # Verify label has not been deleted
+        
         if (caption_model_label and isdeleted(caption_model_label)) or \
                 (caption_model_value and isdeleted(caption_model_value)):
             log.debug("Property has been deleted, skipping")
             return
 
-        # Get data model and selection
+        
         cur_property = caption_model_label.data()
         property_type = cur_property[1]["type"]
 
-        # Save caption text
+        
         if property_type == "caption" and cur_property[1].get('memo') != new_caption_text:
             self.start_transaction(caption_model_value)
             self.update_in_progress = True
@@ -792,28 +792,28 @@ class PropertiesTableView(QTableView):
     def select_frame(self, frame_number):
         """ Update the values of the selected clip, based on the current frame """
 
-        # Update item
+        
         self.clip_properties_model.update_frame(frame_number)
 
     def filter_changed(self, value=None):
         """ Filter the list of properties """
 
-        # Update property model (and re-trigger filter logic)
+        
         self.clip_properties_model.update_model(value)
 
-        # Filter keyframes visible on timeline
+        
         get_app().window.SetKeyframeFilter.emit(value)
 
     def contextMenuEvent(self, event):
         """ Display context menu """
-        # Get property being acted on
+        
         pos = _event_posf(event).toPoint()
         index = self.indexAt(pos)
         if not index.isValid():
             event.ignore()
             return
 
-        # Get data model and selection
+        
         idx = self.indexAt(pos)
         row = idx.row()
         selected_label = idx.model().item(row, 0)
@@ -822,20 +822,20 @@ class PropertiesTableView(QTableView):
         self.selected_label = selected_label
         frame_number = self.clip_properties_model.frame_number
 
-        # Skip any read-only properties
+        
         cur_property = selected_label.data()
         readonly = cur_property[1]["readonly"]
         if readonly:
             return
 
-        # Get translation object
+        
         _ = get_app()._tr
 
-        # If item selected
+        
         if selected_label and selected_label.data() and type(selected_label.data()) == tuple:
             cur_property = selected_label.data()
 
-            # Clear menu if models updated
+            
             if self.menu_reset:
                 self.choices = []
                 self.menu_reset = False
@@ -843,8 +843,8 @@ class PropertiesTableView(QTableView):
             property_name = cur_property[1]["name"]
             self.property_type = cur_property[1]["type"]
             points = cur_property[1]["points"]
-            # Work on a copy so dynamic menu construction doesn't mutate the
-            # property's stored choices and leave stale entries behind.
+            
+            
             self.choices = copy.deepcopy(cur_property[1]["choices"])
             property_key = cur_property[0]
 
@@ -852,24 +852,24 @@ class PropertiesTableView(QTableView):
                 log.info("Context menu shown for %s (%s) for item %s on frame %s" % (property_name, property_key, item_id, frame_number))
                 log.info("Points: %s" % points)
 
-                # Handle parent effect options
+                
                 if property_key == "parent_effect_id" and not self.choices:
-                    # Instantiate this effect
+                    
                     effect = Effect.get(id=item_id)
                     if not effect:
                         return
 
-                    # Loop through timeline's clips
+                    
                     clip_choices = []
                     for clip in Clip.filter():
                         file_id = clip.data.get("file_id")
 
-                        # Look up parent clip id (if effect)
+                        
                         parent_clip_id = effect.parent.get("id")
 
-                        # Avoid attach a clip to it's own object
+                        
                         if clip.id != parent_clip_id:
-                            # Iterate through all project files (to find matching QIcon)
+                            
                             for file_index in range(self.files_model.rowCount()):
                                 file_row = self.files_model.index(file_index, 0)
                                 project_file_id = file_row.sibling(file_index, 5).data()
@@ -878,9 +878,9 @@ class PropertiesTableView(QTableView):
                                     break
 
                             effect_choices = []
-                            # Iterate through clip's effects
+                            
                             for clip_effect_data in clip.data["effects"]:
-                                # Make sure the user can only set a parent effect of the same type as this effect
+                                
                                 if clip_effect_data['class_name'] == effect.data['class_name']:
                                     effect_id = clip_effect_data["id"]
                                     effect_icon = QIcon(QPixmap(os.path.join(info.PATH, "effects", "icons", "%s.png" % clip_effect_data['class_name'].lower())))
@@ -898,22 +898,22 @@ class PropertiesTableView(QTableView):
                     if clip_choices:
                         self.choices.append({"name": _("Clips"), "value": clip_choices, "selected": False, "icon": None})
 
-                # Handle selected object options (ObjectDetection effect)
+                
                 if property_key in ["selected_object_index", "class_filter"] and not self.choices:
                     if property_key == "class_filter":
-                        # Use only class_name (if it has not already been added to the choices)
+                        
                         tracked_object_menu_name = _("Tracked Classes")
                         self.choices.append({"name": _("Clear"), "value": "", "selected": False, "icon": None})
                     else:
                         tracked_object_menu_name = _("Tracked Objects")
 
-                    # Get all visible object's indexes
+                    
                     timeline_instance = get_app().window.timeline_sync.timeline
-                    # Instantiate the effect
+                    
                     effect = timeline_instance.GetClipEffect(item_id)
-                    # Get the indexes and IDs of the visible objects
+                    
                     visible_objects = json.loads(effect.GetVisibleObjects(frame_number))
-                    # Add visible objects as choices
+                    
                     object_index_choices = []
                     for enum_index, object_index in enumerate(visible_objects["visible_objects_index"]):
                         class_name = visible_objects["visible_class_names"][enum_index]
@@ -921,7 +921,7 @@ class PropertiesTableView(QTableView):
                         object_value = f"{object_index}"
                         skip_choice = False
                         if property_key == "class_filter":
-                            # Use only class_name (if it has not already been added to the choices)
+                            
                             tracked_object_menu_name = _("Tracked Classes")
                             object_name = f"{class_name}"
                             object_value = f"{class_name}"
@@ -937,28 +937,28 @@ class PropertiesTableView(QTableView):
                     if object_index_choices:
                         self.choices.append({"name": tracked_object_menu_name, "value": object_index_choices, "selected": False, "icon": None})
 
-                # Handle clip attach options
+                
                 if property_key in ["parentObjectId"] and not self.choices:
-                    # Add all Clips as choices - initialize with None
+                    
                     tracked_choices = []
                     clip_choices = []
-                    # Instantiate the timeline
+                    
                     timeline_instance = get_app().window.timeline_sync.timeline
-                    # Loop through timeline's clips
+                    
                     for clip in Clip.filter():
                         file_id = clip.data.get("file_id")
 
-                        # Look up parent clip id (if effect)
+                        
                         parent_clip_id = item_id
                         if item_type == "effect":
                             parent_clip_id = Effect.get(id=item_id).parent.get("id")
                             log.debug(f"Lookup parent clip ID for effect: '{item_id}' = '{parent_clip_id}'")
 
-                        # Skip attaching to itself
+                        
                         if clip.id == parent_clip_id:
                             continue
 
-                        # Get the file's icon
+                        
                         clip_icon = None
                         for row in range(self.files_model.rowCount()):
                             idx = self.files_model.index(row, 0)
@@ -966,7 +966,7 @@ class PropertiesTableView(QTableView):
                                 clip_icon = idx.data(Qt.DecorationRole)
                                 break
 
-                        # Add the clip as a choice
+                        
                         clip_choices.append({
                             "name": clip.data["title"],
                             "value": clip.id,
@@ -974,13 +974,13 @@ class PropertiesTableView(QTableView):
                             "icon": clip_icon
                         })
 
-                        # Now gather tracked objects under this clip
+                        
                         tracked_objects = []
                         for effect in clip.data["effects"]:
                             if effect.get("has_tracked_object"):
                                 eff_inst = timeline_instance.GetClipEffect(effect["id"])
                                 visible = json.loads(eff_inst.GetVisibleObjects(frame_number))
-                                # Use the new "<effect-UUID>-<index>" IDs directly
+                                
                                 for obj_id in visible["visible_objects_id"]:
                                     tracked_objects.append({
                                         "name": obj_id,
@@ -997,7 +997,7 @@ class PropertiesTableView(QTableView):
                                 "icon": clip_icon
                             })
 
-                    # Build the final choices list
+                    
                     self.choices.append({"name": _("None"), "value": "None", "selected": False, "icon": None})
                     if tracked_choices:
                         self.choices.append({
@@ -1014,7 +1014,7 @@ class PropertiesTableView(QTableView):
                             "icon": None
                         })
 
-                # Handle generated mask source effect options
+                
                 if property_key == "mask_source_id" and not self.choices:
                     tracked_effect_choices = self._tracked_mask_source_choices(item_id)
 
@@ -1027,9 +1027,9 @@ class PropertiesTableView(QTableView):
                             "icon": None
                         })
 
-            # Handle reader type values
+            
             if self.property_type == "reader" and not self.choices:
-                # Add all files
+                
                 file_choices = []
                 for i in range(self.files_model.rowCount()):
                     idx = self.files_model.index(i, 0)
@@ -1044,7 +1044,7 @@ class PropertiesTableView(QTableView):
                         continue
                     file_data = getattr(file_obj, "data", {}) or {}
 
-                    # Append file choice
+                    
                     file_choices.append({"name": name,
                                          "value": {
                                              "file_id": file_id,
@@ -1056,15 +1056,15 @@ class PropertiesTableView(QTableView):
                                          "icon": icon
                                          })
 
-                # Add None option to clear the source
+                
                 self.choices.append({"name": _("None"), "value": "", "selected": False, "icon": None})
 
 
-                # Add root file choice
+                
                 if file_choices:
                     self.choices.append({"name": _("Files"), "value": file_choices, "selected": False, "icon": None})
 
-                # Add all transitions
+                
                 trans_choices = []
                 for i in range(self.transition_model.rowCount()):
                     idx = self.transition_model.index(i, 0)
@@ -1074,14 +1074,14 @@ class PropertiesTableView(QTableView):
                     name = idx.sibling(i, 1).data()
                     path = idx.sibling(i, 3).data()
 
-                    # Append transition choice
+                    
                     trans_choices.append({"name": name,
                                           "value": path,
                                           "selected": False,
                                           "icon": icon
                                           })
 
-                # Add root transitions choice
+                
                 self.choices.append({"name": _("Transitions"), "value": trans_choices, "selected": False})
 
             elif property_key == "lut_path":
@@ -1097,7 +1097,7 @@ class PropertiesTableView(QTableView):
                         full = os.path.join(dir_path, name)
                         pretty = _(name.replace("_", " ").title()).replace("&", "&&")
                         if os.path.isdir(full):
-                            # folder → submenu
+                            
                             children = [
                                 {"name": _(os.path.splitext(fn)[0]
                                            .replace("_", " ")
@@ -1111,7 +1111,7 @@ class PropertiesTableView(QTableView):
                             if children:
                                 result.append({"name": pretty, "value": children})
                         elif name.lower().endswith(".cube"):
-                            # loose .cube file
+                            
                             result.append({
                                 "name": pretty,
                                 "value": full,
@@ -1120,44 +1120,44 @@ class PropertiesTableView(QTableView):
                             })
                     return result
 
-                # user-defined group
+                
                 user_choices = _gather(info.USER_COLORS_PATH)
                 if user_choices:
                     self.choices.append({"name": _("User-Defined"), "value": user_choices})
 
-                # built-in LUTs
+                
                 self.choices.extend(_gather(info.COLORS_PATH))
 
-            # Handle track choices
+            
             if property_name == "Track" and self.property_type == "int" and not self.choices:
-                # Populate all display track names
+                
                 all_tracks = get_app().project.get("layers")
                 display_count = len(all_tracks)
                 for track in reversed(sorted(all_tracks, key=itemgetter('number'))):
-                    # Append track choice
+                    
                     track_name = track.get("label") or _("Track %s") % QLocale().toString(display_count)
                     self.choices.append({"name": track_name, "value": track.get("number"), "selected": False, "icon": None})
                     display_count -= 1
 
             elif self.property_type == "font":
-                # Get font from user
+                
                 current_font_name = cur_property[1].get("memo", "sans")
                 current_font = QFont(current_font_name)
                 font, ok = get_font_dialog_selection(current_font, self.win, _("Change Font"))
 
-                # Update font
+                
                 if ok and font:
                     fontinfo = QFontInfo(font)
                     self.clip_properties_model.value_updated(self.selected_item, value=fontinfo.family())
 
-            # Add menu options for keyframes
+            
             menu = StyledContextMenu(parent=self)
             if self.property_type == "color":
                 Color_Action = menu.addAction(_("Select a Color"))
                 Color_Action.triggered.connect(functools.partial(self.Color_Picker_Triggered, cur_property))
                 menu.addSeparator()
             if points > 1:
-                # Menu items only for multiple points
+                
                 populate_keyframe_context_menu(
                     menu,
                     bezier_callback=self.Bezier_Action_Triggered,
@@ -1169,22 +1169,22 @@ class PropertiesTableView(QTableView):
                 )
                 menu.addSeparator()
             if points >= 1:
-                # Menu items for one or more points
+                
                 Insert_Action = menu.addAction(_("Insert Keyframe"))
                 Insert_Action.triggered.connect(self.Insert_Action_Triggered)
                 Remove_Action = menu.addAction(_("Remove Keyframe"))
                 Remove_Action.triggered.connect(self.Remove_Action_Triggered)
                 menu.addSeparator()
 
-            # Format menu nesting
+            
             log.debug(f"Context menu choices: {self.choices}")
             self.menu = self.build_menu(self.choices, menu)
 
-            # Show context menu (if any options present)
-            # There is always at least 1 QAction in an empty menu though
+            
+            
             if len(self.menu.children()) > 1:
                 self.menu.show_at(event)
-                # Focus the first menu item for keyboard navigation
+                
                 actions = self.menu.actions()
                 if actions:
                     self.menu.setActiveAction(actions[0])
@@ -1194,7 +1194,7 @@ class PropertiesTableView(QTableView):
         if parent_menu is None:
             parent_menu = StyledContextMenu(parent=self)
 
-        # Get translation object
+        
         _ = get_app()._tr
 
         SubMenuSize = 25
@@ -1206,7 +1206,7 @@ class PropertiesTableView(QTableView):
                 else:
                     SubMenuRoot = parent_menu.addMenu(choice["name"])
 
-                # Check if the list needs to be divided into sub-menus
+                
                 if len(choice["value"]) > SubMenuSize:
                     for i in range(0, len(choice["value"]), SubMenuSize):
                         range_label = f"{i + 1}-{min(i + SubMenuSize, len(choice['value']))}"
@@ -1215,7 +1215,7 @@ class PropertiesTableView(QTableView):
                 else:
                     self.build_menu(choice["value"], SubMenuRoot)
             else:
-                # Single choice, not a list, add directly to the menu
+                
                 log.info(" - Add choice: " + choice["name"])
                 Choice_Action = parent_menu.addAction(_(choice["name"]))
                 if choice.get("icon"):
@@ -1228,28 +1228,28 @@ class PropertiesTableView(QTableView):
     def Bezier_Action_Triggered(self, preset=[]):
         log.info("Bezier_Action_Triggered: %s" % str(preset))
         if self.property_type != "color":
-            # Update keyframe interpolation mode
+            
             self.clip_properties_model.value_updated(self.selected_item, interpolation=0, interpolation_details=preset)
         else:
-            # Update colors interpolation mode
+            
             self.clip_properties_model.color_update(self.selected_item, QColor("#000"), interpolation=0, interpolation_details=preset)
 
     def Linear_Action_Triggered(self):
         log.info("Linear_Action_Triggered")
         if self.property_type != "color":
-            # Update keyframe interpolation mode
+            
             self.clip_properties_model.value_updated(self.selected_item, interpolation=1)
         else:
-            # Update colors interpolation mode
+            
             self.clip_properties_model.color_update(self.selected_item, QColor("#000"), interpolation=1, interpolation_details=[])
 
     def Constant_Action_Triggered(self):
         log.info("Constant_Action_Triggered")
         if self.property_type != "color":
-            # Update keyframe interpolation mode
+            
             self.clip_properties_model.value_updated(self.selected_item, interpolation=2)
         else:
-            # Update colors interpolation mode
+            
             self.clip_properties_model.color_update(self.selected_item, QColor("#000"), interpolation=2, interpolation_details=[])
 
         if not self.mouse_pressed:
@@ -1260,19 +1260,19 @@ class PropertiesTableView(QTableView):
 
         _ = get_app()._tr
 
-        # Get current value of color
+        
         red = int(cur_property[1]["red"]["value"])
         green = int(cur_property[1]["green"]["value"])
         blue = int(cur_property[1]["blue"]["value"])
-        # Get alpha value (if present) or default to fully opaque
+        
         alpha = int(cur_property[1].get("alpha", {}).get("value", 255))
 
-        # Show color dialog with alpha support
+        
         try:
-            # Create color with alpha
+            
             currentColor = QColor(red, green, blue, alpha)
         except (ValueError, TypeError):
-            # Default to opaque red if conversion fails
+            
             currentColor = QColor(255, 0, 0, 255)
 
         ColorPicker(
@@ -1282,7 +1282,7 @@ class PropertiesTableView(QTableView):
     def Insert_Action_Triggered(self):
         log.info("Insert_Action_Triggered")
 
-        # Verify label has not been deleted
+        
         if (self.selected_label and isdeleted(self.selected_label)) or \
                 (self.selected_item and isdeleted(self.selected_item)):
             log.debug("Property has been deleted, skipping")
@@ -1305,7 +1305,7 @@ class PropertiesTableView(QTableView):
         log.info("Choice_Action_Triggered")
         choice_value = self.sender().data()
 
-        # Update value of dropdown item
+        
         if not self.clip_properties_model.ignore_update_signal:
             self.start_transaction(self.selected_item)
         self.update_in_progress = True
@@ -1313,7 +1313,7 @@ class PropertiesTableView(QTableView):
         if not self.mouse_pressed:
             self.finalize_transaction()
 
-        # Restore focus to label column (column 0) for visible focus indicator
+        
         current_row = self.currentIndex().row()
         if current_row >= 0:
             self.setCurrentIndex(self.clip_properties_model.model.index(current_row, 0))
@@ -1323,16 +1323,16 @@ class PropertiesTableView(QTableView):
         self.menu_reset = True
 
     def __init__(self, *args):
-        # Invoke parent init
+        
         QTableView.__init__(self, *args)
 
-        # Get a reference to the window object
+        
         self.win = get_app().window
 
-        # Create properties model
+        
         self.clip_properties_model = PropertiesModel(self)
 
-        # Reconnect itemChanged signal to intercept edits
+        
         try:
             self.clip_properties_model.model.itemChanged.disconnect(
                 self.clip_properties_model.value_updated
@@ -1341,17 +1341,17 @@ class PropertiesTableView(QTableView):
             log.debug("Failed to disconnect itemChanged: %s", ex)
         self.clip_properties_model.model.itemChanged.connect(self.value_updated_wrapper)
 
-        # Get base models for files, transitions
+        
         self.transition_model = self.win.transition_model.model
         self.files_model = self.win.files_model.model
 
-        # Connect to update signals, so our menus stay current
+        
         self.files_model.dataChanged.connect(self.refresh_menu)
         self.win.files_model.ModelRefreshed.connect(self.refresh_menu)
         self.win.transition_model.ModelRefreshed.connect(self.refresh_menu)
         self.menu_reset = False
 
-        # Keep track of mouse press start position to determine when to start drag
+        
         self.selected = []
         self.selected_label = None
         self.selected_item = None
@@ -1366,39 +1366,39 @@ class PropertiesTableView(QTableView):
         self.menu = None
         self.current_selection = []
 
-        # Context menu icons
+        
         self.bezier_icon = QIcon(QPixmap(os.path.join(info.IMAGES_PATH, "keyframe-%s.png" % smartedit.BEZIER)))
         self.linear_icon = QIcon(QPixmap(os.path.join(info.IMAGES_PATH, "keyframe-%s.png" % smartedit.LINEAR)))
         self.constant_icon = QIcon(QPixmap(os.path.join(info.IMAGES_PATH, "keyframe-%s.png" % smartedit.CONSTANT)))
 
-        # Setup header columns
+        
         self.setModel(self.clip_properties_model.model)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setWordWrap(True)
 
-        # Set delegate
+        
         delegate = PropertyDelegate(model=self.clip_properties_model.model)
         self.setItemDelegateForColumn(1, delegate)
         self.previous_x = -1
 
-        # Enable hover cursor updates without requiring a button press
+        
         self.viewport().setMouseTracking(True)
 
-        # Get table header
+        
         horizontal_header = self.horizontalHeader()
         horizontal_header.setSectionResizeMode(QHeaderView.Stretch)
         vertical_header = self.verticalHeader()
         vertical_header.setVisible(False)
 
-        # Refresh view
+        
         self.clip_properties_model.update_model()
 
-        # Resize columns
+        
         self.resizeColumnToContents(0)
         self.resizeColumnToContents(1)
 
-        # Connect filter signals
+        
         get_app().window.txtPropertyFilter.textChanged.connect(self.filter_changed)
         get_app().window.InsertKeyframe.connect(self.Insert_Action_Triggered)
         self.doubleClicked.connect(self.doubleClickedCB)
@@ -1435,13 +1435,13 @@ class SelectionLabel(QFrame):
     """ The label to display selections """
 
     def getMenu(self):
-        # Build menu for selection button
+        
         menu = StyledContextMenu(parent=self)
 
-        # Get translation object
+        
         _ = get_app()._tr
 
-        # Look up item for more info
+        
         if self.item_type == "clip":
             item = Clip.get(id=self.item_id)
             if item:
@@ -1455,12 +1455,12 @@ class SelectionLabel(QFrame):
             if item:
                 self.item_name = item.title()
 
-        # Choose which selection list to use
+        
         selection = self.all_selection if self.all_selection else get_app().window.selected_items
         if not selection:
             return None
 
-        # Add multi-selection option (if applicable)
+        
         if len(selection) > 1:
             label = _("%d selections") % len(selection)
             action = menu.addAction(label)
@@ -1468,8 +1468,8 @@ class SelectionLabel(QFrame):
             action.triggered.connect(self.Action_Triggered)
             menu.addSeparator()
 
-        # Add selections to menu, and switch to "wait"
-        # cursor if things take too long
+        
+        
         cursor_set = False
         count = 0
         try:
@@ -1490,22 +1490,22 @@ class SelectionLabel(QFrame):
                         continue
                     item_name = clip.title()
 
-                    # Get file for clip (if any)
+                    
                     file_id = clip.data.get("file_id")
                     file = File.get(id=file_id)
                     if not file:
                         continue
 
-                    # Generate thumbnail for file (if needed)
+                    
                     media_type = file.data.get("media_type")
                     if media_type in ["video", "image"]:
-                        # Video thumbnail
+                        
                         fps = file.data["fps"]
                         fps_float = float(fps["num"]) / float(fps["den"])
                         thumbnail_frame = round(float(clip.data['start']) * fps_float) + 1
                         thumb_icon = QIcon(GetThumbPath(file.id, thumbnail_frame))
                     else:
-                        # Audio thumbnail
+                        
                         thumb_icon = QIcon(os.path.join(info.PATH, "images", "AudioThumbnail.svg"))
 
                     action = menu.addAction(thumb_icon, item_name)
@@ -1546,14 +1546,14 @@ class SelectionLabel(QFrame):
 
         finally:
             if cursor_set:
-                # Restore cursor
+                
                 get_app().restoreOverrideCursor()
 
-        # Don't show menu if no actions were added
+        
         if len(menu.actions()) == 0:
             return None
 
-        # Return the menu object
+        
         return menu
 
     def _selections_equal(self, first, second):
@@ -1572,35 +1572,35 @@ class SelectionLabel(QFrame):
         win = get_app().window
 
         if 'selection' in data:
-            # User picked the multi-selection action → store the multi-selection, clear any target
-            self.all_selection = list(data['selection'])  # Cache for toggling!
+            
+            self.all_selection = list(data['selection'])  
             self.target_selection = None
-            # Restore full selection in timeline
+            
             for idx, sel in enumerate(self.all_selection):
                 win.timeline.AddSelectionJS(sel['id'], sel['type'], idx == 0)
         else:
-            # User picked a single item. Don't overwrite all_selection!
+            
             item_id = data['item_id']
             item_type = data['item_type']
             self.target_selection = [{'id': item_id, 'type': item_type}]
-            # If we don't have a cached all_selection, set it now
+            
             if not self.all_selection:
                 self.all_selection = list(win.selected_items)
             win.timeline.AddSelectionJS(item_id, item_type, True)
 
     def select_item(self, selection):
-        # Only update our internal selection state if this is a fresh selection
+        
         if self.target_selection is not None:
-            # We just triggered a toggle (to a single item), check if it's loaded
+            
             if self._selections_equal(selection, self.target_selection):
-                # UI loaded the requested single item; restore all_selection for the next time
+                
                 self.target_selection = None
-                # Don't touch self.all_selection! Keep it alive for toggling back.
+                
             else:
-                # Ignore any intermediate reloads
+                
                 return
         else:
-            # If selection changed outside menu, update all_selection
+            
             if not self._selections_equal(selection, self.all_selection):
                 self.all_selection = list(selection)
 
@@ -1611,10 +1611,10 @@ class SelectionLabel(QFrame):
         else:
             self.item_type = 'multi'
 
-        # Get translation object
+        
         _ = get_app()._tr
 
-        # Look up item for more info
+        
         if self.item_type == "multi":
             self.lblSelection.setText("<strong>%s</strong>" % _("Selection:"))
             self.btnSelectionName.setText(_("%d selections") % count)
@@ -1644,11 +1644,11 @@ class SelectionLabel(QFrame):
                 self.item_name = _(effect.title())
                 _set_item_icon(os.path.join(info.PATH, "effects", "icons", "%s.png" % effect.data.get('class_name').lower()))
 
-        # Truncate long text
+        
         if self.item_name and len(self.item_name) > 25:
             self.item_name = "%s..." % self.item_name[:22]
 
-        # Set label
+        
         if self.item_id:
             self.lblSelection.setText("<strong>%s</strong>" % _("Selection:"))
             self.btnSelectionName.setText(self.item_name)
@@ -1659,11 +1659,11 @@ class SelectionLabel(QFrame):
             self.lblSelection.setText("<strong>%s</strong>" % _("No Selection"))
             self.btnSelectionName.setVisible(False)
 
-        # Set the menu on the button
+        
         self.btnSelectionName.setMenu(None)
 
     def __init__(self, *args):
-        # Invoke parent init
+        
         super().__init__(*args)
         self.item_id = None
         self.item_type = None
@@ -1671,10 +1671,10 @@ class SelectionLabel(QFrame):
         self.item_icon = None
         self.all_selection = []
 
-        # Get translation object
+        
         _ = get_app()._tr
 
-        # Widgets
+        
         self.lblSelection = QLabel()
         self.lblSelection.setText("<strong>%s</strong>" % _("No Selection"))
         self.btnSelectionName = QPushButton()
@@ -1684,7 +1684,7 @@ class SelectionLabel(QFrame):
         self.btnSelectionName.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.btnSelectionName.clicked.connect(self.open_menu)
 
-        # Support rich text
+        
         self.lblSelection.setTextFormat(Qt.RichText)
 
         hbox = QHBoxLayout()
@@ -1693,9 +1693,9 @@ class SelectionLabel(QFrame):
         hbox.addWidget(self.btnSelectionName)
         self.setLayout(hbox)
 
-        # Variables for managing dropdown selections
+        
         self.target_selection = None
         self.previous_selection = []
 
-        # Connect signals
+        
         get_app().window.propertyTableView.loadProperties.connect(self.select_item)

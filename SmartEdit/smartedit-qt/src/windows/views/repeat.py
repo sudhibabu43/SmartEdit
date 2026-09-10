@@ -97,7 +97,7 @@ class RepeatDialog(QDialog):
         return pattern, direction, passes, delay_frames, ramp
 
 
-# Repeat logic
+
 
 
 def _normalize_points(points):
@@ -128,16 +128,16 @@ def _normalize_points_to_trim(points, trim_start_frames, trim_span_frames):
     for p, x_abs in zip(pts, xs):
         co = p.get("co", {}) if isinstance(p, dict) else {}
 
-        # If the data already looks clip-relative (within trimmed span), keep as-is
+        
         if 1 <= min_x and max_x <= trim_span_frames:
             x_rel = x_abs
         else:
-            # Convert absolute project frame to trimmed-relative frame (1-based)
+            
             x_rel = x_abs - trim_start_frames
 
         x_rel = int(round(x_rel))
 
-        # Drop any keyframes that fall outside the trimmed clip range once shifted.
+        
         if x_rel < 1 or x_rel > trim_span_frames:
             continue
 
@@ -185,8 +185,8 @@ def apply_repeat(clip, pattern, start_dir, passes, delay_frames, ramp, fps_float
     if passes < 2:
         return
 
-    # Convert trim (seconds) to frames (zero-based repeat: always use 1..trim_span).
-    # Use duration to avoid off-by-one loss when end is rounded down/up differently.
+    
+    
     trim_start_frames = int(round(float(clip.data.get("start", 0.0)) * fps_float))
     trim_span_frames = max(
         1,
@@ -196,14 +196,14 @@ def apply_repeat(clip, pattern, start_dir, passes, delay_frames, ramp, fps_float
     target_end_y = target_start_y + trim_span_frames
     target_range = max(1, target_end_y - target_start_y)
 
-    # Normalize existing time curve or build linear default
+    
     orig_time = clip.data.get("time", {}).get("Points", [])
     if isinstance(orig_time, list) and len(orig_time) >= 2:
         base_time = _normalize_points(orig_time)
         y_start = int(round(base_time[0]["co"].get("Y", 0)))
         y_end = int(round(base_time[-1]["co"].get("Y", 0)))
         y_range = max(1, y_end - y_start)
-        # Rescale Y values so they align with the trimmed region (in frames)
+        
         for p in base_time:
             y_val = p["co"].get("Y", 0)
             p["co"]["Y"] = target_start_y + ((y_val - y_start) * target_range / y_range)
@@ -215,7 +215,7 @@ def apply_repeat(clip, pattern, start_dir, passes, delay_frames, ramp, fps_float
         ]
     time_span_x = max(1, int(round(base_time[-1]["co"]["X"])))
 
-    # Rescale any existing time curve X to the trimmed span so repeat stays zero-based
+    
     if time_span_x != trim_span_frames:
         scale = float(trim_span_frames) / float(time_span_x)
         for p in base_time:
@@ -223,7 +223,7 @@ def apply_repeat(clip, pattern, start_dir, passes, delay_frames, ramp, fps_float
             p["co"]["X"] = max(1, x_val)
         time_span_x = trim_span_frames
 
-    # Store original data if not already
+    
     if "repeat_cache" not in clip.data:
         cache = {
             "start": clip.data.get("start", 0.0),
@@ -238,13 +238,13 @@ def apply_repeat(clip, pattern, start_dir, passes, delay_frames, ramp, fps_float
 
     dir_sign = 1 if start_dir >= 0 else -1
 
-    # Build time curve based on existing keyframes
+    
     time_points, total_frames = _repeat_curve(
         base_time, time_span_x, dir_sign, passes, delay_frames, ramp, pattern
     )
     clip.data["time"] = {"Points": time_points}
 
-    # Repeat animated properties
+    
     cache = clip.data.get("repeat_cache", {})
     for prop, original in cache.get("properties", {}).items():
         if prop == "time":
@@ -256,7 +256,7 @@ def apply_repeat(clip, pattern, start_dir, passes, delay_frames, ramp, fps_float
         )
         span = int(round(norm[-1]["co"]["X"])) if norm else 0
         if span:
-            # Rescale keyframe X into the trimmed span to keep repeats aligned
+            
             if span != time_span_x:
                 scale = float(time_span_x) / float(span)
                 first_x = float(norm[0]["co"].get("X", 1))
@@ -267,12 +267,12 @@ def apply_repeat(clip, pattern, start_dir, passes, delay_frames, ramp, fps_float
                     p["co"]["X"] = min(max(1, x_val), time_span_x)
                 span = time_span_x
 
-            # Deduplicate any points that collapsed onto the same frame (esp. at start)
+            
             latest_by_x = {}
             for p in norm:
                 x_val = int(round(p["co"].get("X", 1)))
                 p["co"]["X"] = x_val
-                # Prefer the last occurrence (most recently edited) when duplicates collapse
+                
                 latest_by_x[x_val] = p
             norm = [latest_by_x[x] for x in sorted(latest_by_x.keys())]
 
@@ -280,7 +280,7 @@ def apply_repeat(clip, pattern, start_dir, passes, delay_frames, ramp, fps_float
             clip.data[prop] = {"Points": new_points}
             total_frames = max(total_frames, used)
 
-    # Update trims to cover the repeated span starting at 0
+    
     new_duration = total_frames / fps_float
     clip.data["start"] = 0.0
     clip.data["end"] = new_duration

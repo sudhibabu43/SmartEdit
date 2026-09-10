@@ -79,6 +79,9 @@ class EditingController:
             timeline_clips = []
             try:
                 timeline_clips = Clip.filter()
+                if app and hasattr(app, "window") and hasattr(app.window, "selected_clips") and app.window.selected_clips:
+                    selected_ids = set(app.window.selected_clips)
+                    timeline_clips = [c for c in timeline_clips if str(c.id) in selected_ids]
             except Exception:
                 timeline_clips = []
 
@@ -94,14 +97,14 @@ class EditingController:
         plan_items: List[PlanItem] = []
         operations: List[Dict[str, Any]] = []
 
-        # -------------------------------------------------------------
-        # 1. Shaky Footage Detection & Labeling
-        # -------------------------------------------------------------
+        
+        
+        
         shaky_regions_found = []
         if command.has_action(ActionType.DETECT_SHAKY) or command.has_action(ActionType.LABEL_SHAKY) or command.has_action(ActionType.DELETE_SHAKY):
             thresh_pct = self.shaky_service.get_threshold(command.parameters.get("shaky", {}).get("threshold") or command.parameters.get("delete_shaky", {}).get("threshold"))
             
-            # Analyze exact discrete shaky regions across timeline clips
+            
             shaky_regions_found = self.shaky_service.analyze_timeline_shaky_regions(threshold=thresh_pct, clips=timeline_clips)
 
             if shaky_regions_found:
@@ -153,9 +156,9 @@ class EditingController:
                     icon="ℹ️"
                 ))
 
-        # -------------------------------------------------------------
-        # 2. Silence Detection & Removal
-        # -------------------------------------------------------------
+        
+        
+        
         if command.has_action(ActionType.REMOVE_SILENCE):
             from smartedit.audio_analysis import AudioAnalyzer
             audio_analyzer = AudioAnalyzer()
@@ -216,9 +219,9 @@ class EditingController:
                     icon="ℹ️"
                 ))
 
-        # -------------------------------------------------------------
-        # 3. Clip Arrangement & Sequential Alignment
-        # -------------------------------------------------------------
+        
+        
+        
         if command.has_action(ActionType.ARRANGE_CLIPS) or command.has_action(ActionType.ROUGH_CUT):
             if timeline_clips:
                 count = len(timeline_clips)
@@ -278,7 +281,7 @@ class EditingController:
         app = get_app()
         window = getattr(app, "window", None)
 
-        # Generate atomic transaction ID for undo/redo
+        
         transaction_id = str(uuid.uuid4())
         self.last_transaction_id = transaction_id
         app.updates.transaction_id = transaction_id
@@ -289,7 +292,7 @@ class EditingController:
             for op in target_plan.operations:
                 op_type = op.get("type")
 
-                # A. Label Shaky Clips/Regions (Non-destructive: places labels on topmost unused layer)
+                
                 if op_type == ActionType.LABEL_SHAKY:
                     shaky_items = op.get("regions") or op.get("clips", [])
                     if shaky_items:
@@ -298,7 +301,7 @@ class EditingController:
                         track_num = target_layer // 1000000
                         applied_details.append(f"Placed {len(created)} 'SHAKY FOOTAGE' label(s) on Track {track_num} (top unused layer)")
 
-                # B. Remove Shaky Regions (Cut out shaky segments, keep stable portions, source video files untouched)
+                
                 elif op_type == ActionType.DELETE_SHAKY:
                     shaky_items = op.get("regions") or op.get("clips", [])
                     if shaky_items:
@@ -312,22 +315,22 @@ class EditingController:
                                 clip.delete()
                         applied_details.append(f"Removed {len(op.get('clip_ids', []))} shaky clip(s)")
 
-                # C. Arrange Clips Sequentially
+                
                 elif op_type == ActionType.ARRANGE_CLIPS:
                     source = op.get("source")
                     if source == "timeline":
                         all_clips = Clip.filter()
-                        # Exclude AI label clips from clip rearrangement
+                        
                         clips = [
                             c for c in all_clips
                             if not ((c.data or {}).get("ui") or {}).get("ai_label")
                             and not str((c.data or {}).get("title", "")).startswith("SHAKY FOOTAGE")
                         ]
-                        # Sort clips by existing position or file name
+                        
                         clips.sort(key=lambda c: (c.data.get("position", 0.0), c.data.get("layer", 0)))
                         
                         current_pos = 0.0
-                        target_layer = 1000000  # Default primary track
+                        target_layer = 1000000  
 
                         for c in clips:
                             duration = float(c.data.get("end", 10.0)) - float(c.data.get("start", 0.0))
@@ -363,15 +366,15 @@ class EditingController:
 
                         applied_details.append(f"Placed {len(files)} file(s) onto timeline")
 
-                # D. Silence Removal
+                
                 elif op_type == ActionType.REMOVE_SILENCE:
                     for s_op in op.get("silence_ops", []):
                         clip = Clip.get(id=s_op["clip_id"])
                         if clip:
-                            # Trim start/end silence if cut points touch boundaries
+                            
                             cut_points = s_op.get("cut_points", [])
                             if cut_points:
-                                # Adjust start if silence at beginning
+                                
                                 first_cut = cut_points[0]
                                 if first_cut < 2.0:
                                     clip.data["start"] = float(clip.data.get("start", 0.0)) + first_cut
@@ -379,10 +382,10 @@ class EditingController:
                     applied_details.append("Processed silence cuts on timeline clips")
 
         finally:
-            # Clear transaction id so subsequent manual edits form new transactions
+            
             app.updates.transaction_id = None
 
-        # Refresh the timeline view and project window
+        
         if window:
             if hasattr(window, "refreshFrameSignal"):
                 window.refreshFrameSignal.emit()

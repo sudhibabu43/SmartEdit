@@ -646,7 +646,7 @@ class VideoWidgetTransformTests(unittest.TestCase):
             os.remove(test_path)
 
     def test_location_offset_inverse_round_trips_drag_motion(self):
-        # Crop square in a 16:9 viewport renders as 160x160, centered at y=-35.
+        
         source_w, source_h, scaled_w, scaled_h, anchor_x, anchor_y, layout_x, layout_y, layout_w, layout_h = (
             VideoWidget._clip_location_geometry(
                 self.widget,

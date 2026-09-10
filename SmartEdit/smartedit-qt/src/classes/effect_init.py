@@ -31,11 +31,11 @@ import os
 YOLO_DEFAULT_PATH = os.path.join(YOLO_PATH, "yolo26n-seg")
 EFFICIENTSAM_DEFAULT_PATH = os.path.join(YOLO_PATH, "efficient-sam-tiny-1024")
 CUTIE_DEFAULT_PATH = os.path.join(YOLO_PATH, "cutie-medium")
-# Not all Effects support pre-processing, so for now, this is a hard-coded
-# solution to providing the pre-processing params needed for these special effects.
+
+
 
 effect_options = {
-    # TODO: Remove Example example options
+    
     "Example": [
         {
             "title": "Region",

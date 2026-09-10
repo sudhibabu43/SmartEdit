@@ -39,7 +39,7 @@ AUDIO_OUTPUT_TYPES = {
 }
 
 KNOWN_NODE_TYPES = {
-    # Input
+    
     "checkpointloadersimple",
     "unetloader",
     "cliptextencode",
@@ -49,7 +49,7 @@ KNOWN_NODE_TYPES = {
     "loadvideo",
     "vhs_loadvideo",
     "loadaudio",
-    # Core built-in/SmartEdit workflows
+    
     "vaeencode",
     "vaedecode",
     "ksampler",
@@ -89,7 +89,7 @@ KNOWN_NODE_TYPES = {
     "stableaudioembedding",
     "kdiffusionsampler",
     "stableaudiovaedecode",
-    # ComfyUI_FL-ClearVoice
+    
     "fl_clearvoice_modelloader",
     "fl_clearvoice_process",
     "videocombine",
@@ -109,7 +109,7 @@ KNOWN_NODE_TYPES = {
     "midas-depthmappreprocessor",
     "zoe-depthmappreprocessor",
     "zoe_depthanythingpreprocessor",
-    # Video Helper Suite
+    
     "vhs_batchmanager",
     "vhs_loadaudio",
     "vhs_loadvideo",
@@ -120,13 +120,13 @@ KNOWN_NODE_TYPES = {
     "vhs_videoinfo",
     "vhs_videoinfoloaded",
     "vhs_videoinfosource",
-    # ComfyUI-segment-anything-2
+    
     "downloadandloadsam2model",
     "sam2segmentation",
     "sam2autosegmentation",
     "sam2videosegmentationaddpoints",
     "sam2videosegmentation",
-    # SmartEdit-ComfyUI (custom SAM2)
+    
     "smarteditdownloadandloadsam2model",
     "smarteditsam2segmentation",
     "smarteditsam2videosegmentationaddpoints",

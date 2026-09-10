@@ -70,7 +70,7 @@ class FilesListProgressDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
         super().paint(painter, option, index)
 
-        # list_proxy_model index -> proxy_model index -> source model index
+        
         proxy_index = self.view.files_model.list_proxy_model.mapToSource(index)
         if not proxy_index or not proxy_index.isValid():
             return
@@ -173,7 +173,7 @@ class FilesListView(QListView):
     def contextMenuEvent(self, event):
         event.accept()
 
-        # Set context menu mode
+        
         app = get_app()
         self.win = app.window
         _ = app._tr
@@ -185,7 +185,7 @@ class FilesListView(QListView):
         else:
             self.selectionModel().setCurrentIndex(index, QItemSelectionModel.NoUpdate)
 
-        # Build menu
+        
         menu = StyledContextMenu(parent=self)
 
         add_bound_action(menu, self.win, "actionImportFiles", _("Import Files..."), "actionImportFiles_trigger")
@@ -226,18 +226,18 @@ class FilesListView(QListView):
         add_bound_action(menu, self.win, "actionDetailsView", _("Details View"), "actionDetailsView_trigger")
 
         if index.isValid():
-            # Look up the model item and our unique ID
+            
             model = self.model()
             source_index = model.mapToSource(index)
 
-            # Look up file_id from 5th column of row
+            
             id_index = source_index.sibling(source_index.row(), 5)
             file_id = model.sourceModel().data(id_index, Qt.DisplayRole)
 
-            # If a valid file selected, show file related options
+            
             menu.addSeparator()
 
-            # Add edit title option (if svg file)
+            
             file = File.get(id=file_id)
             if not file:
                 menu.popup(event.globalPos())
@@ -254,13 +254,13 @@ class FilesListView(QListView):
             menu.addSeparator()
             add_bound_action(menu, self.win, "actionAdd_to_Timeline", _("Add to Timeline"), "actionAdd_to_Timeline_trigger")
 
-            # Add Profile menu
+            
             profile_menu = StyledContextMenu(title=_("Choose Profile"), parent=self)
             profile_icon = get_app().window.actionProfile.icon()
             profile_missing_icon = QIcon(":/icons/Humanity/actions/16/list-add.svg")
             profile_menu.setIcon(profile_icon)
 
-            # Get file's profile
+            
             file_profile = file.profile()
             if file_profile.info.description:
                 action = profile_menu.addAction(profile_icon, file_profile.info.description)
@@ -275,7 +275,7 @@ class FilesListView(QListView):
             add_bound_action(menu, self.win, "actionRemove_from_Project", _("Remove from Project"), "actionRemove_from_Project_trigger")
             menu.addSeparator()
 
-        # Show menu
+        
         menu.show_at(event)
 
     def mousePressEvent(self, event):
@@ -293,7 +293,7 @@ class FilesListView(QListView):
                 index,
                 QItemSelectionModel.ClearAndSelect,
             )
-        # Preview File, File Properties, or Split File (depending on Shift/Ctrl)
+        
         if modifiers_has(get_app().keyboardModifiers(), Qt.ShiftModifier):
             get_app().window.actionSplitFile.trigger()
         elif modifiers_has(get_app().keyboardModifiers(), Qt.ControlModifier):
@@ -302,7 +302,7 @@ class FilesListView(QListView):
             get_app().window.actionPreview_File.trigger()
 
     def dragEnterEvent(self, event):
-        # If dragging urls onto widget, accept
+        
         if not event.mimeData().hasUrls():
             event.ignore()
             return
@@ -312,7 +312,7 @@ class FilesListView(QListView):
     def startDrag(self, supportedActions):
         """ Override startDrag method to display custom icon """
 
-        # Get first column indexes for all selected rows
+        
         selected = self.selectionModel().selectedRows(0)
         selected = [
             idx for idx in selected
@@ -321,12 +321,12 @@ class FilesListView(QListView):
             )
         ]
 
-        # Check if there are any selected items
+        
         if not selected:
             log.warning("No draggable items found in model!")
             return False
 
-        # Get icons from up to 3 selected items
+        
         icons = []
         for i in range(min(3, len(selected))):
             current = selected[i]
@@ -334,77 +334,77 @@ class FilesListView(QListView):
             if icon:
                 icons.append(icon.pixmap(self.drag_item_size))
 
-        # If no icons were retrieved, abort the drag
+        
         if not icons:
             log.warning("No valid icons found for dragging!")
             return False
 
-        # Calculate the total width of the composite pixmap including gaps
-        gap = 1  # 1 pixel gap between icons
+        
+        gap = 1  
         total_width = (self.drag_item_size.width() * len(icons)) + (gap * (len(icons) - 1))
 
-        # Create a composite pixmap to hold the icons in a row
+        
         composite_pixmap = QPixmap(total_width, self.drag_item_size.height())
-        composite_pixmap.fill(Qt.transparent)  # Start with a transparent background
+        composite_pixmap.fill(Qt.transparent)  
 
-        # Use a QPainter to draw the icons in a row with 1 pixel gap between them
+        
         painter = QPainter(composite_pixmap)
         for idx, icon_pixmap in enumerate(icons):
-            x_offset = idx * (self.drag_item_size.width() + gap)  # Position each icon with a gap
+            x_offset = idx * (self.drag_item_size.width() + gap)  
             painter.drawPixmap(int(x_offset), 0, icon_pixmap)
         painter.end()
 
-        # Start the drag operation
+        
         drag = QDrag(self)
 
-        # Combine all selected items into the mime data
+        
         mime_data = self.model().mimeData(selected)
         drag.setMimeData(mime_data)
 
-        # Set the composite pixmap for the drag operation
+        
         drag.setPixmap(composite_pixmap)
 
-        # Set the hot spot to the center of the composite pixmap
+        
         drag.setHotSpot(composite_pixmap.rect().center())
 
-        # Start a transaction so all clips are grouped for a single undo
+        
         tid = str(uuid.uuid4())
         get_app().updates.transaction_id = tid
 
-        # Execute the drag operation
+        
         exec_fn = getattr(drag, "exec", None) or getattr(drag, "exec_", None)
         if exec_fn is None:
             raise AttributeError("QDrag has no exec_/exec method")
         exec_fn(supportedActions)
         clear_override_cursor()
 
-        # End transaction
+        
         get_app().updates.transaction_id = None
 
-    # Without defining this method, the 'copy' action doesn't show with cursor
+    
     def dragMoveEvent(self, event):
         event.accept()
 
-    # Handle a drag and drop being dropped on widget
+    
     def dropEvent(self, event):
         if not event.mimeData().hasUrls():
-            # Nothing we're interested in
+            
             event.reject()
             return
         event.accept()
-        # Use try/finally so we always reset the cursor
+        
         try:
-            # Set cursor to waiting
+            
             get_app().setOverrideCursor(QCursor(Qt.WaitCursor))
 
             qurl_list = event.mimeData().urls()
             log.info("Processing drop event for {} urls".format(len(qurl_list)))
             self.files_model.process_urls(qurl_list)
         finally:
-            # Restore cursor
+            
             get_app().restoreOverrideCursor()
 
-    # Pass file add requests to the model
+    
     def add_file(self, filepath):
         self.files_model.add_files(filepath)
 
@@ -414,7 +414,7 @@ class FilesListView(QListView):
     def refresh_view(self):
         """Filter files with proxy class"""
         filter_text = self.win.filesFilter.text()
-        # Apply filter to the source proxy model (not the single-column wrapper)
+        
         from qt_api import make_filter_regex, set_proxy_filter
         pattern = filter_text.replace(' ', '.*')
         regex = make_filter_regex(pattern, case_insensitive=True)
@@ -428,31 +428,31 @@ class FilesListView(QListView):
         pass
 
     def __init__(self, model, *args):
-        # Invoke parent init
+        
         super().__init__(*args)
 
-        # Get a reference to the window object
+        
         app = get_app()
         self.win = app.window
 
-        # Get Model data
+        
         self.files_model = model
         self.setModel(self.files_model.list_proxy_model)
 
-        # Remove the default selection model and wire up to the list-specific one
+        
         self.selectionModel().deleteLater()
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionModel(self.files_model.list_selection_model)
         self.setItemDelegate(FilesListProgressDelegate(self))
 
-        # Keep track of mouse press start position to determine when to start drag
+        
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
         self.setDropIndicatorShown(True)
 
-        # Setup header columns and layout
-        self.setModelColumn(0)  # Only display first column in icon mode
+        
+        self.setModelColumn(0)  
         self.setIconSize(info.LIST_ICON_SIZE)
         self.setGridSize(info.LIST_GRID_SIZE)
         self.setViewMode(QListView.IconMode)
@@ -465,6 +465,6 @@ class FilesListView(QListView):
 
         self.files_model.ModelRefreshed.connect(self.refresh_view)
 
-        # setup filter events
+        
         app = get_app()
         app.window.filesFilter.textChanged.connect(self.filter_changed)

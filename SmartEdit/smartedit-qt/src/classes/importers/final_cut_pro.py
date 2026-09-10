@@ -54,7 +54,7 @@ def _pathurl_to_path(path_url, base_folder):
             path = "/%s%s" % (netloc, path)
         path = unquote(path)
         if len(path) > 2 and path[0] == "/" and path[2:3] == ":":
-            # Windows drive letter encoded as /C:/
+            
             path = path[1:]
         return os.path.normpath(path)
 
@@ -74,7 +74,7 @@ def _extract_path_from_file_node(file_node, file_lookup, base_folder):
     if path_nodes and path_nodes[0].childNodes:
         return _pathurl_to_path(path_nodes[0].childNodes[0].nodeValue, base_folder)
 
-    # Follow references to shared file definitions
+    
     file_id = file_node.getAttribute("id")
     referenced_node = file_lookup.get(file_id)
     if referenced_node is not None and referenced_node is not file_node:
@@ -254,14 +254,14 @@ def import_xml():
     app = get_app()
     _ = app._tr
 
-    # Get FPS info
+    
     fps_num = app.project.get("fps").get("num", 24)
     fps_den = app.project.get("fps").get("den", 1)
     fps_float = float(fps_num / fps_den)
     project_width = app.project.get("width") or 1920
     project_height = app.project.get("height") or 1080
 
-    # Get XML path
+    
     recommended_path = app.project.current_filepath or ""
     if not recommended_path:
         recommended_path = info.HOME_PATH
@@ -271,25 +271,25 @@ def import_xml():
                                             _("Final Cut Pro (*.xml)"), _("Final Cut Pro (*.xml)"))[0]
 
     if not file_path or not os.path.exists(file_path):
-        # User canceled dialog
+        
         return
 
-    # Parse XML file
+    
     xmldoc = minidom.parse(file_path)
     xml_folder = os.path.dirname(os.path.abspath(file_path))
 
-    # Build lookup for shared <file> nodes
+    
     file_lookup = {}
     for file_element in xmldoc.getElementsByTagName("file"):
         file_id = file_element.getAttribute("id")
         if file_id:
             file_lookup[file_id] = file_element
 
-    # Get video tracks
+    
     video_tracks = []
     for video_element in xmldoc.getElementsByTagName("video"):
         for video_track in video_element.getElementsByTagName("track"):
-            # Skip empty tracks up front so ordering math matches created tracks
+            
             if video_track.getElementsByTagName("clipitem"):
                 video_tracks.append(video_track)
     audio_tracks = []
@@ -298,9 +298,9 @@ def import_xml():
             if audio_track.getElementsByTagName("clipitem"):
                 audio_tracks.append(audio_track)
 
-    # Pre-compute numbering so audio layers stay below video layers.
-    # Tracks are displayed in reversed sorted order, so higher numbers are higher on screen.
-    # We give all video tracks a higher range, then audio tracks a lower range.
+    
+    
+    
     stride = 1000000
     all_tracks = app.project.get("layers")
     max_existing = 0
@@ -313,21 +313,21 @@ def import_xml():
     video_created = 0
     audio_created = 0
 
-    # Loop through tracks
+    
     track_index = 0
     imported_clip_map = {}
 
     for track_list, track_type in ((video_tracks, "video"), (audio_tracks, "audio")):
         is_audio_track_list = (track_type == "audio")
         for track_element in track_list:
-            # Get clipitems on this track (if any)
+            
             clips_on_track = track_element.getElementsByTagName("clipitem")
             if not clips_on_track:
                 continue
 
             track_index += 1
 
-            # Assign track numbers so video layers sit above audio layers after import.
+            
             if is_audio_track_list:
                 track_number = audio_base + (audio_created * stride)
                 audio_created += 1
@@ -335,7 +335,7 @@ def import_xml():
                 track_number = video_base + (video_created * stride)
                 video_created += 1
 
-            # Prepare to create track lazily (only if clips remain after merging)
+            
             track = None
             locked_nodes = track_element.getElementsByTagName("locked")
             locked_text = _node_text_content(locked_nodes[0]) if locked_nodes else ""
@@ -348,9 +348,9 @@ def import_xml():
                     track.data = {"number": track_number, "y": 0, "label": "XML Import %s" % track_index, "lock": is_locked}
                     track.save()
 
-            # Loop through clips
+            
             for clip_element in clips_on_track:
-                # Get clip path (handles shared file nodes)
+                
                 file_elements = clip_element.getElementsByTagName("file")
                 if not file_elements:
                     continue
@@ -362,38 +362,38 @@ def import_xml():
                 if is_skipped:
                     continue
 
-                # Check for this path in our existing project data
+                
                 file = File.get(path=clip_path)
 
-                # Load filepath in libsmartedit clip object (which will try multiple readers to open it)
+                
                 clip_obj = smartedit.Clip(clip_path)
 
                 if not file:
-                    # Get the JSON for the clip's internal reader
+                    
                     try:
                         reader = clip_obj.Reader()
                         file_data = json.loads(reader.Json())
 
-                        # Determine media type
+                        
                         file_data["media_type"] = get_media_type(file_data)
 
-                        # Save new file to the project data
+                        
                         file = File()
                         file.data = file_data
 
-                        # Save file
+                        
                         file.save()
                     except Exception:
                         log.warning('Error building File object for %s' % clip_path, exc_info=1)
 
                 if (file.data["media_type"] == "video" or file.data["media_type"] == "image"):
-                    # Determine thumb path
+                    
                     thumb_path = os.path.join(info.THUMBNAIL_PATH, "%s.png" % file.data["id"])
                 else:
-                    # Audio file
+                    
                     thumb_path = os.path.join(info.PATH, "images", "AudioThumbnail.svg")
 
-                # Create Clip object
+                
                 clip = Clip()
                 clip_start_value = _float_value(clip_element.getElementsByTagName("in"), 0.0) / fps_float
                 clip_end_value = _float_value(clip_element.getElementsByTagName("out"), 0.0) / fps_float
@@ -420,7 +420,7 @@ def import_xml():
                 location_y_points = []
                 scale_points = []
                 rotation_points = []
-                # Loop through clip's effects
+                
                 for effect_element in clip_element.getElementsByTagName("effect"):
                     effectid_nodes = effect_element.getElementsByTagName("effectid")
                     effectid = _node_text_content(effectid_nodes[0]) if effectid_nodes else ""
@@ -453,7 +453,7 @@ def import_xml():
                                     value_node = value_nodes[0] if value_nodes else None
                                     horiz_value = _float_value(value_node.getElementsByTagName("horiz"), 0.0) if value_node else 0.0
                                     vert_value = _float_value(value_node.getElementsByTagName("vert"), 0.0) if value_node else 0.0
-                                    # Derive normalized location by removing gravity/scale offsets at this time
+                                    
                                     scale_mode = clip.data.get("scale", smartedit.SCALE_FIT)
                                     gravity = clip.data.get("gravity", smartedit.GRAVITY_CENTER)
                                     src_w = (file.data or {}).get("width") if isinstance(file.data, dict) else None
@@ -580,15 +580,15 @@ def import_xml():
                     clip.data["rotation"] = {"Points": rotation_points}
                 if volume_points:
                     clip.data["volume"] = {"Points": volume_points}
-                # Save clip
+                
                 clip.save()
 
                 if not is_audio_track_list and merge_key:
                     imported_clip_map[merge_key] = clip
 
-            # Update the preview and reselect current frame in properties
+            
             app.window.refreshFrameSignal.emit()
             app.window.propertyTableView.select_frame(app.window.preview_thread.player.Position())
 
-    # Free up DOM memory
+    
     xmldoc.unlink()

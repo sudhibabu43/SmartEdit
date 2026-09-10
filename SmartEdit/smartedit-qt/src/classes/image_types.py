@@ -64,5 +64,5 @@ def get_media_type(file_object):
     elif file_object["has_audio"] and not file_object["has_video"]:
         return "audio"
     else:
-        # If none set, just assume video
+        
         return "video"

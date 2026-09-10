@@ -16,7 +16,7 @@ class CosmicDuskTimelineTheme(HumanityDarkTimelineTheme):
     def __init__(self):
         super().__init__()
 
-        # ── Timeline ──────────────────────────────────────────────────────
+        
         self.background             = QColor("#141923")
         self.background2            = QColor()
         self.playhead_color         = QColor("#FABE0A")
@@ -31,16 +31,16 @@ class CosmicDuskTimelineTheme(HumanityDarkTimelineTheme):
         self.keyframe_panel_marker_fill      = QColor()
         self.keyframe_panel_marker_border    = QColor()
 
-        # ── Clip ──────────────────────────────────────────────────────────
+        
         self.clip.background    = QColor("#192332")
         self.clip.background2   = QColor()
-        self.clip.top_overlay   = QColor()      # gradient overlay disabled
+        self.clip.top_overlay   = QColor()      
         self.clip.top_overlay2  = QColor()
         self.clip.border_color  = QColor("#0078FF")
         self.clip.border_radius = 8
         self.clip.height        = 48
 
-        # ── Track ─────────────────────────────────────────────────────────
+        
         self.track.background               = QColor("#283241")
         self.track.background2              = QColor()
         self.track.border_color             = QColor("#283241")
@@ -53,19 +53,19 @@ class CosmicDuskTimelineTheme(HumanityDarkTimelineTheme):
         self.track.name_border_top_width    = 1
         self.track.name_border_bottom_color = QColor("#192332")
         self.track.name_border_bottom_width = 1
-        self.track.name_radius_tl           = 0   # gradient overlay/radius disabled
+        self.track.name_radius_tl           = 0   
         self.track.name_radius_bl           = 0
         self.track.name_top_overlay         = QColor()
         self.track.name_top_overlay2        = QColor()
 
-        # ── Transition ────────────────────────────────────────────────────
+        
         self.transition.height = 48
 
-        # ── Ruler ─────────────────────────────────────────────────────────
+        
         self.ruler.background  = QColor("#141923")
         self.ruler.background2 = QColor()
 
-        # ── Icons ─────────────────────────────────────────────────────────
+        
         _c = "themes/cosmic/images/"
 
         self.playhead_icon                      = _icon(_c + "playhead.svg")

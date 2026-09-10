@@ -43,7 +43,7 @@ class EffectsTreeView(NameColumnKeyboardSearchMixin, QTreeView):
     drag_item_center = QPoint(24, 24)
 
     def contextMenuEvent(self, event):
-        # Set context menu mode
+        
         event.accept()
         app = get_app()
         self.win = app.window
@@ -56,23 +56,23 @@ class EffectsTreeView(NameColumnKeyboardSearchMixin, QTreeView):
     def startDrag(self, supportedActions):
         """ Override startDrag method to display custom icon """
 
-        # Get first column indexes for all selected rows
+        
         selected = self.selectionModel().selectedRows(0)
 
-        # Get image of current item
+        
         current = self.selectionModel().currentIndex()
         if not current.isValid() and selected:
             current = selected[0]
 
         if not current.isValid():
-            # We can't find anything to drag
+            
             log.warning("No draggable items found in model!")
             return False
 
-        # Get icon from column 0 on same row as current item
+        
         icon = current.sibling(current.row(), 0).data(Qt.DecorationRole)
 
-        # Start drag operation
+        
         drag = QDrag(self)
         drag.setMimeData(self.model().mimeData(selected))
         drag.setPixmap(icon.pixmap(self.drag_item_size))
@@ -86,37 +86,37 @@ class EffectsTreeView(NameColumnKeyboardSearchMixin, QTreeView):
     def refresh_columns(self):
         """Hide certain columns"""
         if type(self) == EffectsTreeView:
-            # Only execute when the treeview is active
+            
             self.hideColumn(3)
             self.hideColumn(4)
             self.setColumnWidth(0, 80)
         self.sortByColumn(0, Qt.AscendingOrder)
 
     def __init__(self, model):
-        # Invoke parent init
+        
         QTreeView.__init__(self)
 
-        # Get a reference to the window object
+        
         self.win = get_app().window
 
-        # Get Model data
+        
         self.effects_model = model
 
-        # Keep track of mouse press start position to determine when to start drag
+        
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
         self.setDropIndicatorShown(True)
 
         self.setModel(self.effects_model.proxy_model)
 
-        # Remove the default selection model and wire up to the shared one
+        
         self.selectionModel().deleteLater()
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionModel(self.effects_model.selection_model)
         self.setSortingEnabled(True)
 
-        # Setup header columns
+        
         self.setIconSize(info.TREE_ICON_SIZE)
         self.setIndentation(0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)

@@ -65,30 +65,30 @@ class CreditsModel():
         app = get_app()
         _ = app._tr
 
-        # Clear all items
+        
         if clear:
             log.debug('cleared credits model')
             self.model.clear()
 
-        # Add Headers
+        
         self.model.setHorizontalHeaderLabels(["", "", _("Name"), _("Email"), _("Website")])
 
         for person in self.credits_list:
 
-            # Remove any person string keys that explicitly contain a value of None
+            
             for field in ["name", "email", "website"]:
                 if field in person and person.get(field) is None:
                     person.pop(field)
 
             if len(person.get("name", "")) < 2:
-                # Skip blank names
+                
                 continue
 
 
             row = []
             flags = Qt.ItemIsSelectable | Qt.ItemIsEnabled
 
-            # Append type icon (PayPal, Kickstarter, Bitcoin, or Patreon)
+            
             item = QStandardItem()
             for contrib in [n for n in self.icon_mapping if n in person.get("icons", "")]:
                 (tooltip, icon) = self.icon_mapping.get(contrib, (None, None))
@@ -97,7 +97,7 @@ class CreditsModel():
             item.setFlags(flags)
             row.append(item)
 
-            # Append Star icon (Multiple donations, big donations, five-timer kickstarter group, etc...)
+            
             item = QStandardItem()
             if "s" in person.get("icons", ""):
                 item.setIcon(QIcon(":/about/star-icon.svg"))
@@ -116,7 +116,7 @@ class CreditsModel():
 
         _ = get_app()._tr
 
-        # Supporter icons
+        
         self.icon_mapping = {
             "p": (
                 _("PayPal Supporter!"), QIcon(":/about/paypal-icon.svg")
@@ -136,13 +136,13 @@ class CreditsModel():
                 ),
         }
 
-        # Create standard model
+        
         self.app = get_app()
         self.model = CreditsStandardItemModel()
         self.model.setColumnCount(6)
         self.credits_list = credits
 
-        # Create proxy model (for sorting and filtering)
+        
         self.proxy_model = CreditsFilterProxyModel()
         self.proxy_model.setDynamicSortFilter(True)
         self.proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
@@ -150,5 +150,5 @@ class CreditsModel():
         self.proxy_model.setSourceModel(self.model)
         self.proxy_model.setSortLocaleAware(True)
 
-        # Create selection model to share between views (if needed)
+        
         self.selection_model = QItemSelectionModel(self.proxy_model)

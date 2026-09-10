@@ -69,12 +69,12 @@ sys.excepthook = _smartedit_excepthook
 if hasattr(threading, "excepthook"):
     threading.excepthook = lambda args: _smartedit_excepthook(args.exc_type, args.exc_value, args.exc_traceback)
 
-# Ensure the source directory is at the front of sys.path
+
 _src_dir = os.path.dirname(os.path.abspath(__file__))
 if _src_dir not in sys.path:
     sys.path.insert(0, _src_dir)
 
-# Ensure Qt plugin DLL dependencies and MSYS2 UCRT64 DLLs are found on Windows builds.
+
 if os.name == "nt":
     _msys_ucrt64 = r"C:\msys64\ucrt64\bin"
     if hasattr(os, "add_dll_directory"):
@@ -101,13 +101,13 @@ if os.name == "nt":
 
 if sys.platform != "win32":
     try:
-        # This needs to be imported before the Qt binding
-        # To prevent some issues on AppImage build: wrapping/forcing older glibc versions
+        
+        
         import smartedit
     except ImportError:
         pass
 
-# Load user-configured UI scale before importing the Qt binding
+
 scale = 1.0
 logger = logging.getLogger(__name__)
 
@@ -132,22 +132,22 @@ Qt = QtCore.Qt
 QApplication = QtWidgets.QApplication
 
 try:
-    # This must be done before creating QApplication
+    
     QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
-    from OpenGL import GL  # noqa
+    from OpenGL import GL  
 except (ImportError, AttributeError):
     pass
 
 try:
-    # PassThrough lets Qt use the exact QT_SCALE_FACTOR value (e.g. 1.5) without rounding
-    # to the nearest integer (e.g. 2.0).
+    
+    
     os.environ['QT_SCALE_FACTOR_ROUNDING_POLICY'] = "PassThrough"
 
-    # Enable High-DPI resolutions
+    
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
 except AttributeError:
-    pass  # Quietly fail for older Qt5 versions
+    pass  
 
 try:
     from classes import info
@@ -156,7 +156,7 @@ except ImportError:
     sys.path.append(smartedit_qt.SMARTEDIT_PATH)
     from classes import info
 
-# Global holder for QApplication instance
+
 app = None
 
 
@@ -165,7 +165,7 @@ def main():
 
     global app
 
-    # Configure argument handling for commandline launches
+    
     parser = argparse.ArgumentParser(description='SmartEdit version ' + info.SETUP['version'])
     parser.add_argument(
         '-l', '--lang', action='store',
@@ -199,12 +199,12 @@ def main():
 
     args, extra_args = parser.parse_known_args()
 
-    # Display version and exit (if requested)
+    
     if args.version:
         print(info.SETUP['version'])
         sys.exit()
 
-    # Set up debugging log level to requested streams
+    
     if args.debug or args.debug_file:
         info.LOG_LEVEL_FILE = 'DEBUG'
     if args.debug or args.debug_console:
@@ -232,7 +232,7 @@ def main():
 
     if args.modeltest:
         info.MODEL_TEST = True
-        # Set default logging rules, if the user didn't
+        
         if os.getenv('QT_LOGGING_RULES') is None:
             os.putenv('QT_LOGGING_RULES', 'qt.modeltest.debug=true')
     if args.lang:
@@ -242,20 +242,20 @@ def main():
             print(f"Unsupported language '{args.lang}'! (See --list-languages)")
             sys.exit(-1)
 
-    # Normal startup, print module path and lauch application
+    
     print(f"Loaded modules from: {info.PATH}")
 
-    # Configure packaged CA certificates before optional network integrations start.
+    
     from classes import http_client, sentry
     http_client.configure_ssl_environment()
 
-    # Initialize sentry exception tracing
+    
     sentry.init_tracing()
 
-    # Create any missing paths in the user's settings dir
+    
     info.setup_userdirs()
 
-    # Create Qt application, pass any unprocessed arguments
+    
     from classes.app import SmartEditApp
 
     argv = [sys.argv[0]]
@@ -273,16 +273,16 @@ def main():
     if not app:
         sys.exit(1)
 
-    # Setup Qt application details
+    
     app.setApplicationName('smartedit')
     app.setApplicationVersion(info.VERSION)
     try:
-        # Qt 5.7+ only
+        
         app.setDesktopFile("org.smartedit.SmartEdit")
     except AttributeError:
         pass
 
-    # Launch GUI and start event loop
+    
     if app.gui():
         if hasattr(app, "exec") and callable(app.exec):
             exit_code = app.exec()

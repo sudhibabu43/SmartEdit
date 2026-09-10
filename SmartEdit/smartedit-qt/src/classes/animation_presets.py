@@ -32,21 +32,21 @@
  https://animate.style/
  """
 
-# Keyframe presets for the Motion menu.
-#
-# Format:
-#     PRESETS[name][property] = [(frame, value), ...]
-#
-# A third tuple item can be present:
-#     (frame, value, easing_name)
-#
-# Frame positions are 1-31 at 30 fps source speed and should be scaled to the
-# actual clip zone at apply time. Only non-identity channels are stored.
-#
-# Easing values are CSS cubic-bezier(x1, y1, x2, y2) tuples. Convert them to
-# libsmartedit Point handles as follows:
-#     current.handle_right = (x1, y1)
-#     next.handle_left     = (x2, y2)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 KEYFRAME_EASING = {
     'ease_in': (0.420, 0.000, 1.000, 1.000),
@@ -58,7 +58,7 @@ KEYFRAME_EASING = {
 
 PRESETS = {
 
-    # ── Attention seekers ─────────────────────────────────────────────────────
+    
 
     'bounce': {
         'scale_y': [
@@ -140,7 +140,7 @@ PRESETS = {
     },
 
 
-    # ── Back entrances ────────────────────────────────────────────────────────
+    
 
     'backInDown': {
         'alpha': [(1, 0.7), (25, 0.7), (31, 1)],
@@ -171,7 +171,7 @@ PRESETS = {
     },
 
 
-    # ── Back exits ────────────────────────────────────────────────────────────
+    
 
     'backOutDown': {
         'alpha': [(1, 1), (7, 0.7), (31, 0.7)],
@@ -202,7 +202,7 @@ PRESETS = {
     },
 
 
-    # ── Bouncing entrances ────────────────────────────────────────────────────
+    
 
     'bounceIn': {
         'alpha': [(1, 0, 'ease_out_cubic'), (19, 1, 'ease_out_cubic'), (31, 1)],
@@ -253,7 +253,7 @@ PRESETS = {
     },
 
 
-    # ── Bouncing exits ────────────────────────────────────────────────────────
+    
 
     'bounceOut': {
         'alpha': [(16, 1), (18, 1), (31, 0)],
@@ -286,7 +286,7 @@ PRESETS = {
     },
 
 
-    # ── Fading entrances ──────────────────────────────────────────────────────
+    
 
     'fadeIn': {
         'alpha': [(1, 0), (31, 1)],
@@ -357,7 +357,7 @@ PRESETS = {
     },
 
 
-    # ── Fading exits ──────────────────────────────────────────────────────────
+    
 
     'fadeOut': {
         'alpha': [(1, 1), (31, 0)],

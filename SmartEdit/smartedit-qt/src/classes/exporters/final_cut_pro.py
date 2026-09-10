@@ -258,7 +258,7 @@ def _scale_mode_size(src_w, src_h, frame_w, frame_h, scale_mode):
     if scale_mode == smartedit.SCALE_FIT:
         factor = min(fw / sw, fh / sh)
         return sw * factor, sh * factor
-    # SCALE_NONE or unknown
+    
     return sw, sh
 
 
@@ -357,7 +357,7 @@ def createEffect(xmldoc, name, node, points, scale, max_frames=None, param_name=
     if not parameterNode:
         return
 
-    # Loop through Points (remove duplicates)
+    
     keyframes = {}
     for point in points:
         keyframeTime = point.get('co', {}).get('X', 1)
@@ -367,11 +367,11 @@ def createEffect(xmldoc, name, node, points, scale, max_frames=None, param_name=
             keyframeTime = max(0, min(keyframeTime, max_frames))
         keyframes[keyframeTime] = (keyframeValue, interpolation)
 
-    # Loop through Points
+    
     for keyframeTime in sorted(keyframes.keys()):
         keyframeValue, interpolation = keyframes.get(keyframeTime)
 
-        # Create keyframe element for each point
+        
         keyframeNode = xmldoc.createElement("keyframe")
         parameterNode.appendChild(keyframeNode)
         whenNode = xmldoc.createElement("when")
@@ -494,7 +494,7 @@ def export_xml():
     app = get_app()
     _ = app._tr
 
-    # Get FPS info
+    
     fps_num = get_app().project.get("fps").get("num", 24)
     fps_den = get_app().project.get("fps").get("den", 1)
     timebase_value = _format_timebase(fps_num, fps_den)
@@ -514,7 +514,7 @@ def export_xml():
     project_anamorphic_value = "TRUE" if abs(project_pixel_ratio_float - 1.0) > 0.0005 else "FALSE"
     project_field_dominance = "lower" if project_interlaced else "none"
 
-    # Get path
+    
     recommended_path = get_app().project.current_filepath or ""
     if not recommended_path:
         recommended_path = os.path.join(info.HOME_PATH, "%s.xml" % _("Untitled Project"))
@@ -523,32 +523,32 @@ def export_xml():
     file_path = QFileDialog.getSaveFileName(app.window, _("Export XML..."), recommended_path,
                                             _("Final Cut Pro (*.xml)"))[0]
     if not file_path:
-        # User canceled dialog
+        
         return
 
-    # Append .xml if needed
+    
     if not file_path.endswith(".xml"):
         file_path = "%s.xml" % file_path
 
     export_folder = os.path.dirname(os.path.abspath(file_path))
 
-    # Get filename with no path
+    
     file_name = os.path.basename(file_path)
 
-    # Determine max frame (based on clips)
+    
     duration = 0.0
     all_clips = Clip.filter()
     for clip in all_clips:
         clip_last_frame = (clip.data.get("position") or 0.0) + ((clip.data.get("end") or 0.0) - (clip.data.get("start") or 0.0))
         if clip_last_frame > duration:
-            # Set max length of timeline
+            
             duration = clip_last_frame
     duration_frames = _seconds_to_frames(duration, fps_num, fps_den)
 
-    # XML template path
+    
     xmldoc = minidom.parse(os.path.join(info.RESOURCES_PATH, 'export-project-template.xml'))
 
-    # Set Project Details
+    
     _set_text(xmldoc.getElementsByTagName("name")[0], file_name)
     _set_text(xmldoc.getElementsByTagName("uuid")[0], str(uuid1()))
     _set_text(xmldoc.getElementsByTagName("duration")[0], duration_frames)
@@ -570,7 +570,7 @@ def export_xml():
     for ntsc_node in xmldoc.getElementsByTagName("ntsc"):
         _set_text(ntsc_node, ntsc_value)
 
-    # Get parent nodes
+    
     parentAudioNode = xmldoc.getElementsByTagName("audio")[0]
     parentVideoNode = xmldoc.getElementsByTagName("video")[0]
     num_output_channels = parentAudioNode.getElementsByTagName("channelcount")
@@ -580,7 +580,7 @@ def export_xml():
             project_channels = 2
         _set_text(num_output_channels[0], project_channels)
 
-    # Loop through tracks
+    
     all_tracks = get_app().project.get("layers")
     video_track_index = 1
     audio_track_index = 1
@@ -589,11 +589,11 @@ def export_xml():
     for track in sorted(all_tracks, key=itemgetter('number')):
         existing_track = Track.get(number=track.get("number"))
         if not existing_track:
-            # Log error and fail silently, and continue
+            
             log.error('No track object found with number: %s' % track.get("number"))
             continue
 
-        # Track details
+        
         track_locked = track.get("lock", False)
         clips_on_track = sorted(Clip.filter(layer=track.get("number")), key=lambda c: c.data.get('position', 0.0))
         if not clips_on_track:
@@ -631,7 +631,7 @@ def export_xml():
         video_clip_index = 1
         audio_clip_index = 1
 
-        # Loop through clips on this track
+        
         for clip in clips_on_track:
             clip_reader = clip.data.get("reader", {}) or {}
             clip_duration_frames = _seconds_to_frames((clip.data.get('end') or 0.0) - (clip.data.get('start') or 0.0), fps_num, fps_den)
@@ -669,7 +669,7 @@ def export_xml():
             relative_media_path = relative_export_path(abs_media_path, export_folder)
             file_id_value = _unique_file_id(abs_media_path or merged_data.get("path"), clip.data.get('file_id'), file_id_map)
 
-            # Use the single authoritative duration from the File object (if available)
+            
             file_duration_frames = None
             if file_obj and isinstance(file_obj.data.get("duration"), (int, float)):
                 file_duration_frames = _seconds_to_frames(file_obj.data.get("duration"), fps_num, fps_den)
@@ -907,5 +907,5 @@ def export_xml():
     except IOError as inst:
         log.error("Error writing XML export: {}".format(str(inst)))
     finally:
-        # Free up DOM memory
+        
         xmldoc.unlink()

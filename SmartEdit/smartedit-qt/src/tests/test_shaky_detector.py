@@ -21,22 +21,22 @@ class TestVideoAnalyzerScores(unittest.TestCase):
         self.analyzer = VideoAnalyzer(default_shake_threshold=50.0)
 
     def test_classification_categories(self):
-        # 0–30% = Stable
+        
         self.assertEqual(classify_shake(0.0), "Stable")
         self.assertEqual(classify_shake(15.5), "Stable")
         self.assertEqual(classify_shake(30.0), "Stable")
 
-        # 30–50% = Slightly Shaky
+        
         self.assertEqual(classify_shake(30.1), "Slightly Shaky")
         self.assertEqual(classify_shake(42.0), "Slightly Shaky")
         self.assertEqual(classify_shake(50.0), "Slightly Shaky")
 
-        # 50–70% = Shaky
+        
         self.assertEqual(classify_shake(50.1), "Shaky")
         self.assertEqual(classify_shake(65.0), "Shaky")
         self.assertEqual(classify_shake(70.0), "Shaky")
 
-        # 70–100% = Very Shaky
+        
         self.assertEqual(classify_shake(70.1), "Very Shaky")
         self.assertEqual(classify_shake(88.5), "Very Shaky")
         self.assertEqual(classify_shake(100.0), "Very Shaky")
@@ -46,9 +46,9 @@ class TestVideoAnalyzerScores(unittest.TestCase):
         self.assertEqual(self.analyzer.get_effective_threshold(), 50.0)
 
     def test_custom_threshold_override(self):
-        # Explicit argument
+        
         self.assertEqual(self.analyzer.get_effective_threshold(65.0), 65.0)
-        # Fractional argument (0.7 -> 70.0)
+        
         self.assertEqual(self.analyzer.get_effective_threshold(0.7), 70.0)
 
     @patch("classes.app.get_app")
@@ -82,8 +82,8 @@ class TestTopUnusedLayerSelection(unittest.TestCase):
     @patch("classes.query.Clip.filter")
     @patch("classes.app.get_app")
     def test_creates_new_layer_above_when_top_layer_occupied(self, mock_get_app, mock_clip_filter, mock_track_save, mock_trans_filter):
-        # Project has Tracks 1, 2, 3 (1000000, 2000000, 3000000)
-        # Clip is on Track 3 (3000000) -> top layer is occupied
+        
+        
         mock_app = MagicMock()
         mock_app.project.get.return_value = [
             {"number": 1000000},
@@ -97,7 +97,7 @@ class TestTopUnusedLayerSelection(unittest.TestCase):
         mock_clip_filter.return_value = [c]
 
         chosen_layer = self.service.find_or_create_top_unused_layer()
-        # Must create Track 4 (4000000) above Track 3
+        
         self.assertEqual(chosen_layer, 4000000)
         mock_track_save.assert_called()
 
@@ -106,9 +106,9 @@ class TestTopUnusedLayerSelection(unittest.TestCase):
     @patch("classes.query.Clip.filter")
     @patch("classes.app.get_app")
     def test_uses_existing_topmost_unused_track_above_clips(self, mock_get_app, mock_clip_filter, mock_track_get, mock_trans_filter):
-        # Project has Tracks 1, 2, 3, 4, 5
-        # Clips only on Track 1 and 2
-        # Topmost unused layer is Track 5 (5000000)
+        
+        
+        
         mock_app = MagicMock()
         mock_app.project.get.return_value = [
             {"number": 1000000},
@@ -147,7 +147,7 @@ class TestNonDestructiveLabeling(unittest.TestCase):
         mock_app.project.generate_id.return_value = "marker_1"
         mock_get_app.return_value = mock_app
 
-        # Original clip reference
+        
         orig_clip = MagicMock()
         orig_clip.id = "orig_c1"
         orig_clip.data = {
@@ -172,13 +172,13 @@ class TestNonDestructiveLabeling(unittest.TestCase):
         target_layer = 4000000
         created = self.service.label_shaky_clips(shaky_data, target_layer)
 
-        # 1. Verify original clip is untouched (not deleted, not modified)
+        
         orig_clip.delete.assert_not_called()
         self.assertEqual(orig_clip.data["position"], 14.5)
         self.assertEqual(orig_clip.data["duration"], 8.0)
         self.assertEqual(orig_clip.data["layer"], 2000000)
 
-        # 2. Verify created label clip
+        
         self.assertEqual(len(created), 1)
         lbl_clip = created[0]
         self.assertEqual(lbl_clip.data["position"], 14.5)
@@ -188,7 +188,7 @@ class TestNonDestructiveLabeling(unittest.TestCase):
         self.assertTrue(lbl_clip.data["ui"]["ai_label"])
         self.assertEqual(lbl_clip.data["ui"]["target_clip_id"], "orig_c1")
 
-        # 3. Verify timeline marker was created
+        
         mock_marker_save.assert_called()
 
     @patch("classes.query.Marker.save")
@@ -204,7 +204,7 @@ class TestNonDestructiveLabeling(unittest.TestCase):
         mock_app.updates.transaction_id = None
         mock_get_app.return_value = mock_app
 
-        # Clip 1 is shaky, Clip 2 is stable
+        
         c1 = MagicMock()
         c1.id = "c1"
         c1.title.return_value = "shaky_clip.mp4"
@@ -287,7 +287,7 @@ class TestEditingControllerIntegration(unittest.TestCase):
         plan = self.controller.generate_plan(cmd)
 
         self.assertFalse(plan.is_empty)
-        # Should have detection item and labeling item on top layer
+        
         self.assertEqual(len(plan.items), 2)
         self.assertIn("SHAKY FOOTAGE", plan.items[1].description)
         self.assertIn("topmost unused layer", plan.items[1].description)
@@ -311,7 +311,7 @@ class TestShakyRegionDetectionAndRemoval(unittest.TestCase):
         self.service = ShakyFootageService()
 
     def test_detect_discrete_shaky_regions(self):
-        # Clip from 0 to 20s placed at timeline position 0
+        
         regions = self.service.video_analyzer.detect_shaky_regions(
             "action_shaky_cam.mp4",
             threshold=50.0,
@@ -359,7 +359,7 @@ class TestShakyRegionDetectionAndRemoval(unittest.TestCase):
         labels = self.service.label_shaky_regions(regions, target_layer)
 
         self.assertEqual(len(labels), 2)
-        # Check first marker
+        
         self.assertEqual(labels[0].data["position"], 5.2)
         self.assertEqual(labels[0].data["duration"], 2.9)
         self.assertEqual(labels[0].data["layer"], 4000000)
@@ -367,7 +367,7 @@ class TestShakyRegionDetectionAndRemoval(unittest.TestCase):
         self.assertIn("5.20–8.10", labels[0].data["title"])
         self.assertTrue(labels[0].data["ui"]["ai_label"])
 
-        # Check second marker
+        
         self.assertEqual(labels[1].data["position"], 14.5)
         self.assertEqual(labels[1].data["duration"], 1.7)
         self.assertEqual(labels[1].data["layer"], 4000000)
@@ -384,7 +384,7 @@ class TestShakyRegionDetectionAndRemoval(unittest.TestCase):
         mock_app.updates.transaction_id = None
         mock_get_app.return_value = mock_app
 
-        # Original clip: 0.0 to 20.0, layer 1000000
+        
         orig_clip = MagicMock()
         orig_clip.id = "c1"
         orig_clip.data = {
@@ -397,7 +397,7 @@ class TestShakyRegionDetectionAndRemoval(unittest.TestCase):
         }
         mock_clip_get.return_value = orig_clip
 
-        # Existing top layer label clip
+        
         label_clip = MagicMock()
         label_clip.id = "lbl_1"
         label_clip.data = {
@@ -431,16 +431,16 @@ class TestShakyRegionDetectionAndRemoval(unittest.TestCase):
         self.assertEqual(res["removed_count"], 1)
         self.assertEqual(res["affected_clips"], 1)
 
-        # 1. Left stable piece kept in orig_clip: [0.0, 5.20]
+        
         self.assertEqual(orig_clip.data["position"], 0.0)
         self.assertEqual(orig_clip.data["start"], 0.0)
         self.assertEqual(orig_clip.data["end"], 5.2)
         self.assertEqual(orig_clip.data["duration"], 5.2)
 
-        # 2. Right stable piece created via new Clip: [8.10, 20.0]
+        
         self.assertGreaterEqual(mock_clip_save.call_count, 1)
 
-        # 3. Top layer label kept and updated to [⚠ REMOVED SHAKY]
+        
         self.assertTrue(label_clip.data["ui"]["removed"])
         self.assertIn("REMOVED", label_clip.data["title"])
         self.assertEqual(label_clip.data["position"], 5.2)
@@ -469,7 +469,7 @@ class TestShakyRegionDetectionAndRemoval(unittest.TestCase):
         mock_clip_filter.return_value = []
         mock_marker_filter.return_value = []
 
-        # 2 discrete shaky regions: 5.20-8.10 and 14.50-16.20
+        
         regions = [
             {"clip_id": "c_multi", "timeline_start": 5.2, "timeline_end": 8.1, "timeline_duration": 2.9, "shake_percentage": 67.0},
             {"clip_id": "c_multi", "timeline_start": 14.5, "timeline_end": 16.2, "timeline_duration": 1.7, "shake_percentage": 74.0}
@@ -480,7 +480,7 @@ class TestShakyRegionDetectionAndRemoval(unittest.TestCase):
         self.assertTrue(res["success"])
         self.assertEqual(res["removed_count"], 2)
 
-        # Stable piece 1: [0.0, 5.20]
+        
         self.assertEqual(orig_clip.data["position"], 0.0)
         self.assertEqual(orig_clip.data["duration"], 5.2)
 
@@ -547,7 +547,7 @@ class TestSafeUiHandling(unittest.TestCase):
         img = QImage(100, 100, QImage.Format.Format_ARGB32)
         qpainter = QPainter(img)
         try:
-            # Should not raise AttributeError: 'NoneType' object has no attribute 'get'
+            
             painter_obj._fill_clip_background(qpainter, QRectF(0, 0, 100, 50), clip=clip_with_none_ui)
         finally:
             qpainter.end()
@@ -585,7 +585,7 @@ class TestTrimShakyFootageWorkflow(unittest.TestCase):
             "reader": {"path": "/fake/video.mp4"}
         }
 
-        # Shaky region from 12.40s to 15.80s
+        
         regions = [{
             "clip_id": "clip_03",
             "clip_start": 0.0,
@@ -603,13 +603,13 @@ class TestTrimShakyFootageWorkflow(unittest.TestCase):
         self.assertEqual(res["removed_count"], 1)
         self.assertEqual(res["affected_clips"], 1)
 
-        # Stable segment 1: [0.0, 12.4]
+        
         self.assertEqual(orig_clip.data["position"], 0.0)
         self.assertEqual(orig_clip.data["start"], 0.0)
         self.assertEqual(orig_clip.data["end"], 12.4)
         self.assertEqual(orig_clip.data["duration"], 12.4)
 
-        # Stable segment 2 was saved via new_clip
+        
         self.assertGreaterEqual(mock_clip_save.call_count, 1)
 
     @patch("classes.app.get_app")

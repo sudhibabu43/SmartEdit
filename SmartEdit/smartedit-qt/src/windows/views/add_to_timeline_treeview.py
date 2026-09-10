@@ -37,20 +37,20 @@ class TimelineTreeView(QTreeView):
     """ A TreeView QWidget used on the add to timeline window """
 
     def currentChanged(self, selected, deselected):
-        # Get selected item
+        
         self.selected = selected
         self.deselected = deselected
 
-        # Get translation object
+        
         _ = self.app._tr
 
     def contextMenuEvent(self, event):
-        # # Ignore event, propagate to parent
+        
         event.ignore()
 
     def mousePressEvent(self, event):
 
-        # Ignore event, propagate to parent
+        
         event.ignore()
         super().mousePressEvent(event)
 
@@ -59,21 +59,21 @@ class TimelineTreeView(QTreeView):
         self.hideColumn(2)
 
     def __init__(self, *args):
-        # Invoke parent init
+        
         QTreeView.__init__(self, *args)
 
-        # Get a reference to the window object
+        
         self.app = get_app()
         self.win = args[0]
 
-        # Get Model data
+        
         self.timeline_model = TimelineModel()
 
-        # Keep track of mouse press start position to determine when to start drag
+        
         self.selected = None
         self.deselected = None
 
-        # Setup header columns
+        
         self.setModel(self.timeline_model.model)
         self.setIconSize(info.TREE_ICON_SIZE)
         self.setIndentation(0)
@@ -81,5 +81,5 @@ class TimelineTreeView(QTreeView):
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setWordWrap(True)
 
-        # Refresh view
+        
         self.refresh_view()

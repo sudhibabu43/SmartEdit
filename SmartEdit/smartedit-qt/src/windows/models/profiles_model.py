@@ -39,12 +39,12 @@ class ProfilesProxyModel(QSortFilterProxyModel):
     def filterAcceptsRow(self, sourceRow, sourceParent):
         """Filter for common transitions and text filter"""
 
-        # Fetch the effect values
+        
         profile_key = self.sourceModel().data(self.sourceModel().index(sourceRow, 0, sourceParent))
         profile_desc = self.sourceModel().data(self.sourceModel().index(sourceRow, 1, sourceParent))
         profile_dar = self.sourceModel().data(self.sourceModel().index(sourceRow, 5, sourceParent))
 
-        # Return, if regExp match in displayed format.
+        
         filter_re = None
         if hasattr(self, "filterRegularExpression"):
             filter_re = self.filterRegularExpression()
@@ -69,12 +69,12 @@ class ProfilesModel:
         app = get_app()
         _ = app._tr
 
-        # Clear all items
+        
         if clear:
             log.debug('cleared profiles model')
             self.model.clear()
 
-        # Add Headers
+        
         self.model.setHorizontalHeaderLabels([_("Key"), _("Description"), _("Width"), _("Height"),
                                               _("FPS"), _("DAR"), _("SAR"), _("360°")])
 
@@ -94,30 +94,30 @@ class ProfilesModel:
         Updates an existing row if a profile with the same key exists,
         otherwise inserts a new row.
         """
-        # Find if the profile already exists in the model by key
+        
         existing_index = None
         for row in range(self.model.rowCount()):
-            index = self.model.index(row, 0)  # Assuming key is in column 0
+            index = self.model.index(row, 0)  
             if index.data(Qt.UserRole) is profile:
                 existing_index = index
                 break
 
         if existing_index:
-            # Update existing row
+            
             self._update_row(existing_index.row(), profile)
         else:
-            # Insert new row
+            
             self._insert_row(profile)
 
     def remove_row(self, profile):
         """
         Removes an existing row if a profile with the same key exists.
         """
-        # Find if the profile already exists in the model by key
+        
         for row in range(self.model.rowCount()):
-            index = self.model.index(row, 0)  # Assuming key is in column 0
+            index = self.model.index(row, 0)  
             if index.data(Qt.UserRole) is profile:
-                # Remove the row from the model
+                
                 self.model.removeRow(row)
                 break
 
@@ -138,7 +138,7 @@ class ProfilesModel:
         self.model.setData(self.model.index(row, 5), f"{profile.info.display_ratio.num}:{profile.info.display_ratio.den}", Qt.DisplayRole)
         self.model.setData(self.model.index(row, 6), f"{profile.info.pixel_ratio.num}:{profile.info.pixel_ratio.den}", Qt.DisplayRole)
 
-        # Add spherical flag
+        
         self.model.setData(self.model.index(row, 7), "Yes" if profile.info.spherical else "No", Qt.DisplayRole)
 
     def _insert_row(self, profile):
@@ -179,7 +179,7 @@ class ProfilesModel:
         item.setFlags(flags)
         row.append(item)
 
-        # Add spherical flag
+        
         item = QStandardItem("Yes" if profile.info.spherical else "No")
         item.setFlags(flags)
         row.append(item)
@@ -190,13 +190,13 @@ class ProfilesModel:
 
         _ = get_app()._tr
 
-        # Create standard model
+        
         self.app = get_app()
         self.model = ProfilesStandardItemModel()
         self.model.setColumnCount(7)
         self.profiles_list = profiles
 
-        # Create proxy model (for sorting and filtering)
+        
         self.proxy_model = ProfilesProxyModel()
         self.proxy_model.setDynamicSortFilter(False)
         self.proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)

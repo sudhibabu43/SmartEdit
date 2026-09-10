@@ -39,51 +39,51 @@ MAX_FPS_SPINBOX_VALUE = 2147483647
 class EditProfileDialog(QDialog):
     """ Edit Profile Dialog """
 
-    # Path to ui file
+    
     ui_path = os.path.join(info.PATH, 'windows', 'ui', 'profile-edit.ui')
 
     def __init__(self, profile, duplicate):
         super().__init__()
 
-        # Make copy of profile
+        
         self.original_profile = profile.Json()
         self.profile = profile
         self.duplicate = duplicate
         if duplicate:
-            # Clear reference to original profile
+            
             self.profile = smartedit.Profile()
             self.profile.SetJson(self.original_profile)
 
-        # Save initial file path (if editing, this needs to be removed)
+        
         self.existing_path = None
         if hasattr(profile, "path"):
             self.existing_path = profile.path
 
-        # Load UI from designer & init
+        
         ui_util.load_ui(self, self.ui_path)
         ui_util.init_ui(self)
 
-        # Populate fields from profile
+        
         self.initialize()
 
         tabstops.apply_auto_tab_order_later(self)
 
     def initialize(self):
         """Initialize the form fields with data from the profile."""
-        # get translations
+        
         _ = get_app()._tr
 
-        # Update windows title
+        
         if self.duplicate:
             self.setWindowTitle(_('Create Profile'))
         else:
             self.setWindowTitle(_('Edit Profile'))
 
-        # Add options to cboInterlaced dropdown
+        
         self.cboInterlaced.addItem(_('Yes'))
         self.cboInterlaced.addItem(_('No'))
 
-        # Add options to cboSpherical dropdown
+        
         self.cboSpherical.addItem(_('Yes'))
         self.cboSpherical.addItem(_('No'))
 
@@ -104,7 +104,7 @@ class EditProfileDialog(QDialog):
         if not self.duplicate:
             self.update_profile_path()
 
-        # Connect all signals
+        
         self.connect_signals()
 
     def connect_signals(self):
@@ -122,7 +122,7 @@ class EditProfileDialog(QDialog):
         self.cboSpherical.currentTextChanged.connect(self.update_profile_spherical)
         self.txtProfileName.setFocus()
 
-    # Handlers for updating profile
+    
     def update_profile_description(self, value):
         self.profile.info.description = value
         self.update_profile_path()
@@ -157,7 +157,7 @@ class EditProfileDialog(QDialog):
             self.profile.info.display_ratio.den = height * pixel_ratio_den
             self.profile.info.display_ratio.Reduce()
 
-        # Update the aspect ratio fields in the UI
+        
         self.txtAspectRatioNum.setValue(self.profile.info.display_ratio.num)
         self.txtAspectRatioDen.setValue(self.profile.info.display_ratio.den)
 
@@ -175,14 +175,14 @@ class EditProfileDialog(QDialog):
         self.lblFrameRateValueDisplay.setText(f"= {fps_float:.2f}")
 
     def update_profile_interlaced(self, value):
-        # get translations
+        
         _ = get_app()._tr
 
         self.profile.info.interlaced_frame = True if value == _('Yes') else False
         self.update_profile_path()
 
     def update_profile_spherical(self, value):
-        # get translations
+        
         _ = get_app()._tr
 
         self.profile.info.spherical = True if value == _('Yes') else False
@@ -196,34 +196,34 @@ class EditProfileDialog(QDialog):
 
         profile_suffix = 1
         while self.duplicate and os.path.exists(profiles_path):
-            # Add suffix if 'duplicate' mode - and existing file found
+            
             profiles_path = f"{os.path.join(info.USER_PROFILES_PATH, self.profile.Key())}-{profile_suffix}"
             profile_suffix += 1
         self.lblFilePathValue.setText(profiles_path)
 
     def accept(self):
         """Save the profile to a file when the user accepts the dialog."""
-        # get translations
+        
         _ = get_app()._tr
 
-        # Ensure a concrete output path exists even if the placeholder is still shown.
+        
         self.update_profile_path()
 
-        # Prevent saving with no description
+        
         error_title = _("Profile Error")
         error_message = _("Please enter a <b>unique</b> description for this profile.")
         if not self.profile.info.description.strip():
             QMessageBox.warning(self, error_title, error_message)
             return
 
-        # Verify description is unique
+        
         for profile_folder in [info.USER_PROFILES_PATH, info.PROFILES_PATH]:
             for file in reversed(sorted(os.listdir(profile_folder))):
                 profile_verify_path = os.path.join(profile_folder, file)
                 if os.path.isdir(profile_verify_path) or profile_verify_path == self.lblFilePathValue.text():
                     continue
                 try:
-                    # Load Profile
+                    
                     p = smartedit.Profile(profile_verify_path)
                     if p.info.description.strip() == self.profile.info.description.strip():
                         QMessageBox.warning(self, error_title, error_message)
@@ -231,19 +231,19 @@ class EditProfileDialog(QDialog):
                 except RuntimeError as e:
                     log.warning("Failed to parse file '%s' as a profile: %s" % (profile_verify_path, e))
 
-        # Save the profile data as a text file in the user profiles folder
+        
         profile_path = self.lblFilePathValue.text()
         log.info(f"Saving custom profile: {profile_path}")
         self.profile.Save(profile_path)
         self.profile.user_created = True
         self.profile.path = profile_path
 
-        # Accept the dialog
+        
         super(EditProfileDialog, self).accept()
 
     def reject(self):
         """Close the dialog without saving changes."""
-        # restore original profile
+        
         self.profile.SetJson(self.original_profile)
 
         super(EditProfileDialog, self).reject()

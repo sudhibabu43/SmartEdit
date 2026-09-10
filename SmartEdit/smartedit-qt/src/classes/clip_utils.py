@@ -251,7 +251,7 @@ def _timeline_clip(clip_data: Any, existing_clip: Any) -> Any:
         timeline_sync = getattr(window, "timeline_sync", None)
         timeline = getattr(timeline_sync, "timeline", None)
         return timeline.GetClip(clip_id) if timeline else None
-    except Exception as exc:  # pragma: no cover - defensive logging
+    except Exception as exc:  
         logger.debug("Unable to locate clip %s on timeline: %s", clip_id, exc, exc_info=True)
         return None
 
@@ -282,7 +282,7 @@ def _time_curve_length_frames(clip_data: Any, existing_clip: Any) -> Optional[in
     if clip_obj and getattr(clip_obj, "time", None):
         try:
             length = clip_obj.time.GetLength()
-        except Exception as exc:  # pragma: no cover - defensive logging
+        except Exception as exc:  
             logger.debug("Unable to query clip time length: %s", exc, exc_info=True)
         else:
             frame_count = _rounded_int(length)

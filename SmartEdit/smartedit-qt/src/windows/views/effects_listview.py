@@ -42,7 +42,7 @@ class EffectsListView(QListView):
     drag_item_center = QPoint(24, 24)
 
     def contextMenuEvent(self, event):
-        # Set context menu mode
+        
         app = get_app()
         self.win = app.window
         app.context_menu_object = "effects"
@@ -54,23 +54,23 @@ class EffectsListView(QListView):
     def startDrag(self, event):
         """ Override startDrag method to display custom icon """
 
-        # Get first column indexes for all selected rows
+        
         selected = self.selectionModel().selectedRows(0)
 
-        # Get image of current item
+        
         current = self.selectionModel().currentIndex()
         if not current.isValid() and selected:
             current = selected[0]
 
         if not current.isValid():
-            # We can't find anything to drag
+            
             log.warning("No draggable items found in model!")
             return False
 
-        # Get icon from column 0 on same row as current item
+        
         icon = current.sibling(current.row(), 0).data(Qt.DecorationRole)
 
-        # Start drag operation
+        
         drag = QDrag(self)
         drag.setMimeData(self.model().mimeData(selected))
         drag.setPixmap(icon.pixmap(self.drag_item_size))
@@ -95,24 +95,24 @@ class EffectsListView(QListView):
         self.effects_model.proxy_model.sort(0, Qt.AscendingOrder)
 
     def __init__(self, model):
-        # Invoke parent init
+        
         QListView.__init__(self)
 
-        # Get a reference to the window object
+        
         app = get_app()
         self.win = app.window
 
-        # Get Model data
+        
         self.effects_model = model
 
-        # Keep track of mouse press start position to determine when to start drag
+        
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
         self.setDropIndicatorShown(True)
 
         self.setModel(self.effects_model.list_proxy_model)
 
-        # Remove the default selection model and wire up to the list-specific one
+        
         self.selectionModel().deleteLater()
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -120,7 +120,7 @@ class EffectsListView(QListView):
             self.setSelectionRectVisible(False)
         self.setSelectionModel(self.effects_model.list_selection_model)
 
-        # Setup header columns
+        
         self.setIconSize(info.LIST_ICON_SIZE)
         self.setGridSize(info.LIST_GRID_SIZE)
         self.setViewMode(QListView.IconMode)
@@ -129,6 +129,6 @@ class EffectsListView(QListView):
         self.setWordWrap(False)
         self.setTextElideMode(Qt.ElideRight)
 
-        # setup filter events
+        
         app.window.effectsFilter.textChanged.connect(self.filter_changed)
         app.window.refreshEffectsSignal.connect(self.refresh_view)

@@ -41,7 +41,7 @@ from qt_api import (
     QCheckBox, QComboBox, QDialogButtonBox, QSizePolicy, QMessageBox,
     QFileDialog, QProgressDialog, QApplication, QWidget, QHBoxLayout,
 )
-import smartedit  # Python module for libsmartedit (required video editing module installed separately)
+import smartedit  
 
 from classes import info
 from classes import http_client
@@ -195,7 +195,7 @@ class RegionButton(QPushButton):
 
     def setImage(self, qimage):
         self.qimage = qimage
-        self.update()  # Trigger a repaint
+        self.update()  
 
     def paintEvent(self, event):
         super().paintEvent(event)
@@ -204,14 +204,14 @@ class RegionButton(QPushButton):
             resized_qimage = self.qimage.scaled(self.size(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
             painter.drawImage(0, 0, resized_qimage)
         else:
-            super().paintEvent(event)  # Draw the normal button
+            super().paintEvent(event)  
 
 
 class ProcessEffect(QDialog):
     """ Choose Profile Dialog """
     progress = pyqtSignal(int)
 
-    # Path to ui file
+    
     ui_path = os.path.join(info.PATH, 'windows', 'ui', 'process-effect.ui')
 
     def __init__(self, clip_id, effect_class, effect_params):
@@ -219,9 +219,9 @@ class ProcessEffect(QDialog):
         if not smartedit.Clip().COMPILED_WITH_CV:
             raise ModuleNotFoundError("Smartedit not compiled with OpenCV")
 
-        # Create dialog class
+        
         super().__init__()
-        # Track effect details
+        
         self.clip_id = clip_id
         self.effect_name = ""
         self.effect_class = effect_class
@@ -243,47 +243,47 @@ class ProcessEffect(QDialog):
         self.file_validation_timer.setSingleShot(True)
         self.file_validation_timer.timeout.connect(self.update_file_validation)
 
-        # Get all effect JSON data, and find effect's display name (based on the class name)
+        
         raw_effects_list = json.loads(smartedit.EffectInfo.Json())
         for raw_effect in raw_effects_list:
             if raw_effect.get("class_name") == self.effect_class:
                 self.effect_name = raw_effect.get("name")
                 break
 
-        # Access C++ timeline and find the Clip instance which this effect should be applied to
+        
         timeline_instance = get_app().window.timeline_sync.timeline
         for clip_instance in timeline_instance.Clips():
             if clip_instance.Id() == self.clip_id:
                 self.clip_instance = clip_instance
                 break
 
-        # Load UI from designer & init
+        
         ui_util.load_ui(self, self.ui_path)
         ui_util.init_ui(self)
 
-        # get translations
+        
         _ = get_app()._tr
 
-        # Update window title
+        
         self.setWindowTitle(self.windowTitle() % _(self.effect_name))
 
-        # Pause playback
+        
         get_app().window.PauseSignal.emit()
 
-        # Track metrics
+        
         track_metric_screen("process-effect-screen")
 
-        # Loop through options and create widgets
+        
         form_layout = self.scrollAreaWidgetContents.layout()
         for param in effect_params:
-            # Create Label
+            
             widget = None
             label = QLabel()
             label.setText(_(param["title"]))
             label.setToolTip(_(param["title"]))
 
             if param["type"] == "link":
-                # create a clickable link
+                
                 label.setText('<a href="%s">%s</a>' % (param["value"], _(param["title"])))
                 label.setTextInteractionFlags(Qt.TextBrowserInteraction)
                 label.linkActivated.connect(functools.partial(self.link_activated, widget, param))
@@ -292,7 +292,7 @@ class ProcessEffect(QDialog):
                 widget = self.create_model_download_widget(param)
 
             if param["type"] == "spinner":
-                # create QDoubleSpinBox
+                
                 widget = QDoubleSpinBox()
                 widget.setMinimum(float(param["min"]))
                 widget.setMaximum(float(param["max"]))
@@ -301,17 +301,17 @@ class ProcessEffect(QDialog):
                 widget.setToolTip(_(param["title"]))
                 widget.valueChanged.connect(functools.partial(self.spinner_value_changed, widget, param))
 
-                # Set initial context
+                
                 self.context[param["setting"]] = float(param["value"])
 
             if param["type"] == "rect":
-                # create QPushButton which opens up a display of the clip, with ability to select Rectangle
+                
                 widget = RegionButton(_("Click to Select"))
                 widget.setMinimumHeight(80)
                 widget.setToolTip(_(param["title"]))
                 widget.clicked.connect(functools.partial(self.rect_select_clicked, widget, param))
 
-                # Set initial context
+                
                 self.context[param["setting"]] = {"button-clicked": False, "x": 0, "y": 0, "width": 0, "height": 0}
 
             if param["type"] == "object-mask-selection":
@@ -342,7 +342,7 @@ class ProcessEffect(QDialog):
                 }
 
             if param["type"] == "spinner-int":
-                # create QDoubleSpinBox
+                
                 widget = QSpinBox()
                 widget.setMinimum(int(param["min"]))
                 widget.setMaximum(int(param["max"]))
@@ -351,16 +351,16 @@ class ProcessEffect(QDialog):
                 widget.setToolTip(_(param["title"]))
                 widget.valueChanged.connect(functools.partial(self.spinner_value_changed, widget, param))
 
-                # Set initial context
+                
                 self.context[param["setting"]] = int(param["value"])
 
             elif param["type"] == "text":
-                # create QLineEdit
+                
                 widget = QLineEdit()
                 widget.setText(_(param["value"]))
                 widget.textChanged.connect(functools.partial(self.text_value_changed, widget, param))
 
-                # Set initial context
+                
                 self.context[param["setting"]] = param["value"]
 
             elif param["type"] == "file":
@@ -398,7 +398,7 @@ class ProcessEffect(QDialog):
                 }
 
             elif param["type"] == "bool":
-                # create spinner
+                
                 widget = QCheckBox()
                 if param["value"] == True:
                     widget.setCheckState(Qt.Checked)
@@ -410,35 +410,35 @@ class ProcessEffect(QDialog):
 
             elif param["type"] == "dropdown":
 
-                # create spinner
+                
                 widget = QComboBox()
 
-                # Get values
+                
                 value_list = param["values"]
 
-                # Add normal values
+                
                 box_index = 0
                 for value_item in value_list:
                     k = value_item["name"]
                     v = value_item["value"]
                     i = value_item.get("icon", None)
 
-                    # add dropdown item
+                    
                     widget.addItem(_(k), v)
 
-                    # select dropdown (if default)
+                    
                     if v == param["value"]:
                         widget.setCurrentIndex(box_index)
 
-                        # Set initial context
+                        
                         self.context[param["setting"]] = param["value"]
                     box_index = box_index + 1
 
                 widget.currentIndexChanged.connect(functools.partial(self.dropdown_index_changed, widget, param))
 
-            # Add Label and Widget to the form
+            
             if widget and label:
-                # Add minimum size
+                
                 label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
                 label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
                 widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -462,7 +462,7 @@ class ProcessEffect(QDialog):
                 label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
                 form_layout.addRow(label)
 
-        # Add buttons
+        
         self.cancel_button = QPushButton(_('Cancel'))
         self.process_button = QPushButton(_('Process Effect'))
         self.buttonBox.addButton(self.process_button, QDialogButtonBox.AcceptRole)
@@ -470,7 +470,7 @@ class ProcessEffect(QDialog):
         self.sync_download_groups_to_selected_models()
         self.update_file_validation()
 
-        # flag to close the clip processing thread
+        
         self.cancel_clip_processing = False
         self.effect = None
 
@@ -758,7 +758,7 @@ class ProcessEffect(QDialog):
     def text_value_changed(self, widget, param, value=None):
         """Textbox value change callback"""
         try:
-            # Attempt to load value from QTextEdit (i.e. multi-line)
+            
             if not value:
                 value = widget.toPlainText()
         except:
@@ -1141,7 +1141,7 @@ class ProcessEffect(QDialog):
         try:
             processing.CancelProcessing()
         except RuntimeError:
-            # Cancellation can invalidate the SWIG-backed job immediately.
+            
             return
 
         wait_start = time.time()
@@ -1150,8 +1150,8 @@ class ProcessEffect(QDialog):
                 if processing.IsDone():
                     return
             except RuntimeError:
-                # An invalid handle after CancelProcessing means there is
-                # nothing left for the dialog to poll.
+                
+                
                 return
             QCoreApplication.processEvents()
             time.sleep(0.01)
@@ -1537,7 +1537,7 @@ class ProcessEffect(QDialog):
         _ = get_app()._tr
         self.context[param["setting"]].update({"button-clicked": True})
 
-        # show dialog
+        
         from windows.region import SelectRegion
         from classes.query import File, Clip
 
@@ -1546,11 +1546,11 @@ class ProcessEffect(QDialog):
         f = File.get(path=reader_path)
         if f:
             win = SelectRegion(f, self.clip_instance, parent=self)
-            # Run the dialog event loop - blocking interaction on this window during that time
+            
             result = win.exec_()
             if result == QDialog.Accepted:
-                # self.first_frame = win.current_frame
-                # Region selected (get coordinates if any)
+                
+                
                 selected_rect = win.selected_rect_normalized() if hasattr(win, "selected_rect_normalized") else None
                 if selected_rect:
                     x1 = float(selected_rect.get("normalized_x", 0.0))
@@ -1575,20 +1575,20 @@ class ProcessEffect(QDialog):
                     xw = x2 - x1
                     yh = y2 - y1
 
-                # Get QImage of region
+                
                 region_qimage = win.selected_region_qimage() if hasattr(win, "selected_region_qimage") else None
                 if region_qimage is None and win.videoPreview.region_qimage:
                     region_qimage = win.videoPreview.region_qimage
                 if region_qimage:
 
-                    # Resize QImage to match button size
+                    
                     resized_qimage = region_qimage.scaled(widget.size(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
 
-                    # Remove button text (so region QImage is more visible)
+                    
                     widget.setImage(resized_qimage)
                     widget.setText("")
 
-                # If data found, add to context
+                
                 self.context[param["setting"]].update({"normalized_x": x1, "normalized_y": y1,
                                                        "normalized_width": xw,
                                                        "normalized_height": yh,
@@ -1701,24 +1701,24 @@ class ProcessEffect(QDialog):
         if self.file_fields and not self.process_button.isEnabled():
             return
 
-        # Enable ProgressBar
+        
         self.progressBar.setEnabled(True)
         self.processing_effect = True
         self.set_processing_controls_enabled(False)
 
-        # Print effect settings
+        
         log.info(self.context)
 
-        # Create effect Id and protobuf data path
+        
         ID = get_app().project.generate_id()
 
-        # Create protobuf data path
+        
         protobufPath = os.path.join(info.PROTOBUF_DATA_PATH, ID + '.data')
         if os.name == 'nt' : protobufPath = protobufPath.replace("\\", "/")
 
         self.context["protobuf_data_path"] = protobufPath
 
-        # Load into JSON string info about protobuf data path
+        
         jsonString = json.dumps(self.context)
 
         def show_processing_error(message=None):
@@ -1731,7 +1731,7 @@ class ProcessEffect(QDialog):
             self.update_file_validation()
             QMessageBox.warning(self, _("Processing Failed"), message)
 
-        # Generate processed data
+        
         try:
             processing = smartedit.ClipProcessingJobs(self.effect_class, jsonString)
             processing.processClip(self.clip_instance, jsonString)
@@ -1740,7 +1740,7 @@ class ProcessEffect(QDialog):
             show_processing_error(str(ex))
             return
 
-        # get processing status
+        
         blank_error_start = None
         while(not processing.IsDone() ):
             if processing.GetError():
@@ -1760,15 +1760,15 @@ class ProcessEffect(QDialog):
             else:
                 blank_error_start = None
 
-            # update progressbar
+            
             progressionStatus = processing.GetProgress()
             self.progressBar.setValue(int(progressionStatus))
             time.sleep(0.01)
 
-            # Process any queued events
+            
             QCoreApplication.processEvents()
 
-            # if the cancel button was pressed, close the processing thread
+            
             if(self.cancel_clip_processing):
                 self.cancel_processing_job(processing)
                 return
@@ -1783,17 +1783,17 @@ class ProcessEffect(QDialog):
             return
 
         if(not self.cancel_clip_processing):
-            # Load processed data into effect
+            
             self.effect = smartedit.EffectInfo().CreateEffect(self.effect_class)
             self.effect.SetJson( '{"protobuf_data_path": "%s"}' % protobufPath )
             self.effect.Id(ID)
 
-            # Accept dialog
+            
             self.restore_file_validation_wait_cursor()
             super(ProcessEffect, self).accept()
 
     def reject(self):
-        # Cancel dialog
+        
         self.exporting = False
         self.cancel_clip_processing = True
         self.restore_file_validation_wait_cursor()

@@ -75,9 +75,9 @@ class GeometryBase:
         self._track_offsets = []
         self._view_context = {}
 
-    # ------------------------------------------------------------------
-    # Cache management
-    # ------------------------------------------------------------------
+    
+    
+    
     def mark_dirty(self):
         """Invalidate all cached geometry."""
         self.dirty = True
@@ -89,9 +89,9 @@ class GeometryBase:
         if self.dirty:
             self._rebuild()
 
-    # ------------------------------------------------------------------
-    # Geometry building
-    # ------------------------------------------------------------------
+    
+    
+    
     def _reset_cache(self):
         self.track_rects.clear()
         self.clip_entries.clear()
@@ -424,9 +424,9 @@ class GeometryBase:
             "v_offset": v_offset,
         }
 
-    # ------------------------------------------------------------------
-    # Hit testing
-    # ------------------------------------------------------------------
+    
+    
+    
     def hit(self, pos: QPointF):
         """Return a string describing what lies under *pos*."""
         self.ensure()
@@ -513,9 +513,9 @@ class GeometryBase:
                 self._resort_transition_entries()
                 return
 
-    # ------------------------------------------------------------------
-    # Iteration helpers
-    # ------------------------------------------------------------------
+    
+    
+    
     def iter_clips(self, reverse=False, *, viewport=True):
         """Yield (rect, clip, selected) tuples for cached clips."""
         yield from self._iter_entries(
@@ -696,15 +696,15 @@ class GeometryBase:
             indices = list(reversed(backward)) + forward
             return [entries[i] for i in indices]
 
-        # `viewport=False` means callers need full timeline-space iteration
-        # (for example, group drag across off-screen selections). Do not cull
-        # by visible/search range in that mode.
+        
+        
+        
         if viewport:
             seq = _visible_sequence()
         else:
             seq = list(entries)
 
-        # Drag-preview items should always be topmost while creating new clips/transitions.
+        
         preview_ids = {
             getattr((item or {}).get("model"), "id", None)
             for item in (getattr(self.widget, "_drag_preview_items", None) or [])

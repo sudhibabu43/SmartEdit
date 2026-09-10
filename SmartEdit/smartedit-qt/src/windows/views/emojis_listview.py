@@ -28,7 +28,7 @@
 from qt_api import QMimeData, QSize, QPoint, Qt, QUrl, pyqtSlot
 from qt_api import clear_override_cursor
 from qt_api import QDrag, QListView
-import smartedit  # Python module for libsmartedit (required video editing module installed separately)
+import smartedit  
 from classes import info
 from classes.query import File
 from classes.app import get_app
@@ -93,7 +93,7 @@ class EmojisListView(QListView):
     emoji_grid_size = QSize(80, 95)
 
     def dragEnterEvent(self, event):
-        # If dragging urls onto widget, accept
+        
         if event.mimeData().hasUrls():
             event.setDropAction(Qt.CopyAction)
             event.accept()
@@ -101,27 +101,27 @@ class EmojisListView(QListView):
     def startDrag(self, event):
         """ Override startDrag method to display custom icon """
 
-        # Get image of selected item
+        
         selected = self.selectedIndexes()
 
-        # Start drag operation
+        
         drag = QDrag(self)
         drag.setMimeData(self.model.mimeData(selected))
         icon = self.model.data(selected[0], Qt.DecorationRole)
         drag.setPixmap(icon.pixmap(self.drag_item_size))
         drag.setHotSpot(self.drag_item_center)
 
-        # Create emoji file before drag starts
+        
         data = json.loads(drag.mimeData().text())
 
-        # Get the translated emoji name from the model item
-        # Map through proxy_model -> group_model -> standard model
+        
+        
         group_index = self.model.mapToSource(selected[0])
         source_index = self.group_model.mapToSource(group_index)
         selected_item = self.emojis_model.model.itemFromIndex(source_index)
         emoji_name = selected_item.text() if selected_item else None
 
-        # Start a transaction so File + Clip are grouped for undo
+        
         tid = str(uuid.uuid4())
         get_app().updates.transaction_id = tid
         try:
@@ -130,7 +130,7 @@ class EmojisListView(QListView):
                 log.warning("Failed to add emoji file for drag: %s", data[0])
                 return
 
-            # Update mimedata for emoji
+            
             data = QMimeData()
             data.setText(json.dumps([file.id]))
             data.setHtml("clip")
@@ -142,57 +142,57 @@ class EmojisListView(QListView):
                     data.setUrls([QUrl.fromLocalFile(file_path)])
             drag.setMimeData(data)
 
-            # Start drag
+            
             exec_fn = getattr(drag, "exec", None) or getattr(drag, "exec_", None)
             if exec_fn is None:
                 raise AttributeError("QDrag has no exec_/exec method")
             exec_fn()
             clear_override_cursor()
         finally:
-            # End transaction
+            
             get_app().updates.transaction_id = None
 
     def add_file(self, filepath, emoji_name=None):
-        # Add file into project
+        
 
         app = get_app()
         _ = app._tr
 
-        # Check for this path in our existing project data
-        # ["1F595-1F3FE",
-        # "smartedit-qt-git/src/emojis/color/svg/1F595-1F3FE.svg"]
+        
+        
+        
         file = File.get(path=filepath)
 
-        # If this file is already found, exit
+        
         if file:
             return file
 
         try:
-            # Bundled OpenMoji SVGs are standardized 72x72 single images.
-            # Avoid synchronously parsing the SVG through the full libsmartedit
-            # reader stack before QDrag.exec(), which causes a cold-start hitch.
+            
+            
+            
             file_data = builtin_emoji_reader_data(filepath)
             if file_data is None:
-                # User-supplied emoji assets still require normal inspection.
+                
                 clip = smartedit.Clip(filepath)
                 reader = clip.Reader()
                 file_data = json.loads(reader.Json())
 
-            # Determine media type
+            
             file_data["media_type"] = "image"
 
-            # Set friendly emoji name (translated)
+            
             if emoji_name:
                 file_data["name"] = emoji_name
 
-            # Save new file to the project data
+            
             file = File()
             file.data = file_data
             file.save()
             return file
 
         except Exception as ex:
-            # Log exception
+            
             log.warning("Failed to import file: {}".format(str(ex)))
 
 
@@ -218,44 +218,44 @@ class EmojisListView(QListView):
     @pyqtSlot()
     def clicked(self, index):
         """If any emoji clicked, set that emoji on the project"""
-        # Get selected emoji file_path
+        
         index = index.sibling(index.row(), 5)
         file_path = self.model.data(index, Qt.DisplayRole)
 
-        # Add emoji to project (after checking if not found in project)
+        
         if file_path not in info.EMOJI_FILES:
             self.add_file(file_path)
 
-        # Set emoji file in preferences (displayed on project actions)
+        
         info.PREFERENCES.set("emoji", file_path)
         info.EMOJI_PATH = file_path
         info.EMOJI_ICON = file_path
 
     def __init__(self, model, *args):
-        # Invoke parent init
+        
         super().__init__(*args)
 
-        # Get a reference to the window object
+        
         self.win = get_app().window
 
-        # Set model (expects a proxy model)
+        
         self.emojis_model = model
         self.group_model = self.emojis_model.group_model
         self.model = self.emojis_model.proxy_model
         self.setModel(self.model)
 
-        # Configure selection behavior
+        
         self.setSelectionMode(QListView.SingleSelection)
         self.setSelectionBehavior(QListView.SelectRows)
         if hasattr(self, "setSelectionRectVisible"):
             self.setSelectionRectVisible(False)
 
-        # Keep track of mouse press start position to determine when to start drag
+        
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
         self.setDropIndicatorShown(True)
 
-        # Setup header columns and layout
+        
         self.setIconSize(self.emoji_icon_size)
         self.setGridSize(self.emoji_grid_size)
         self.setViewMode(QListView.IconMode)
@@ -265,7 +265,7 @@ class EmojisListView(QListView):
         self.setTextElideMode(Qt.ElideRight)
 
         self.emojis_model.ModelRefreshed.connect(self.refresh_view)
-        # Activate filter and group selection
+        
         _ = get_app()._tr
         self.win.emojisFilter.textChanged.connect(self.filter_changed)
         s = get_app().get_settings()

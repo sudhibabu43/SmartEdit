@@ -32,7 +32,7 @@ from qt_api import (
     QSortFilterProxyModel, QPersistentModelIndex, QItemSelectionModel, QItemSelection, QModelIndex,
 )
 from qt_api import QIcon, QPixmap, QStandardItemModel, QStandardItem
-import smartedit  # Python module for libsmartedit (required video editing module installed separately)
+import smartedit  
 
 from classes import info
 from classes.logger import log
@@ -74,12 +74,12 @@ class EffectsProxyModel(QSortFilterProxyModel):
         """Filter for common transitions and text filter"""
 
         if not get_app().window.actionEffectsShowAll.isChecked():
-            # Fetch the effect values
+            
             effect_name = self.sourceModel().data(self.sourceModel().index(sourceRow, 1, sourceParent))
             effect_desc = self.sourceModel().data(self.sourceModel().index(sourceRow, 2, sourceParent))
             effect_type = self.sourceModel().data(self.sourceModel().index(sourceRow, 3, sourceParent))
 
-            # Return, if regExp match in displayed format.
+            
             if get_app().window.actionEffectsShowVideo.isChecked():
                 return effect_type == "Video" and \
                     (self.filterRegExp().indexIn(effect_name) >= 0 or
@@ -89,14 +89,14 @@ class EffectsProxyModel(QSortFilterProxyModel):
                     (self.filterRegExp().indexIn(effect_name) >= 0 or
                      self.filterRegExp().indexIn(effect_desc) >= 0)
 
-        # Continue running built-in parent filter logic
+        
         return super(EffectsProxyModel, self).filterAcceptsRow(sourceRow, sourceParent)
 
     def mimeData(self, indexes):
-        # Create MimeData for drag operation
+        
         data = QMimeData()
 
-        # Get list of class names for requested effect indexes
+        
         items = []
         for proxy_index in indexes:
             source_index = self.mapToSource(proxy_index)
@@ -104,7 +104,7 @@ class EffectsProxyModel(QSortFilterProxyModel):
         data.setText(json.dumps(items))
         data.setHtml("effect")
 
-        # Return Mimedata
+        
         return data
 
 
@@ -115,36 +115,36 @@ class EffectsModel(QObject):
         log.info("updating effects model.")
         app = get_app()
 
-        # Get window to check filters
+        
         win = app.window
         _ = app._tr
 
-        # Clear all items
+        
         if clear:
             self.model_names = {}
             self.model.clear()
 
-        # Add Headers
+        
         self.model.setHorizontalHeaderLabels([_("Thumb"), _("Name"), _("Description")])
 
-        # Get the folder path of effects
+        
         effects_dir = os.path.join(info.PATH, "effects")
         icons_dir = os.path.join(effects_dir, "icons")
 
-        # Get a JSON list of all supported effects in libsmartedit
+        
         raw_effects_list = json.loads(smartedit.EffectInfo.Json())
 
-        # Loop through each effect
+        
         for effect_info in raw_effects_list:
-            # Get basic properties about each effect
+            
             effect_name = effect_info["class_name"]
             title = effect_info["name"]
             description = effect_info["description"]
-            # Remove any spaces from icon name
+            
             icon_name = "%s.png" % effect_name.lower().replace(' ', '')
             icon_path = os.path.join(icons_dir, icon_name)
 
-            # Determine the category of effect (audio, video, both)
+            
             category = None
             if effect_info["has_video"] and effect_info["has_audio"]:
                 category = "Audio & Video"
@@ -153,27 +153,27 @@ class EffectsModel(QObject):
             elif effect_info["has_video"] and not effect_info["has_audio"]:
                 category = "Video"
 
-            # Check for thumbnail path (in build-in cache)
+            
             thumb_path = os.path.join(info.IMAGES_PATH, "cache", icon_name)
 
-            # Check built-in cache (if not found)
+            
             if not os.path.exists(thumb_path):
-                # Check user folder cache
+                
                 thumb_path = os.path.join(info.CACHE_PATH, icon_name)
 
-            # Generate thumbnail (if needed)
+            
             if not os.path.exists(thumb_path):
 
                 try:
-                    # Reload this reader
+                    
                     log.info('Generating thumbnail for %s (%s)' % (thumb_path, icon_path))
                     clip = smartedit.Clip(icon_path)
                     reader = clip.Reader()
 
-                    # Open reader
+                    
                     reader.Open()
 
-                    # Save thumbnail
+                    
                     reader.GetFrame(0).Thumbnail(
                         thumb_path, 98, 64,
                         os.path.join(info.IMAGES_PATH, "mask.png"),
@@ -182,15 +182,15 @@ class EffectsModel(QObject):
                     reader.Close()
 
                 except Exception:
-                    # Handle exception
+                    
                     log.warning("{} is not a valid image file.".format(icon_path))
 
             row = []
 
-            # Append thumbnail
+            
             col = QStandardItem()
 
-            # Load icon (using display DPI)
+            
             icon = QIcon()
             icon.addFile(thumb_path)
 
@@ -201,7 +201,7 @@ class EffectsModel(QObject):
             col.setAccessibleText(self.app._tr(title))
             row.append(col)
 
-            # Append Name
+            
             col = QStandardItem("Name")
             col.setData(self.app._tr(title), Qt.DisplayRole)
             col.setText(self.app._tr(title))
@@ -209,32 +209,32 @@ class EffectsModel(QObject):
             col.setAccessibleText(self.app._tr(title))
             row.append(col)
 
-            # Append Description
+            
             col = QStandardItem("Description")
             col.setData(self.app._tr(description), Qt.DisplayRole)
             col.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsUserCheckable | Qt.ItemIsDragEnabled)
             row.append(col)
 
-            # Append Category
+            
             col = QStandardItem("Category")
             col.setData(category, Qt.DisplayRole)
             col.setText(category)
             col.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsUserCheckable | Qt.ItemIsDragEnabled)
             row.append(col)
 
-            # Append Path
+            
             col = QStandardItem("Effect")
             col.setData(effect_name, Qt.DisplayRole)
             col.setText(effect_name)
             col.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsUserCheckable | Qt.ItemIsDragEnabled)
             row.append(col)
 
-            # Append ROW to MODEL (if does not already exist in model)
+            
             if effect_name not in self.model_names:
                 self.model.appendRow(row)
                 self.model_names[effect_name] = QPersistentModelIndex(row[1].index())
 
-        # Emit signal when model is updated
+        
         self.ModelRefreshed.emit()
 
     def _sync_tree_to_list_selection(self, selected, deselected):
@@ -274,16 +274,16 @@ class EffectsModel(QObject):
             self._syncing_selection = False
 
     def __init__(self, *args):
-        # Init QObject superclass
+        
         super().__init__(*args)
 
-        # Create standard model
+        
         self.app = get_app()
         self.model = QStandardItemModel()
         self.model.setColumnCount(5)
         self.model_names = {}
 
-        # Create proxy model (for sorting and filtering) - used by TreeView
+        
         self.proxy_model = EffectsProxyModel()
         self.proxy_model.setDynamicSortFilter(True)
         self.proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
@@ -292,24 +292,24 @@ class EffectsModel(QObject):
         self.proxy_model.setSortLocaleAware(True)
         self.proxy_model.setFilterKeyColumn(-1)
 
-        # Create single-column proxy for ListView (wraps proxy_model for accessibility)
+        
         self.list_proxy_model = SingleColumnProxyModel()
         self.list_proxy_model.setSourceModel(self.proxy_model)
 
-        # Create selection models for each view
+        
         self.selection_model = QItemSelectionModel(self.proxy_model)
         self.list_selection_model = QItemSelectionModel(self.list_proxy_model)
 
-        # Sync selections between the two selection models
+        
         self._syncing_selection = False
         self.selection_model.selectionChanged.connect(self._sync_tree_to_list_selection)
         self.list_selection_model.selectionChanged.connect(self._sync_list_to_tree_selection)
 
-        # Attempt to load model testing interface, if requested
-        # (will only succeed with Qt 5.11+)
+        
+        
         if info.MODEL_TEST:
             try:
-                # Create model tester objects
+                
                 from qt_api import QAbstractItemModelTester
                 self.model_tests = []
                 for m in [self.proxy_model, self.model]:
