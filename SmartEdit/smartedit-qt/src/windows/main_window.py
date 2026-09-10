@@ -96,6 +96,7 @@ from windows.views.timeline_backend.enums import MenuCopy, MenuSlice
 from windows.views.transitions_listview import TransitionsListView
 from windows.views.transitions_treeview import TransitionsTreeView
 from windows.views.tutorial import TutorialManager
+from slm.panel import SLMAssistantPanel
 
 
 
@@ -5430,6 +5431,11 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         self.dockAudio.setWidget(self.audio_meter)
         self.dockAudio.hide()
         self.addDockWidget(Qt.RightDockWidgetArea, self.dockAudio)
+
+        self.dockSLMAssistant = SLMAssistantPanel(self)
+        self.dockSLMAssistant.setObjectName("dockSLMAssistant")
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.dockSLMAssistant)
+        self.dockSLMAssistant.hide()
 
         self.audio_recording_content = None
         self.dockAudioRecording = QDockWidget(_("Recording"), self)
