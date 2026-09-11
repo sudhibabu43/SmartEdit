@@ -4444,24 +4444,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
         self.actionUndoShakyLabels.setObjectName("actionUndoShakyLabels")
         self.actionUndoShakyLabels.triggered.connect(self.actionUndoShakyLabels_trigger)
 
-        
-        if hasattr(self, "menuEdit") and self.menuEdit:
-            self.menuEdit.addSeparator()
-
-            self.menuEdit.addAction(self.actionDetectShakyFootage)
-            self.menuEdit.addAction(self.actionTrimShakyFootage)
-            self.menuEdit.addAction(self.actionPromptInterpreter)
-            self.menuEdit.addAction(self.actionSilenceRemover)
-            self.menuEdit.addAction(self.actionUndoShakyLabels)
-        elif hasattr(self, "menuBar") and self.menuBar():
-            tools_menu = self.menuBar().addMenu(_("&AI Tools"))
-
-            tools_menu.addAction(self.actionDetectShakyFootage)
-            tools_menu.addAction(self.actionTrimShakyFootage)
-            tools_menu.addAction(self.actionPromptInterpreter)
-            tools_menu.addAction(self.actionSilenceRemover)
-            tools_menu.addAction(self.actionUndoShakyLabels)
-
+        # AI Tools menu removed as per user request
 
     def actionDetectShakyFootage_trigger(self, checked=True):
         """Detect camera shake across timeline clips, mark on top unused layer, and provide Apply removal."""
