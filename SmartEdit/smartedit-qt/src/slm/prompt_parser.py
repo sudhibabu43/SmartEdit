@@ -109,7 +109,9 @@ class PromptParser:
             delete_shaky = True
 
         # ───────────────────────────────────────────
-        close_gaps = bool(re.search(r"\b(close\s+gaps?|ripple|pull\s+together|shift\s+left)\b", t))
+        # By default, automatically close gaps when trimming, unless the user specifically asks to keep them
+        keep_gaps = bool(re.search(r"\b(keep\s+gaps?|leave\s+gaps?|don'?t\s+(?:close|ripple|shift)|preserve\s+(?:spaces?|gaps?|timeline))\b", t))
+        close_gaps = not keep_gaps
 
         if delete_shaky:
             if ActionType.DETECT_SHAKY not in actions:
