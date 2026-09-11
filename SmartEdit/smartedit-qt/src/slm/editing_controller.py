@@ -101,7 +101,7 @@ class EditingController:
         
         
         shaky_regions_found = []
-        if command.has_action(ActionType.DETECT_SHAKY) or command.has_action(ActionType.LABEL_SHAKY) or command.has_action(ActionType.DELETE_SHAKY):
+        if command.has_action(ActionType.DETECT_SHAKY) or command.has_action(ActionType.DELETE_SHAKY):
             thresh_pct = self.shaky_service.get_threshold(command.parameters.get("shaky", {}).get("threshold") or command.parameters.get("delete_shaky", {}).get("threshold"))
             
             
@@ -137,18 +137,6 @@ class EditingController:
                         "clip_ids": [r.get("clip_id") for r in shaky_regions_found],
                         "close_gaps": close_gaps
                     })
-                elif command.has_action(ActionType.LABEL_SHAKY) or command.has_action(ActionType.DETECT_SHAKY):
-                    plan_items.append(PlanItem(
-                        action=ActionType.LABEL_SHAKY,
-                        description=f"Find/create topmost unused layer and mark <b>{len(shaky_regions_found)}</b> shaky region(s) with <b>'SHAKY FOOTAGE – XX%'</b> visual indicators and timeline markers",
-                        icon="✓",
-                        details={"regions": shaky_regions_found, "clips": shaky_regions_found}
-                    ))
-                    operations.append({
-                        "type": ActionType.LABEL_SHAKY,
-                        "regions": shaky_regions_found,
-                        "clips": shaky_regions_found
-                    })
             else:
                 plan_items.append(PlanItem(
                     action=ActionType.DETECT_SHAKY,
@@ -160,64 +148,75 @@ class EditingController:
         
         
         if command.has_action(ActionType.REMOVE_SILENCE):
-            from smartedit.audio_analysis import AudioAnalyzer
-            audio_analyzer = AudioAnalyzer()
-
-            total_silences = 0
-            total_time_saved = 0.0
-            silence_ops = []
-
-            for clip in timeline_clips:
-                path = clip.data.get("reader", {}).get("path") or ""
-                if not path and clip.data.get("file_id"):
-                    f = File.get(id=clip.data.get("file_id"))
-                    if f:
-                        path = f.absolute_path()
-
-                if path and os.path.isfile(path):
-                    has_audio = clip.data.get("reader", {}).get("has_audio")
-                    if has_audio is False:
-                        continue
-
-                    try:
-                        audio_path = audio_analyzer.extract_audio_if_needed(path)
-                        cut_data = audio_analyzer.generate_cut_points(
-                            audio_path,
-                            top_db=command.parameters.get("silence", {}).get("top_db", 20),
-                            min_silence_duration_sec=command.parameters.get("silence", {}).get("min_silence_duration_sec", 0.5)
-                        )
-                        cut_points = cut_data.get("cut_points", [])
-                        saved_sec = cut_data.get("time_saved_sec", 0.0)
-
-                        if cut_points:
-                            total_silences += len(cut_points)
-                            total_time_saved += saved_sec
-                            silence_ops.append({
-                                "clip_id": clip.id,
-                                "cut_points": cut_points,
-                                "time_saved_sec": saved_sec,
-                                "clip_data": clip.data
-                            })
-                    except Exception as ex:
-                        logger.warning(f"Audio analysis failed for clip {clip.id}: {ex}")
-
-            if total_silences > 0:
+            audio_analyzer = None
+            try:
+                from smartedit.audio_analysis import AudioAnalyzer
+                audio_analyzer = AudioAnalyzer()
+            except (ImportError, AttributeError):
+                logger.warning("AudioAnalyzer not available — skipping silence removal plan step.")
+                audio_analyzer = None
                 plan_items.append(PlanItem(
                     action=ActionType.REMOVE_SILENCE,
-                    description=f"Remove <b>{total_silences} silent section(s)</b> (saving approximately {total_time_saved:.1f}s)",
-                    icon="✓",
-                    details={"silence_ops": silence_ops}
-                ))
-                operations.append({
-                    "type": ActionType.REMOVE_SILENCE,
-                    "silence_ops": silence_ops
-                })
-            else:
-                plan_items.append(PlanItem(
-                    action=ActionType.REMOVE_SILENCE,
-                    description="Analyzed audio levels: <b>No major silent intervals found</b>.",
+                    description="Silence removal is not available in this build.",
                     icon="ℹ️"
                 ))
+
+            if audio_analyzer is not None:
+                total_silences = 0
+                total_time_saved = 0.0
+                silence_ops = []
+
+                for clip in timeline_clips:
+                    path = clip.data.get("reader", {}).get("path") or ""
+                    if not path and clip.data.get("file_id"):
+                        f = File.get(id=clip.data.get("file_id"))
+                        if f:
+                            path = f.absolute_path()
+
+                    if path and os.path.isfile(path):
+                        has_audio = clip.data.get("reader", {}).get("has_audio")
+                        if has_audio is False:
+                            continue
+
+                        try:
+                            audio_path = audio_analyzer.extract_audio_if_needed(path)
+                            cut_data = audio_analyzer.generate_cut_points(
+                                audio_path,
+                                top_db=command.parameters.get("silence", {}).get("top_db", 20),
+                                min_silence_duration_sec=command.parameters.get("silence", {}).get("min_silence_duration_sec", 0.5)
+                            )
+                            cut_points = cut_data.get("cut_points", [])
+                            saved_sec = cut_data.get("time_saved_sec", 0.0)
+
+                            if cut_points:
+                                total_silences += len(cut_points)
+                                total_time_saved += saved_sec
+                                silence_ops.append({
+                                    "clip_id": clip.id,
+                                    "cut_points": cut_points,
+                                    "time_saved_sec": saved_sec,
+                                    "clip_data": clip.data
+                                })
+                        except Exception as ex:
+                            logger.warning(f"Audio analysis failed for clip {clip.id}: {ex}")
+
+                if total_silences > 0:
+                    plan_items.append(PlanItem(
+                        action=ActionType.REMOVE_SILENCE,
+                        description=f"Remove <b>{total_silences} silent section(s)</b> (saving approximately {total_time_saved:.1f}s)",
+                        icon="✓",
+                        details={"silence_ops": silence_ops}
+                    ))
+                    operations.append({
+                        "type": ActionType.REMOVE_SILENCE,
+                        "silence_ops": silence_ops
+                    })
+                else:
+                    plan_items.append(PlanItem(
+                        action=ActionType.REMOVE_SILENCE,
+                        description="Analyzed audio levels: <b>No major silent intervals found</b>.",
+                        icon="ℹ️"
+                    ))
 
         
         
@@ -293,16 +292,7 @@ class EditingController:
                 op_type = op.get("type")
 
                 
-                if op_type == ActionType.LABEL_SHAKY:
-                    shaky_items = op.get("regions") or op.get("clips", [])
-                    if shaky_items:
-                        target_layer = self.shaky_service.find_or_create_top_unused_layer()
-                        created = self.shaky_service.label_shaky_regions(shaky_items, target_layer)
-                        track_num = target_layer // 1000000
-                        applied_details.append(f"Placed {len(created)} 'SHAKY FOOTAGE' label(s) on Track {track_num} (top unused layer)")
-
-                
-                elif op_type == ActionType.DELETE_SHAKY:
+                if op_type == ActionType.DELETE_SHAKY:
                     shaky_items = op.get("regions") or op.get("clips", [])
                     if shaky_items:
                         close_gaps = op.get("close_gaps", False)
@@ -355,7 +345,7 @@ class EditingController:
                         target_layer = 1000000
                         for f in files:
                             if window and hasattr(window, "timeline"):
-                                from PyQt5.QtCore import QPointF
+                                from qt_api import QPointF  # FIX BUG 1: Use qt_api abstraction, not PyQt5
                                 window.timeline.addClip(
                                     file_id=f.id,
                                     position=QPointF(current_pos, 0.0),
@@ -389,11 +379,8 @@ class EditingController:
         if window:
             if hasattr(window, "refreshFrameSignal"):
                 window.refreshFrameSignal.emit()
-            if hasattr(window, "timeline") and hasattr(window.timeline, "run_js"):
-                try:
-                    window.timeline.run_js("if (window.timeline) { timeline.loadTimeline(); }")
-                except Exception:
-                    pass
+            if hasattr(window, "timeline") and hasattr(window.timeline, "update"):
+                window.timeline.update()
 
         self.pending_plan = None
         return {

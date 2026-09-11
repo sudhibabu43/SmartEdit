@@ -246,7 +246,8 @@ class VideoAnalyzer:
                 else:
                     if interval_start is not None:
                         seg_dur = t_sec - interval_start
-                        if seg_dur >= 0.35 and interval_mags:
+                        MIN_SHAKY_SEGMENT_DURATION = 1.0  # FIX BUG 9: Only flag segments >= 1 second as shaky
+                        if seg_dur >= MIN_SHAKY_SEGMENT_DURATION and interval_mags:
                             seg_avg_mag = float(np.mean(interval_mags))
                             seg_score = min(1.0, max(0.3, seg_avg_mag / 150.0))
                             seg_pct = round(seg_score * 100.0, 1)
@@ -263,7 +264,8 @@ class VideoAnalyzer:
 
             if interval_start is not None and interval_mags:
                 seg_dur = timestamp - interval_start
-                if seg_dur >= 0.35:
+                MIN_SHAKY_SEGMENT_DURATION = 1.0  # FIX BUG 9: consistent minimum
+                if seg_dur >= MIN_SHAKY_SEGMENT_DURATION:
                     seg_avg_mag = float(np.mean(interval_mags))
                     seg_score = min(1.0, max(0.3, seg_avg_mag / 150.0))
                     seg_pct = round(seg_score * 100.0, 1)
@@ -320,7 +322,14 @@ class VideoAnalyzer:
         raw_segments = analysis.get("shaky_segments", [])
         overall_pct = analysis.get("shake_percentage", 50.0)
 
-        effective_end = clip_end if clip_end is not None and clip_end > clip_start else (clip_start + 600.0)
+        # FIX BUG 6: Use video duration instead of hardcoded 600s fallback
+        effective_end = clip_end if (clip_end is not None and clip_end > clip_start and clip_end > 0.0) else None
+        if effective_end is None:
+            analysis_duration = analysis.get("duration_sec", 0.0)
+            if analysis_duration > 0:
+                effective_end = clip_start + analysis_duration
+            else:
+                effective_end = clip_start + 600.0
         regions: List[Dict[str, Any]] = []
 
         for seg in raw_segments:

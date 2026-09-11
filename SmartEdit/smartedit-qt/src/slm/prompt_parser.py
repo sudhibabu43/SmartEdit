@@ -82,51 +82,39 @@ class PromptParser:
             }
 
         
-        
+        # ───────────────────────────────────────────
+        # DETECT SHAKY FOOTAGE
         detect_shaky = bool(
             re.search(r"\b(find|detect|identify|spot|search|look\s+for|check\s+for|analyze)\s+(any\s+)?(the\s+)?(shaky|jittery|unstable|wobbly)\s*(footage|clips?|videos?|shots?|scenes?)?\b", t) or \
             re.search(r"\b(shaky\s*(footage|clips?|detection|analysis))\b", t)
         )
 
-        
-        
-        label_shaky = bool(
-            re.search(r"\b(label|mark|tag|flag|highlight|indicate)\s+(it|them|the\s+shaky|shaky\s+footage|shaky\s+clips?)\b", t) or \
-            re.search(r"\b(label\s+shaky)\b", t) or \
-            re.search(r"\b(add\s+(a\s+)?label)\b", t)
-        )
-
-        
-        negate_label = bool(
-            re.search(r"\b(do\s+not|don'?t|not|never|without)\s+(only\s+|just\s+)?(label|mark|tag)(ing)?\b", t)
-        )
-        if negate_label:
-            label_shaky = False
-
-        
-        
+        # ───────────────────────────────────────────
+        # DELETE / REMOVE / TRIM SHAKY FOOTAGE
         delete_shaky = bool(
             re.search(r"\b(delete|remove|drop|cut|trim|eliminate|discard|clear)\s+.*?\b(shak(?:y|e|ing)?|jitter(?:y)?|unstable|wobbl(?:y|e)|those\s+portions|those\s+parts|those\s+segments)\b", t) or \
             re.search(r"\b(split\s+and\s+(?:remove|delete|cut|drop))\b", t) or \
             re.search(r"\b(actually\s+(?:split\s+and\s+)?(?:remove|delete|cut))\b", t) or \
             re.search(r"\b(trim|cut\s*out)\s+(?:the\s+)?(shak(?:y|e)|jittery|unstable)\b", t) or \
-            re.search(r"\b(remove|delete|cut)\s+(?:the\s+)?(?:shaky|jittery|unstable|those\s+portions|those\s+parts|those\s+segments)\b", t)
+            re.search(r"\b(remove|delete|cut)\s+(?:the\s+)?(?:shaky|jittery|unstable|those\s+portions|those\s+parts|those\s+segments)\b", t) or \
+            # FIX: Match reversed word order — "shaky footage and trim/remove/cut"
+            re.search(r"\b(shak(?:y|e|ing)|jitter(?:y)?|unstable|wobbl(?:y|e))\s+(?:footage|clips?|videos?|shots?|parts?|sections?|segments?|portions?)?\s*(?:and|then|,)\s*(?:trim|cut|remove|delete|drop|discard|eliminate)\b", t) or \
+            # FIX: "find/detect shaky ... and trim/remove"
+            re.search(r"\b(?:find|detect|identify|spot|check)\s+.*?(?:shak(?:y|e|ing)|jitter(?:y)?|unstable).*?\b(?:and|then|,)\s*(?:trim|cut|remove|delete|drop)\b", t)
         )
 
-        
+        # FIX: Any shaky-related prompt always triggers trimming (no labeling)
+        # If user mentions shaky in any way, always detect + delete
+        if detect_shaky and not delete_shaky:
+            delete_shaky = True
+
+        # ───────────────────────────────────────────
         close_gaps = bool(re.search(r"\b(close\s+gaps?|ripple|pull\s+together|shift\s+left)\b", t))
 
         if delete_shaky:
             if ActionType.DETECT_SHAKY not in actions:
                 actions.append(ActionType.DETECT_SHAKY)
             actions.append(ActionType.DELETE_SHAKY)
-            if label_shaky and not negate_label:
-                actions.append(ActionType.LABEL_SHAKY)
-        elif label_shaky:
-            actions.append(ActionType.DETECT_SHAKY)
-            actions.append(ActionType.LABEL_SHAKY)
-        elif detect_shaky:
-            actions.append(ActionType.DETECT_SHAKY)
 
         if delete_shaky:
             parameters["delete_shaky"] = {
@@ -134,11 +122,10 @@ class PromptParser:
                 "close_gaps": close_gaps
             }
 
-        if detect_shaky or label_shaky or delete_shaky:
+        if detect_shaky or delete_shaky:
             parameters["shaky"] = {
                 "motion_threshold": 0.70,
-                "label_text": "SHAKY FOOTAGE",
-                "add_marker": label_shaky and not negate_label
+                "add_marker": False
             }
 
         

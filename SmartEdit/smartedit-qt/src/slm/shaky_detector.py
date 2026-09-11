@@ -716,9 +716,10 @@ class ShakyFootageService:
 
         
         print("[DEBUG] Retrieving timeline clips...")
-        target_regions = regions
+        # FIX BUG 4: Deep copy to prevent mutation of caller's original list
+        target_regions = list(regions) if regions else []
         if not target_regions:
-            target_regions = getattr(self, "last_detected_regions", [])
+            target_regions = list(getattr(self, "last_detected_regions", []))
 
         if not target_regions:
             
@@ -809,6 +810,8 @@ class ShakyFootageService:
             if c_obj:
                 pos = float(c_obj.data.get("position", 0.0)) if isinstance(c_obj.data, dict) else 0.0
                 sorted_clip_entries.append((pos, clip_id, clip_regs))
+        # FIX BUG 7: Process clips from right to left (reverse position order) to avoid
+        # cascading position changes when clips after a removed region are shifted.
         sorted_clip_entries.sort(key=lambda x: x[0], reverse=True)
 
         
@@ -866,13 +869,15 @@ class ShakyFootageService:
                 affected_clips += 1
 
                 
+                # FIX BUG 8: Raise minimum stable segment from 0.05s to 0.5s
+                MIN_STABLE_DURATION = 0.5
                 stable_intervals: List[Tuple[float, float]] = []
                 curr = c_pos
                 for (s_shaky, e_shaky, _) in merged_shaky:
-                    if s_shaky - curr >= 0.05:
+                    if s_shaky - curr >= MIN_STABLE_DURATION:
                         stable_intervals.append((curr, s_shaky))
                     curr = max(curr, e_shaky)
-                if c_tl_end - curr >= 0.05:
+                if c_tl_end - curr >= MIN_STABLE_DURATION:
                     stable_intervals.append((curr, c_tl_end))
 
                 total_shaky_dur = c_dur - sum(ei - si for (si, ei) in stable_intervals)
@@ -895,12 +900,11 @@ class ShakyFootageService:
                             clip.data["duration"] = duri
                             clip.save()
                         else:
+                            # FIX BUG 5: Properly initialize new clip for undo support
                             new_clip = Clip()
                             new_clip_data = deepcopy(c_data)
                             new_clip_data.pop("id", None)
-                            new_clip.id = None
-                            new_clip.type = "insert"
-                            new_clip.key = None
+                            new_clip_data.pop("key", None)
                             new_clip.data = new_clip_data
                             new_clip.data["position"] = seg_pos
                             new_clip.data["start"] = m_starti
@@ -912,53 +916,33 @@ class ShakyFootageService:
                         next_pos = round(next_pos + duri, 4)
 
                 
+                # FIX BUG 3: Use manual layer filtering instead of Clip.filter(layer=...)
                 if close_gaps and total_shaky_dur > 0.02:
                     try:
-                        for other_clip in Clip.filter(layer=c_layer):
-                            if other_clip.id != clip_id and float(other_clip.data.get("position", 0.0)) >= c_tl_end - 0.01:
-                                other_clip.data["position"] = max(0.0, float(other_clip.data["position"]) - total_shaky_dur)
+                        for other_clip in Clip.filter():
+                            o_data = other_clip.data if isinstance(other_clip.data, dict) else {}
+                            o_layer = int(o_data.get("layer", 0))
+                            if o_layer != c_layer or other_clip.id == clip_id:
+                                continue
+                            if float(o_data.get("position", 0.0)) >= c_tl_end - 0.01:
+                                other_clip.data["position"] = max(0.0, float(o_data["position"]) - total_shaky_dur)
                                 other_clip.save()
                     except Exception as ex:
                         logger.debug(f"Could not shift clips for gap: {ex}")
 
                     try:
-                        for other_trans in Transition.filter(layer=c_layer):
-                            if float(other_trans.data.get("position", 0.0)) >= c_tl_end - 0.01:
-                                other_trans.data["position"] = max(0.0, float(other_trans.data["position"]) - total_shaky_dur)
+                        for other_trans in Transition.filter():
+                            t_data = other_trans.data if isinstance(other_trans.data, dict) else {}
+                            t_layer = int(t_data.get("layer", 0))
+                            if t_layer != c_layer:
+                                continue
+                            if float(t_data.get("position", 0.0)) >= c_tl_end - 0.01:
+                                other_trans.data["position"] = max(0.0, float(t_data["position"]) - total_shaky_dur)
                                 other_trans.save()
                     except Exception as ex:
                         logger.debug(f"Could not shift transitions for gap: {ex}")
 
             print("[DEBUG] Remaining clips repositioned and merged")
-
-            
-            try:
-                for c in Clip.filter():
-                    c_dict = c.data if isinstance(c.data, dict) else {}
-                    ui = c_dict.get("ui") if isinstance(c_dict.get("ui"), dict) else {}
-                    if ui.get("ai_label") and not ui.get("removed"):
-                        pct = float(ui.get("shake_percentage", 65.0))
-                        orig_s = float(ui.get("original_timeline_start", c_dict.get("position", 0.0)))
-                        orig_e = float(ui.get("original_timeline_end", orig_s + float(c_dict.get("duration", 0.0))))
-                        time_str = f"{orig_s:.2f}–{orig_e:.2f}"
-                        c.data["title"] = f"[⚠ REMOVED SHAKY] {time_str}"
-                        c.data["ui"]["removed"] = True
-                        c.data["ui"]["label_type"] = "shaky_region_removed"
-                        c.save()
-            except Exception as ex:
-                logger.warning(f"Error updating top AI markers after cut: {ex}")
-
-            try:
-                for m in Marker.filter():
-                    m_dict = m.data if isinstance(m.data, dict) else {}
-                    m_ui = m_dict.get("ui") if isinstance(m_dict.get("ui"), dict) else {}
-                    if m_ui.get("ai_label") and not m_ui.get("removed"):
-                        m.data["label"] = "[⚠ REMOVED SHAKY]"
-                        m.data["color"] = "#27ae60"
-                        m.data["ui"]["removed"] = True
-                        m.save()
-            except Exception:
-                pass
 
         finally:
             
