@@ -1,4 +1,4 @@
-﻿"""
+"""
  @file
  @brief This file contains the ThemeManager singleton, used to easily switch UI themes
  @author Jonathan Thomas <jonathan@smartedit.org>
@@ -31,8 +31,6 @@ from enum import Enum
 
 class ThemeName(Enum):
     """Friendly UI theme names used in settings"""
-    RETRO = "Retro"
-    HUMANITY_DARK = "Humanity: Dark"
     COSMIC = "Cosmic Dusk"
 
     @staticmethod
@@ -46,7 +44,7 @@ class ThemeName(Enum):
         for theme in ThemeName:
             if theme.value == name:
                 return theme
-        return ThemeName.HUMANITY_DARK
+        return ThemeName.COSMIC
 
 
 class ThemeManager:
@@ -70,13 +68,7 @@ class ThemeManager:
         """Apply a new UI theme. Expects a ThemeName ENUM as the arg."""
         theme_enum = ThemeName.find_by_name(name)
 
-        if theme_enum == ThemeName.HUMANITY_DARK:
-            from themes.humanity.theme import HumanityDarkTheme
-            self.current_theme = HumanityDarkTheme(self.app)
-        elif theme_enum == ThemeName.RETRO:
-            from themes.humanity.theme import Retro
-            self.current_theme = Retro(self.app)
-        elif theme_enum == ThemeName.COSMIC:
+        if theme_enum == ThemeName.COSMIC:
             from themes.cosmic.theme import CosmicTheme
             self.current_theme = CosmicTheme(self.app)
 

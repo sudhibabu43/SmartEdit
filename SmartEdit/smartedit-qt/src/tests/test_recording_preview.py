@@ -1,4 +1,4 @@
-﻿"""
+"""
  @file
  @brief Tests for recording preview and live thumbnail helpers.
 """
@@ -85,15 +85,10 @@ class RecordingPreviewTests(unittest.TestCase):
 
     def test_recording_styles_are_owned_by_application_themes(self):
         from themes.cosmic.theme import CosmicTheme
-        from themes.humanity.theme import HumanityDarkTheme, Retro
 
         cosmic = CosmicTheme(self.app).style_sheet
-        humanity = HumanityDarkTheme(self.app).style_sheet
-        retro = Retro(self.app).style_sheet
 
         self.assertIn("QFrame#recordingCard", cosmic)
-        self.assertIn("background-color: #303030", humanity)
-        self.assertIn("background-color: #e5e7ea", retro)
 
         card = self.recording_widgets_module.RecordingSourceCard("Mic", "Voice", "M")
         section = self.recording_widgets_module.RecordingSection("Mic", "M")

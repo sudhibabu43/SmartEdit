@@ -1,4 +1,4 @@
-﻿"""
+"""
  @file
  @brief This file contains unit tests for timeline helper logic
  @author Jonathan Thomas <jonathan@smartedit.org>
@@ -105,7 +105,6 @@ class TimelineHelperTests(unittest.TestCase):
         cls.qwidget_timecode_module = importlib.import_module("windows.views.timeline_backend.qwidget.timecode")
         cls.thumbnails_module = importlib.import_module("windows.views.timeline_backend.qwidget.thumbnails")
         cls.waveform_module = importlib.import_module("classes.waveform")
-        cls.humanity_theme_module = importlib.import_module("themes.humanity.styles")
         cls.cosmic_theme_module = importlib.import_module("themes.cosmic.styles")
 
     def make_helper(self):
@@ -2761,12 +2760,8 @@ class TimelineHelperTests(unittest.TestCase):
         self.assertTrue(helper.transition_entries[0].selected)
 
     def test_transition_themes_use_two_pixel_border_width(self):
-        humanity = self.humanity_theme_module.HumanityDarkTimelineTheme()
-        retro = self.humanity_theme_module.RetroTimelineTheme()
         cosmic = self.cosmic_theme_module.CosmicDuskTimelineTheme()
 
-        self.assertEqual(humanity.transition.border_width, 2.0)
-        self.assertEqual(retro.transition.border_width, 2.0)
         self.assertEqual(cosmic.transition.border_width, 2.0)
 
     def test_transition_selected_state_stays_translucent_but_brighter(self):

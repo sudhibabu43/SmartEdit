@@ -1,4 +1,4 @@
-﻿"""
+"""
  @file
  @brief Painter for the keyframe panel overlay.
  @author Jonathan Thomas <jonathan@smartedit.org>
@@ -131,20 +131,12 @@ class KeyframePanelPainter(BasePainter):
         name = name.replace(":", "").replace("-", " ")
         name = " ".join(name.split())
         class_name = current.__class__.__name__.strip().lower() if current else ""
-        return name in {"cosmic dusk", "humanity dark"} or class_name in {
+        return name in {"cosmic dusk"} or class_name in {
             "cosmictheme",
-            "humanitydarktheme",
         }
 
     def _is_retro_theme(self):
-        app = get_app()
-        manager = getattr(app, "theme_manager", None) if app else None
-        current = manager.get_current_theme() if manager and hasattr(manager, "get_current_theme") else None
-        name = str(getattr(current, "name", "") or "").strip().lower()
-        name = name.replace(":", "").replace("-", " ")
-        name = " ".join(name.split())
-        class_name = current.__class__.__name__.strip().lower() if current else ""
-        return name == "retro" or class_name == "retro"
+        return False
 
     def _seconds_to_x(self, seconds):
         try:
