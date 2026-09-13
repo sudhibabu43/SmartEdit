@@ -144,7 +144,7 @@
   {
     "value": "blender",
     "title": "Blender Command (path)",
-    "type": "browse",
+    "type": "hidden",
     "category": "General",
     "setting": "blender_command"
   },

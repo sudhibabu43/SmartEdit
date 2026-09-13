@@ -1,4 +1,4 @@
-﻿"""
+"""
  @file
  @brief This file loads the Preferences dialog (i.e where is all preferences)
  @author Jonathan Thomas <jonathan@smartedit.org>
@@ -67,8 +67,7 @@ class Preferences(QDialog):
         
         ui_util.init_ui(self)
 
-        
-        self.custom_order = ["General", "Timeline", "Preview", "Autosave", "Cache", "Performance", "Keyboard", "Location", "Advanced"]
+        self.custom_order = ["General", "Timeline", "Preview", "Autosave", "Cache", "Performance", "Keyboard", "Location"]
 
         
         self.s = get_app().get_settings()
