@@ -1,6 +1,6 @@
 ﻿# SOME DESCRIPTIVE TITLE.
 # Copyright (C) SmartEdit Studios, LLC
-# This file is distributed under the same license as the SmartEdit Video Editor package.
+# This file is distributed under the same  as the SmartEdit Video Editor package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
@@ -29,7 +29,7 @@ msgid "Features"
 msgstr ""
 
 #: ../introduction.rst:31
-msgid "**Free & open-source** (licensed under GPLv3)"
+msgid "**Free & open-source** (d under GPLv3)"
 msgstr ""
 
 #: ../introduction.rst:32
@@ -237,13 +237,13 @@ msgid "For factors related to real-time previews, see :ref:`playback_ref`."
 msgstr ""
 
 #: ../introduction.rst:100
-msgid "License"
+msgid ""
 msgstr ""
 
 #: ../introduction.rst:101
-msgid "SmartEdit Video Editor is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version."
+msgid "SmartEdit Video Editor is free software: you can redistribute it and/or modify it under the terms of the GNU General Public  as published by the Free Software Foundation, either version 3 of the , or (at your option) any later version."
 msgstr ""
 
 #: ../introduction.rst:106
-msgid "SmartEdit Video Editor is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details."
+msgid "SmartEdit Video Editor is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public  for more details."
 msgstr ""

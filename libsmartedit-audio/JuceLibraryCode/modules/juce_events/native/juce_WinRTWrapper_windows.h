@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,93 +20,92 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
-class WinRTWrapper :   public DeletedAtShutdown
-{
+class WinRTWrapper : public DeletedAtShutdown {
 public:
-    //==============================================================================
-    ~WinRTWrapper();
-    bool isInitialised() const noexcept  { return initialised; }
+  //==============================================================================
+  ~WinRTWrapper();
+  bool isInitialised() const noexcept { return initialised; }
 
-    JUCE_DECLARE_SINGLETON (WinRTWrapper, false)
+  JUCE_DECLARE_SINGLETON(WinRTWrapper, false)
 
-    //==============================================================================
-    template <class ComClass>
-    ComSmartPtr<ComClass> activateInstance (const wchar_t* runtimeClassID, REFCLSID classUUID)
-    {
-        ComSmartPtr<ComClass> result;
+  //==============================================================================
+  template <class ComClass>
+  ComSmartPtr<ComClass> activateInstance(const wchar_t *runtimeClassID,
+                                         REFCLSID classUUID) {
+    ComSmartPtr<ComClass> result;
 
-        if (isInitialised())
-        {
-            ComSmartPtr<IInspectable> inspectable;
-            ScopedHString runtimeClass (runtimeClassID);
-            auto hr = roActivateInstance (runtimeClass.get(), inspectable.resetAndGetPointerAddress());
+    if (isInitialised()) {
+      ComSmartPtr<IInspectable> inspectable;
+      ScopedHString runtimeClass(runtimeClassID);
+      auto hr = roActivateInstance(runtimeClass.get(),
+                                   inspectable.resetAndGetPointerAddress());
 
-            if (SUCCEEDED (hr))
-                inspectable->QueryInterface (classUUID, (void**) result.resetAndGetPointerAddress());
-        }
-
-        return result;
+      if (SUCCEEDED(hr))
+        inspectable->QueryInterface(
+            classUUID, (void **)result.resetAndGetPointerAddress());
     }
 
-    template <class ComClass>
-    ComSmartPtr<ComClass> getWRLFactory (const wchar_t* runtimeClassID)
-    {
-        ComSmartPtr<ComClass> comPtr;
+    return result;
+  }
 
-        if (isInitialised())
-        {
-            ScopedHString classID (runtimeClassID);
+  template <class ComClass>
+  ComSmartPtr<ComClass> getWRLFactory(const wchar_t *runtimeClassID) {
+    ComSmartPtr<ComClass> comPtr;
 
-            if (classID.get() != nullptr)
-                roGetActivationFactory (classID.get(), __uuidof (ComClass), (void**) comPtr.resetAndGetPointerAddress());
-        }
+    if (isInitialised()) {
+      ScopedHString classID(runtimeClassID);
 
-        return comPtr;
+      if (classID.get() != nullptr)
+        roGetActivationFactory(classID.get(), __uuidof(ComClass),
+                               (void **)comPtr.resetAndGetPointerAddress());
     }
 
-    //==============================================================================
-    class ScopedHString
-    {
-    public:
-        ScopedHString (String);
-        ~ScopedHString();
+    return comPtr;
+  }
 
-        HSTRING get() const noexcept          { return hstr; }
+  //==============================================================================
+  class ScopedHString {
+  public:
+    ScopedHString(String);
+    ~ScopedHString();
 
-    private:
-        HSTRING hstr = nullptr;
+    HSTRING get() const noexcept { return hstr; }
 
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ScopedHString)
-    };
+  private:
+    HSTRING hstr = nullptr;
 
-    String hStringToString (HSTRING);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ScopedHString)
+  };
+
+  String hStringToString(HSTRING);
 
 private:
-    WinRTWrapper();
+  WinRTWrapper();
 
-    //==============================================================================
-    HMODULE winRTHandle = nullptr;
-    bool initialised = false;
+  //==============================================================================
+  HMODULE winRTHandle = nullptr;
+  bool initialised = false;
 
-    typedef HRESULT (WINAPI* RoInitializeFuncPtr) (int);
-    typedef HRESULT (WINAPI* WindowsCreateStringFuncPtr) (LPCWSTR, UINT32, HSTRING*);
-    typedef HRESULT (WINAPI* WindowsDeleteStringFuncPtr) (HSTRING);
-    typedef PCWSTR  (WINAPI* WindowsGetStringRawBufferFuncPtr) (HSTRING, UINT32*);
-    typedef HRESULT (WINAPI* RoActivateInstanceFuncPtr) (HSTRING, IInspectable**);
-    typedef HRESULT (WINAPI* RoGetActivationFactoryFuncPtr) (HSTRING, REFIID, void**);
+  typedef HRESULT(WINAPI *RoInitializeFuncPtr)(int);
+  typedef HRESULT(WINAPI *WindowsCreateStringFuncPtr)(LPCWSTR, UINT32,
+                                                      HSTRING *);
+  typedef HRESULT(WINAPI *WindowsDeleteStringFuncPtr)(HSTRING);
+  typedef PCWSTR(WINAPI *WindowsGetStringRawBufferFuncPtr)(HSTRING, UINT32 *);
+  typedef HRESULT(WINAPI *RoActivateInstanceFuncPtr)(HSTRING, IInspectable **);
+  typedef HRESULT(WINAPI *RoGetActivationFactoryFuncPtr)(HSTRING, REFIID,
+                                                         void **);
 
-    RoInitializeFuncPtr roInitialize = nullptr;
-    WindowsCreateStringFuncPtr createHString = nullptr;
-    WindowsDeleteStringFuncPtr deleteHString = nullptr;
-    WindowsGetStringRawBufferFuncPtr getHStringRawBuffer = nullptr;
-    RoActivateInstanceFuncPtr roActivateInstance = nullptr;
-    RoGetActivationFactoryFuncPtr roGetActivationFactory = nullptr;
+  RoInitializeFuncPtr roInitialize = nullptr;
+  WindowsCreateStringFuncPtr createHString = nullptr;
+  WindowsDeleteStringFuncPtr deleteHString = nullptr;
+  WindowsGetStringRawBufferFuncPtr getHStringRawBuffer = nullptr;
+  RoActivateInstanceFuncPtr roActivateInstance = nullptr;
+  RoGetActivationFactoryFuncPtr roGetActivationFactory = nullptr;
 
-    //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (WinRTWrapper)
+  //==============================================================================
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(WinRTWrapper)
 };
 
 } // namespace juce

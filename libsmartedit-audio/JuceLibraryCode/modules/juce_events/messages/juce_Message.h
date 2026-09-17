@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,11 +20,9 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
 class MessageListener;
-
 
 //==============================================================================
 /** The base class for objects that can be sent to a MessageListener.
@@ -40,25 +38,25 @@ class MessageListener;
 
     @tags{Events}
 */
-class JUCE_API  Message  : public MessageManager::MessageBase
-{
+class JUCE_API Message : public MessageManager::MessageBase {
 public:
-    //==============================================================================
-    /** Creates an uninitialised message. */
-    Message() noexcept;
-    ~Message() override;
+  //==============================================================================
+  /** Creates an uninitialised message. */
+  Message() noexcept;
+  ~Message() override;
 
-    using Ptr = ReferenceCountedObjectPtr<Message>;
+  using Ptr = ReferenceCountedObjectPtr<Message>;
 
-    //==============================================================================
+  //==============================================================================
 private:
-    friend class MessageListener;
-    WeakReference<MessageListener> recipient;
-    void messageCallback() override;
+  friend class MessageListener;
+  WeakReference<MessageListener> recipient;
+  void messageCallback() override;
 
-    // Avoid the leak-detector because for plugins, the host can unload our DLL with undelivered
-    // messages still in the system event queue. These aren't harmful, but can cause annoying assertions.
-    JUCE_DECLARE_NON_COPYABLE (Message)
+  // Avoid the leak-detector because for plugins, the host can unload our DLL
+  // with undelivered messages still in the system event queue. These aren't
+  // harmful, but can cause annoying assertions.
+  JUCE_DECLARE_NON_COPYABLE(Message)
 };
 
 } // namespace juce

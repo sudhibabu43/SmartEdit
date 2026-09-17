@@ -1,17 +1,17 @@
 /*
  * Copyright 2017 The Android Open Source Project
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * d under the Apache , Version 2.0 (the "");
+ * you may not use this file except in compliance with the .
+ * You may obtain a copy of the  at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/s/-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the  is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * See the  for the specific language governing permissions and
+ * limitations under the .
  */
 
 #ifndef OBOE_ENGINE_OPENSLES_H
@@ -30,36 +30,34 @@ namespace oboe {
  */
 class EngineOpenSLES {
 public:
-    static EngineOpenSLES &getInstance();
+  static EngineOpenSLES &getInstance();
 
-    SLresult open();
+  SLresult open();
 
-    void close();
+  void close();
 
-    SLresult createOutputMix(SLObjectItf *objectItf);
+  SLresult createOutputMix(SLObjectItf *objectItf);
 
-    SLresult createAudioPlayer(SLObjectItf *objectItf,
+  SLresult createAudioPlayer(SLObjectItf *objectItf, SLDataSource *audioSource,
+                             SLDataSink *audioSink);
+  SLresult createAudioRecorder(SLObjectItf *objectItf,
                                SLDataSource *audioSource,
                                SLDataSink *audioSink);
-    SLresult createAudioRecorder(SLObjectItf *objectItf,
-                                 SLDataSource *audioSource,
-                                 SLDataSink *audioSink);
 
 private:
-    // Make this a safe Singleton
-    EngineOpenSLES()= default;
-    ~EngineOpenSLES()= default;
-    EngineOpenSLES(const EngineOpenSLES&)= delete;
-    EngineOpenSLES& operator=(const EngineOpenSLES&)= delete;
+  // Make this a safe Singleton
+  EngineOpenSLES() = default;
+  ~EngineOpenSLES() = default;
+  EngineOpenSLES(const EngineOpenSLES &) = delete;
+  EngineOpenSLES &operator=(const EngineOpenSLES &) = delete;
 
-    std::mutex             mLock;
-    int32_t                mOpenCount = 0;
+  std::mutex mLock;
+  int32_t mOpenCount = 0;
 
-    SLObjectItf            mEngineObject = nullptr;
-    SLEngineItf            mEngineInterface = nullptr;
+  SLObjectItf mEngineObject = nullptr;
+  SLEngineItf mEngineInterface = nullptr;
 };
 
 } // namespace oboe
 
-
-#endif //OBOE_ENGINE_OPENSLES_H
+#endif // OBOE_ENGINE_OPENSLES_H

@@ -30,7 +30,7 @@ TODO: Not currently defined (pending code for determining the SDK version)
 
 Copyright (c) 2020, FeRD (Frank Dana) <ferdnyc@gmail.com>
 
-Redistribution and use is allowed according to the terms of the BSD license.
+Redistribution and use is allowed according to the terms of the BSD .
 For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 #]=======================================================================]
 include(FindPackageHandleStandardArgs)

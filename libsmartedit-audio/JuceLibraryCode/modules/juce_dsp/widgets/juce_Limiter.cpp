@@ -7,14 +7,14 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User
    Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-7-licence
+   End User  Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   www.gnu.org/s).
 
    JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
    EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
@@ -23,69 +23,61 @@
   ==============================================================================
 */
 
-namespace juce::dsp
-{
+namespace juce::dsp {
 
 //==============================================================================
 template <typename SampleType>
-void Limiter<SampleType>::setThreshold (SampleType newThreshold)
-{
-    thresholddB = newThreshold;
-    update();
+void Limiter<SampleType>::setThreshold(SampleType newThreshold) {
+  thresholddB = newThreshold;
+  update();
 }
 
 template <typename SampleType>
-void Limiter<SampleType>::setRelease (SampleType newRelease)
-{
-    releaseTime = newRelease;
-    update();
+void Limiter<SampleType>::setRelease(SampleType newRelease) {
+  releaseTime = newRelease;
+  update();
 }
 
 //==============================================================================
 template <typename SampleType>
-void Limiter<SampleType>::prepare (const ProcessSpec& spec)
-{
-    jassert (spec.sampleRate > 0);
-    jassert (spec.numChannels > 0);
+void Limiter<SampleType>::prepare(const ProcessSpec &spec) {
+  jassert(spec.sampleRate > 0);
+  jassert(spec.numChannels > 0);
 
-    sampleRate = spec.sampleRate;
+  sampleRate = spec.sampleRate;
 
-    firstStageCompressor.prepare (spec);
-    secondStageCompressor.prepare (spec);
+  firstStageCompressor.prepare(spec);
+  secondStageCompressor.prepare(spec);
 
-    update();
-    reset();
+  update();
+  reset();
 }
 
-template <typename SampleType>
-void Limiter<SampleType>::reset()
-{
-    firstStageCompressor.reset();
-    secondStageCompressor.reset();
+template <typename SampleType> void Limiter<SampleType>::reset() {
+  firstStageCompressor.reset();
+  secondStageCompressor.reset();
 
-    outputVolume.reset (sampleRate, 0.001);
+  outputVolume.reset(sampleRate, 0.001);
 }
 
 //==============================================================================
-template <typename SampleType>
-void Limiter<SampleType>::update()
-{
-    firstStageCompressor.setThreshold ((SampleType) -10.0);
-    firstStageCompressor.setRatio     ((SampleType) 4.0);
-    firstStageCompressor.setAttack    ((SampleType) 2.0);
-    firstStageCompressor.setRelease   ((SampleType) 200.0);
+template <typename SampleType> void Limiter<SampleType>::update() {
+  firstStageCompressor.setThreshold((SampleType)-10.0);
+  firstStageCompressor.setRatio((SampleType)4.0);
+  firstStageCompressor.setAttack((SampleType)2.0);
+  firstStageCompressor.setRelease((SampleType)200.0);
 
-    secondStageCompressor.setThreshold (thresholddB);
-    secondStageCompressor.setRatio     ((SampleType) 1000.0);
-    secondStageCompressor.setAttack    ((SampleType) 0.001);
-    secondStageCompressor.setRelease   (releaseTime);
+  secondStageCompressor.setThreshold(thresholddB);
+  secondStageCompressor.setRatio((SampleType)1000.0);
+  secondStageCompressor.setAttack((SampleType)0.001);
+  secondStageCompressor.setRelease(releaseTime);
 
-    auto ratioInverse = (SampleType) (1.0 / 4.0);
+  auto ratioInverse = (SampleType)(1.0 / 4.0);
 
-    auto gain = (SampleType) std::pow (10.0, 10.0 * (1.0 - ratioInverse) / 40.0);
-    gain *= Decibels::decibelsToGain (-thresholddB, (SampleType) -100.0);
+  auto gain = (SampleType)std::pow(10.0, 10.0 * (1.0 - ratioInverse) / 40.0);
+  gain *= Decibels::decibelsToGain(-thresholddB, (SampleType)-100.0);
 
-    outputVolume.setTargetValue (gain);
+  outputVolume.setTargetValue(gain);
 }
 
 //==============================================================================

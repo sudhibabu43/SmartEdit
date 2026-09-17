@@ -1,6 +1,6 @@
 ﻿# SOME DESCRIPTIVE TITLE.
 # Copyright (C) SmartEdit Studios, LLC
-# This file is distributed under the same license as the SmartEdit Video
+# This file is distributed under the same  as the SmartEdit Video
 # Editor package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
@@ -2993,7 +2993,7 @@ msgstr "``(float, 0 à 255)``   La valeur de transparence (alpha) du contour."
 msgid ""
 "The Pixelate effect increases or decreases the size of the pixels in the "
 "video, creating a mosaic-like appearance. This can be used to obscure "
-"details (such as faces or license plates for privacy reasons), or as a "
+"details (such as faces or  plates for privacy reasons), or as a "
 "stylistic effect to evoke a retro, digital, or abstract aesthetic."
 msgstr ""
 "L'effet Pixelisation augmente ou diminue la taille des pixels dans la vidéo, "

@@ -3,7 +3,7 @@
  @brief Shared helpers for best-effort HTTP requests in packaged SmartEdit builds
  @author SmartEdit Studios, LLC
 
- @section LICENSE
+ @section 
 
  Copyright (c) 2008-2026 SmartEdit Studios, LLC
  (http://www.smarteditstudios.com). This file is part of
@@ -12,8 +12,8 @@
  to the world.
 
  SmartEdit Video Editor is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
+ it under the terms of the GNU General Public  as published by
+ the Free Software Foundation, either version 3 of the , or
  (at your option) any later version.
  """
 

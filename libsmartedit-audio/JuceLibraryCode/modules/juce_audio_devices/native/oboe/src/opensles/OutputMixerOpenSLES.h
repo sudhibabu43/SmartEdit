@@ -1,17 +1,17 @@
 /*
  * Copyright 2017 The Android Open Source Project
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * d under the Apache , Version 2.0 (the "");
+ * you may not use this file except in compliance with the .
+ * You may obtain a copy of the  at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/s/-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the  is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * See the  for the specific language governing permissions and
+ * limitations under the .
  */
 
 #ifndef OBOE_OUTPUT_MIXER_OPENSLES_H
@@ -31,28 +31,27 @@ namespace oboe {
 
 class OutputMixerOpenSL {
 public:
-    static OutputMixerOpenSL &getInstance();
+  static OutputMixerOpenSL &getInstance();
 
-    SLresult open();
+  SLresult open();
 
-    void close();
+  void close();
 
-    SLresult createAudioPlayer(SLObjectItf *objectItf,
-                               SLDataSource *audioSource);
+  SLresult createAudioPlayer(SLObjectItf *objectItf, SLDataSource *audioSource);
 
 private:
-    // Make this a safe Singleton
-    OutputMixerOpenSL()= default;
-    ~OutputMixerOpenSL()= default;
-    OutputMixerOpenSL(const OutputMixerOpenSL&)= delete;
-    OutputMixerOpenSL& operator=(const OutputMixerOpenSL&)= delete;
+  // Make this a safe Singleton
+  OutputMixerOpenSL() = default;
+  ~OutputMixerOpenSL() = default;
+  OutputMixerOpenSL(const OutputMixerOpenSL &) = delete;
+  OutputMixerOpenSL &operator=(const OutputMixerOpenSL &) = delete;
 
-    std::mutex            mLock;
-    int32_t               mOpenCount = 0;
+  std::mutex mLock;
+  int32_t mOpenCount = 0;
 
-    SLObjectItf           mOutputMixObject = nullptr;
+  SLObjectItf mOutputMixObject = nullptr;
 };
 
 } // namespace oboe
 
-#endif //OBOE_OUTPUT_MIXER_OPENSLES_H
+#endif // OBOE_OUTPUT_MIXER_OPENSLES_H

@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,215 +20,176 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
-class MidiDeviceListConnectionBroadcaster final : private AsyncUpdater
-{
+class MidiDeviceListConnectionBroadcaster final : private AsyncUpdater {
 public:
-    ~MidiDeviceListConnectionBroadcaster() override
-    {
-        cancelPendingUpdate();
+  ~MidiDeviceListConnectionBroadcaster() override { cancelPendingUpdate(); }
+
+  MidiDeviceListConnection::Key add(std::function<void()> callback) {
+    JUCE_ASSERT_MESSAGE_THREAD
+    return callbacks.emplace(key++, std::move(callback)).first->first;
+  }
+
+  void remove(const MidiDeviceListConnection::Key k) {
+    JUCE_ASSERT_MESSAGE_THREAD
+    callbacks.erase(k);
+  }
+
+  void notify() {
+    if (MessageManager::getInstance()->isThisTheMessageThread()) {
+      cancelPendingUpdate();
+
+      const State newState;
+
+      if (std::exchange(lastNotifiedState, newState) != newState)
+        for (auto it = callbacks.begin(); it != callbacks.end();)
+          NullCheckedInvocation::invoke((it++)->second);
+    } else {
+      triggerAsyncUpdate();
     }
+  }
 
-    MidiDeviceListConnection::Key add (std::function<void()> callback)
-    {
-        JUCE_ASSERT_MESSAGE_THREAD
-        return callbacks.emplace (key++, std::move (callback)).first->first;
-    }
-
-    void remove (const MidiDeviceListConnection::Key k)
-    {
-        JUCE_ASSERT_MESSAGE_THREAD
-        callbacks.erase (k);
-    }
-
-    void notify()
-    {
-        if (MessageManager::getInstance()->isThisTheMessageThread())
-        {
-            cancelPendingUpdate();
-
-            const State newState;
-
-            if (std::exchange (lastNotifiedState, newState) != newState)
-                for (auto it = callbacks.begin(); it != callbacks.end();)
-                    NullCheckedInvocation::invoke ((it++)->second);
-        }
-        else
-        {
-            triggerAsyncUpdate();
-        }
-    }
-
-    static auto& get()
-    {
-        static MidiDeviceListConnectionBroadcaster result;
-        return result;
-    }
+  static auto &get() {
+    static MidiDeviceListConnectionBroadcaster result;
+    return result;
+  }
 
 private:
-    MidiDeviceListConnectionBroadcaster() = default;
+  MidiDeviceListConnectionBroadcaster() = default;
 
-    class State
-    {
-        Array<MidiDeviceInfo> ins = MidiInput::getAvailableDevices(), outs = MidiOutput::getAvailableDevices();
-        auto tie() const { return std::tie (ins, outs); }
+  class State {
+    Array<MidiDeviceInfo> ins = MidiInput::getAvailableDevices(),
+                          outs = MidiOutput::getAvailableDevices();
+    auto tie() const { return std::tie(ins, outs); }
 
-    public:
-        bool operator== (const State& other) const { return tie() == other.tie(); }
-        bool operator!= (const State& other) const { return tie() != other.tie(); }
-    };
+  public:
+    bool operator==(const State &other) const { return tie() == other.tie(); }
+    bool operator!=(const State &other) const { return tie() != other.tie(); }
+  };
 
-    void handleAsyncUpdate() override
-    {
-        notify();
-    }
+  void handleAsyncUpdate() override { notify(); }
 
-    std::map<MidiDeviceListConnection::Key, std::function<void()>> callbacks;
-    State lastNotifiedState;
-    MidiDeviceListConnection::Key key = 0;
+  std::map<MidiDeviceListConnection::Key, std::function<void()>> callbacks;
+  State lastNotifiedState;
+  MidiDeviceListConnection::Key key = 0;
 };
 
 //==============================================================================
-MidiDeviceListConnection::~MidiDeviceListConnection() noexcept
-{
-    if (broadcaster != nullptr)
-        broadcaster->remove (key);
+MidiDeviceListConnection::~MidiDeviceListConnection() noexcept {
+  if (broadcaster != nullptr)
+    broadcaster->remove(key);
 }
 
 //==============================================================================
-void MidiInputCallback::handlePartialSysexMessage ([[maybe_unused]] MidiInput* source,
-                                                   [[maybe_unused]] const uint8* messageData,
-                                                   [[maybe_unused]] int numBytesSoFar,
-                                                   [[maybe_unused]] double timestamp) {}
+void MidiInputCallback::handlePartialSysexMessage(
+    [[maybe_unused]] MidiInput *source,
+    [[maybe_unused]] const uint8 *messageData,
+    [[maybe_unused]] int numBytesSoFar, [[maybe_unused]] double timestamp) {}
 
 //==============================================================================
-MidiOutput::MidiOutput (const String& deviceName, const String& deviceIdentifier)
-    : Thread ("midi out"), deviceInfo (deviceName, deviceIdentifier)
-{
+MidiOutput::MidiOutput(const String &deviceName, const String &deviceIdentifier)
+    : Thread("midi out"), deviceInfo(deviceName, deviceIdentifier) {}
+
+void MidiOutput::sendBlockOfMessagesNow(const MidiBuffer &buffer) {
+  for (const auto metadata : buffer)
+    sendMessageNow(metadata.getMessage());
 }
 
-void MidiOutput::sendBlockOfMessagesNow (const MidiBuffer& buffer)
-{
-    for (const auto metadata : buffer)
-        sendMessageNow (metadata.getMessage());
+void MidiOutput::sendBlockOfMessages(const MidiBuffer &buffer,
+                                     double millisecondCounterToStartAt,
+                                     double samplesPerSecondForBuffer) {
+  // You've got to call startBackgroundThread() for this to actually work..
+  jassert(isThreadRunning());
+
+  // this needs to be a value in the future - RTFM for this method!
+  jassert(millisecondCounterToStartAt > 0);
+
+  auto timeScaleFactor = 1000.0 / samplesPerSecondForBuffer;
+
+  for (const auto metadata : buffer) {
+    auto eventTime =
+        millisecondCounterToStartAt + timeScaleFactor * metadata.samplePosition;
+    auto *m = new PendingMessage(metadata.data, metadata.numBytes, eventTime);
+
+    const ScopedLock sl(lock);
+
+    if (firstMessage == nullptr ||
+        firstMessage->message.getTimeStamp() > eventTime) {
+      m->next = firstMessage;
+      firstMessage = m;
+    } else {
+      auto *mm = firstMessage;
+
+      while (mm->next != nullptr &&
+             mm->next->message.getTimeStamp() <= eventTime)
+        mm = mm->next;
+
+      m->next = mm->next;
+      mm->next = m;
+    }
+  }
+
+  notify();
 }
 
-void MidiOutput::sendBlockOfMessages (const MidiBuffer& buffer,
-                                      double millisecondCounterToStartAt,
-                                      double samplesPerSecondForBuffer)
-{
-    // You've got to call startBackgroundThread() for this to actually work..
-    jassert (isThreadRunning());
+void MidiOutput::clearAllPendingMessages() {
+  const ScopedLock sl(lock);
 
-    // this needs to be a value in the future - RTFM for this method!
-    jassert (millisecondCounterToStartAt > 0);
+  while (firstMessage != nullptr) {
+    auto *m = firstMessage;
+    firstMessage = firstMessage->next;
+    delete m;
+  }
+}
 
-    auto timeScaleFactor = 1000.0 / samplesPerSecondForBuffer;
+void MidiOutput::startBackgroundThread() { startThread(Priority::high); }
 
-    for (const auto metadata : buffer)
+void MidiOutput::stopBackgroundThread() { stopThread(5000); }
+
+void MidiOutput::run() {
+  while (!threadShouldExit()) {
+    auto now = Time::getMillisecondCounter();
+    uint32 eventTime = 0;
+    uint32 timeToWait = 500;
+
+    PendingMessage *message;
+
     {
-        auto eventTime = millisecondCounterToStartAt + timeScaleFactor * metadata.samplePosition;
-        auto* m = new PendingMessage (metadata.data, metadata.numBytes, eventTime);
+      const ScopedLock sl(lock);
+      message = firstMessage;
 
-        const ScopedLock sl (lock);
+      if (message != nullptr) {
+        eventTime = (uint32)roundToInt(message->message.getTimeStamp());
 
-        if (firstMessage == nullptr || firstMessage->message.getTimeStamp() > eventTime)
-        {
-            m->next = firstMessage;
-            firstMessage = m;
+        if (eventTime > now + 20) {
+          timeToWait = eventTime - (now + 20);
+          message = nullptr;
+        } else {
+          firstMessage = message->next;
         }
-        else
-        {
-            auto* mm = firstMessage;
-
-            while (mm->next != nullptr && mm->next->message.getTimeStamp() <= eventTime)
-                mm = mm->next;
-
-            m->next = mm->next;
-            mm->next = m;
-        }
+      }
     }
 
-    notify();
-}
+    if (message != nullptr) {
+      std::unique_ptr<PendingMessage> messageDeleter(message);
 
-void MidiOutput::clearAllPendingMessages()
-{
-    const ScopedLock sl (lock);
+      if (eventTime > now) {
+        Time::waitForMillisecondCounter(eventTime);
 
-    while (firstMessage != nullptr)
-    {
-        auto* m = firstMessage;
-        firstMessage = firstMessage->next;
-        delete m;
+        if (threadShouldExit())
+          break;
+      }
+
+      if (eventTime > now - 200)
+        sendMessageNow(message->message);
+    } else {
+      jassert(timeToWait < 1000 * 30);
+      wait((int)timeToWait);
     }
-}
+  }
 
-void MidiOutput::startBackgroundThread()
-{
-    startThread (Priority::high);
-}
-
-void MidiOutput::stopBackgroundThread()
-{
-    stopThread (5000);
-}
-
-void MidiOutput::run()
-{
-    while (! threadShouldExit())
-    {
-        auto now = Time::getMillisecondCounter();
-        uint32 eventTime = 0;
-        uint32 timeToWait = 500;
-
-        PendingMessage* message;
-
-        {
-            const ScopedLock sl (lock);
-            message = firstMessage;
-
-            if (message != nullptr)
-            {
-                eventTime = (uint32) roundToInt (message->message.getTimeStamp());
-
-                if (eventTime > now + 20)
-                {
-                    timeToWait = eventTime - (now + 20);
-                    message = nullptr;
-                }
-                else
-                {
-                    firstMessage = message->next;
-                }
-            }
-        }
-
-        if (message != nullptr)
-        {
-            std::unique_ptr<PendingMessage> messageDeleter (message);
-
-            if (eventTime > now)
-            {
-                Time::waitForMillisecondCounter (eventTime);
-
-                if (threadShouldExit())
-                    break;
-            }
-
-            if (eventTime > now - 200)
-                sendMessageNow (message->message);
-        }
-        else
-        {
-            jassert (timeToWait < 1000 * 30);
-            wait ((int) timeToWait);
-        }
-    }
-
-    clearAllPendingMessages();
+  clearAllPendingMessages();
 }
 
 } // namespace juce

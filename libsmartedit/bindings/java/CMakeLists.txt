@@ -2,11 +2,11 @@
 # @brief CMake build file for libsmartedit (used to generate Java SWIG bindings)
 # @author Jonathan Thomas <jonathan@smartedit.org>
 #
-# @section LICENSE
+# @section 
 #
 # Copyright (c) 2008-2024 SmartEdit Studios, LLC
 #
-# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX--Identifier: LGPL-3.0-or-later
 
 ############### JAVA BINDINGS ################
 find_package(SWIG 4.0 REQUIRED)

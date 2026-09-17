@@ -7,14 +7,14 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
+   By using JUCE, you agree to the terms of both the JUCE 6 End-User
    Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User  Agreement: www.juce.com/juce-6-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   www.gnu.org/s).
 
    JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
    EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
@@ -25,16 +25,16 @@
 
 #pragma once
 
-namespace juce::detail
-{
+namespace juce::detail {
 
-struct MimeTypeTable
-{
-    static void registerCustomMimeTypeForFileExtension (const String& mimeType, const String& fileExtension);
+struct MimeTypeTable {
+  static void
+  registerCustomMimeTypeForFileExtension(const String &mimeType,
+                                         const String &fileExtension);
 
-    static StringArray getMimeTypesForFileExtension (const String& fileExtension);
+  static StringArray getMimeTypesForFileExtension(const String &fileExtension);
 
-    static StringArray getFileExtensionsForMimeType (const String& mimeType);
+  static StringArray getFileExtensionsForMimeType(const String &mimeType);
 };
 
 } // namespace juce::detail

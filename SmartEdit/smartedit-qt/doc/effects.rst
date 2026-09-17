@@ -5,17 +5,17 @@
  to the world.
 
 .. SmartEdit Video Editor is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
+ it under the terms of the GNU General Public  as published by
+ the Free Software Foundation, either version 3 of the , or
  (at your option) any later version.
 
 .. SmartEdit Video Editor is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+ GNU General Public  for more details.
 
-.. You should have received a copy of the GNU General Public License
- along with SmartEdit Library.  If not, see <http://www.gnu.org/licenses/>.
+.. You should have received a copy of the GNU General Public 
+ along with SmartEdit Library.  If not, see <http://www.gnu.org/s/>.
 
 .. _effects_ref:
 
@@ -1489,7 +1489,7 @@ creating visual separation, and adding an artistic flair to your videos.
 Pixelate
 """"""""
 The Pixelate effect increases or decreases the size of the pixels in the video, creating a mosaic-like appearance.
-This can be used to obscure details (such as faces or license plates for privacy reasons), or as a stylistic effect
+This can be used to obscure details (such as faces or  plates for privacy reasons), or as a stylistic effect
 to evoke a retro, digital, or abstract aesthetic.
 
 .. table::
@@ -1712,7 +1712,7 @@ visible at the start of a clip, and choose one of the following ``Tracking Type`
 then follows this object from frame to frame, recording its position, scale, and sometimes rotation.
 
 The tracked box can also be used as a live mask source for any other effect. For example, add a
-:guilabel:`Tracker` effect, draw a box around a face or license plate, add a :guilabel:`Blur` or
+:guilabel:`Tracker` effect, draw a box around a face or  plate, add a :guilabel:`Blur` or
 :guilabel:`Pixelate` effect to the same clip, and set that effect's :guilabel:`Mask: Source` to the tracker. The blur
 or pixelation is then limited to the tracked box and updates in the video preview as you adjust it.
 

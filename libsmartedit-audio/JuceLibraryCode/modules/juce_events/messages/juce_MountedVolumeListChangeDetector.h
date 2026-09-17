@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,8 +20,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
 #if JUCE_MAC || JUCE_WINDOWS || DOXYGEN
 
@@ -37,20 +36,19 @@ namespace juce
 
     @tags{Events}
 */
-class JUCE_API  MountedVolumeListChangeDetector
-{
+class JUCE_API MountedVolumeListChangeDetector {
 public:
-    MountedVolumeListChangeDetector();
-    virtual ~MountedVolumeListChangeDetector();
+  MountedVolumeListChangeDetector();
+  virtual ~MountedVolumeListChangeDetector();
 
-    /** This method is called when a volume is mounted or unmounted. */
-    virtual void mountedVolumeListChanged() = 0;
+  /** This method is called when a volume is mounted or unmounted. */
+  virtual void mountedVolumeListChanged() = 0;
 
 private:
-    JUCE_PUBLIC_IN_DLL_BUILD (struct Pimpl)
-    std::unique_ptr<Pimpl> pimpl;
+  JUCE_PUBLIC_IN_DLL_BUILD(struct Pimpl)
+  std::unique_ptr<Pimpl> pimpl;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MountedVolumeListChangeDetector)
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MountedVolumeListChangeDetector)
 };
 
 #endif

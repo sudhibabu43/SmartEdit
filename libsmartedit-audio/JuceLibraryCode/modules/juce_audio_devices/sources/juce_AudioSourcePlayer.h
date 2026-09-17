@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,8 +20,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
 //==============================================================================
 /**
@@ -33,83 +32,81 @@ namespace juce
 
     @tags{Audio}
 */
-class JUCE_API  AudioSourcePlayer  : public AudioIODeviceCallback
-{
+class JUCE_API AudioSourcePlayer : public AudioIODeviceCallback {
 public:
-    //==============================================================================
-    /** Creates an empty AudioSourcePlayer. */
-    AudioSourcePlayer();
+  //==============================================================================
+  /** Creates an empty AudioSourcePlayer. */
+  AudioSourcePlayer();
 
-    /** Destructor.
+  /** Destructor.
 
-        Make sure this object isn't still being used by an AudioIODevice before
-        deleting it!
-    */
-    ~AudioSourcePlayer() override;
+      Make sure this object isn't still being used by an AudioIODevice before
+      deleting it!
+  */
+  ~AudioSourcePlayer() override;
 
-    //==============================================================================
-    /** Changes the current audio source to play from.
+  //==============================================================================
+  /** Changes the current audio source to play from.
 
-        If the source passed in is already being used, this method will do nothing.
-        If the source is not null, its prepareToPlay() method will be called
-        before it starts being used for playback.
+      If the source passed in is already being used, this method will do
+     nothing. If the source is not null, its prepareToPlay() method will be
+     called before it starts being used for playback.
 
-        If there's another source currently playing, its releaseResources() method
-        will be called after it has been swapped for the new one.
+      If there's another source currently playing, its releaseResources() method
+      will be called after it has been swapped for the new one.
 
-        @param newSource                the new source to use - this will NOT be deleted
-                                        by this object when no longer needed, so it's the
-                                        caller's responsibility to manage it.
-    */
-    void setSource (AudioSource* newSource);
+      @param newSource                the new source to use - this will NOT be
+     deleted by this object when no longer needed, so it's the caller's
+     responsibility to manage it.
+  */
+  void setSource(AudioSource *newSource);
 
-    /** Returns the source that's playing.
-        May return nullptr if there's no source.
-    */
-    AudioSource* getCurrentSource() const noexcept      { return source; }
+  /** Returns the source that's playing.
+      May return nullptr if there's no source.
+  */
+  AudioSource *getCurrentSource() const noexcept { return source; }
 
-    /** Sets a gain to apply to the audio data.
-        @see getGain
-    */
-    void setGain (float newGain) noexcept;
+  /** Sets a gain to apply to the audio data.
+      @see getGain
+  */
+  void setGain(float newGain) noexcept;
 
-    /** Returns the current gain.
-        @see setGain
-    */
-    float getGain() const noexcept                      { return gain; }
+  /** Returns the current gain.
+      @see setGain
+  */
+  float getGain() const noexcept { return gain; }
 
-    //==============================================================================
-    /** Implementation of the AudioIODeviceCallbackWithContext method. */
-    void audioDeviceIOCallbackWithContext (const float* const* inputChannelData,
-                                           int totalNumInputChannels,
-                                           float* const* outputChannelData,
-                                           int totalNumOutputChannels,
-                                           int numSamples,
-                                           const AudioIODeviceCallbackContext& context) override;
+  //==============================================================================
+  /** Implementation of the AudioIODeviceCallbackWithContext method. */
+  void audioDeviceIOCallbackWithContext(
+      const float *const *inputChannelData, int totalNumInputChannels,
+      float *const *outputChannelData, int totalNumOutputChannels,
+      int numSamples, const AudioIODeviceCallbackContext &context) override;
 
-    /** Implementation of the AudioIODeviceCallback method. */
-    void audioDeviceAboutToStart (AudioIODevice* device) override;
+  /** Implementation of the AudioIODeviceCallback method. */
+  void audioDeviceAboutToStart(AudioIODevice *device) override;
 
-    /** Implementation of the AudioIODeviceCallback method. */
-    void audioDeviceStopped() override;
+  /** Implementation of the AudioIODeviceCallback method. */
+  void audioDeviceStopped() override;
 
-    /** An alternative method for initialising the source without an AudioIODevice. */
-    void prepareToPlay (double sampleRate, int blockSize);
+  /** An alternative method for initialising the source without an
+   * AudioIODevice. */
+  void prepareToPlay(double sampleRate, int blockSize);
 
 private:
-    //==============================================================================
-    CriticalSection readLock;
-    AudioSource* source = nullptr;
-    double sampleRate = 0;
-    int bufferSize = 0;
-    float* channels[128];
-    float* outputChans[128];
-    const float* inputChans[128];
-    AudioBuffer<float> tempBuffer;
-    float lastGain = 1.0f;
-    std::atomic<float> gain { 1.0f };
+  //==============================================================================
+  CriticalSection readLock;
+  AudioSource *source = nullptr;
+  double sampleRate = 0;
+  int bufferSize = 0;
+  float *channels[128];
+  float *outputChans[128];
+  const float *inputChans[128];
+  AudioBuffer<float> tempBuffer;
+  float lastGain = 1.0f;
+  std::atomic<float> gain{1.0f};
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioSourcePlayer)
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioSourcePlayer)
 };
 
 } // namespace juce

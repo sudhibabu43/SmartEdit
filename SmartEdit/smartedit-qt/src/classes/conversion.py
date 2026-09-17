@@ -4,7 +4,7 @@
  @author Jonathan Thomas <jonathan@smartedit.org>
  @author Frank Dana <ferdnyc AT gmail com>
 
- @section LICENSE
+ @section 
 
  Copyright (c) 2008-2018 SmartEdit Studios, LLC
  (http://www.smarteditstudios.com). This file is part of
@@ -13,17 +13,17 @@
  to the world.
 
  SmartEdit Video Editor is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
+ it under the terms of the GNU General Public  as published by
+ the Free Software Foundation, either version 3 of the , or
  (at your option) any later version.
 
  SmartEdit Video Editor is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+ GNU General Public  for more details.
 
- You should have received a copy of the GNU General Public License
- along with SmartEdit Library.  If not, see <http://www.gnu.org/licenses/>.
+ You should have received a copy of the GNU General Public 
+ along with SmartEdit Library.  If not, see <http://www.gnu.org/s/>.
  """
 
 zoomSeconds = [1, 3, 5, 10, 15, 20, 30, 45, 60, 75,

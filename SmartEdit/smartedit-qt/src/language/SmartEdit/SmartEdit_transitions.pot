@@ -1,6 +1,6 @@
 ﻿# SmartEdit Video Editor POT Template File.
 # Copyright (C) 2008-2018 SmartEdit Studios, LLC
-# This file is distributed under the same license as SmartEdit.
+# This file is distributed under the same  as SmartEdit.
 # Jonathan Thomas <Jonathan.Oomph@gmail.com>, 2018.
 #
 #, fuzzy

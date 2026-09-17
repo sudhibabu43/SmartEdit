@@ -6,5 +6,5 @@ These files are from tag 1.8.0 (987538b).
 We've included only those parts of the original repository which are required to build the Oboe
 library. Documentation, samples, tests, and other non-library items have been omitted.
 
-Files in this directory and below are licensed under the terms of the license in the LICENSE file
+Files in this directory and below are d under the terms of the  in the  file
 which you can find in the same directory as this readme.

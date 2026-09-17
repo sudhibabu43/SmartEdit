@@ -2,11 +2,11 @@
 # @brief CMake build file for libsmartedit (used to generate makefiles)
 # @author Jonathan Thomas <jonathan@smartedit.org>
 #
-# @section LICENSE
+# @section 
 #
 # Copyright (c) 2008-2024 SmartEdit Studios, LLC
 #
-# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX--Identifier: LGPL-3.0-or-later
 
 IF(NOT DEFINED ENABLE_PYTHON)
     SET(ENABLE_PYTHON 1)

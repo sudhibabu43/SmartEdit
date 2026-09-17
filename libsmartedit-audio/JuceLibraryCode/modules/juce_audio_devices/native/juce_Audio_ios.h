@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,75 +20,73 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
 class iOSAudioIODeviceType;
 
-class iOSAudioIODevice : public AudioIODevice
-{
+class iOSAudioIODevice : public AudioIODevice {
 public:
-    //==============================================================================
-    String open (const BigInteger&, const BigInteger&, double, int) override;
-    void close() override;
+  //==============================================================================
+  String open(const BigInteger &, const BigInteger &, double, int) override;
+  void close() override;
 
-    void start (AudioIODeviceCallback*) override;
-    void stop() override;
+  void start(AudioIODeviceCallback *) override;
+  void stop() override;
 
-    Array<double> getAvailableSampleRates() override;
-    Array<int> getAvailableBufferSizes() override;
+  Array<double> getAvailableSampleRates() override;
+  Array<int> getAvailableBufferSizes() override;
 
-    bool setAudioPreprocessingEnabled (bool) override;
+  bool setAudioPreprocessingEnabled(bool) override;
 
-    //==============================================================================
-    bool isPlaying() override;
-    bool isOpen() override;
-    String getLastError() override;
+  //==============================================================================
+  bool isPlaying() override;
+  bool isOpen() override;
+  String getLastError() override;
 
-    //==============================================================================
-    StringArray getOutputChannelNames() override;
-    StringArray getInputChannelNames() override;
+  //==============================================================================
+  StringArray getOutputChannelNames() override;
+  StringArray getInputChannelNames() override;
 
-    int getDefaultBufferSize() override;
-    int getCurrentBufferSizeSamples() override;
+  int getDefaultBufferSize() override;
+  int getCurrentBufferSizeSamples() override;
 
-    double getCurrentSampleRate() override;
+  double getCurrentSampleRate() override;
 
-    int getCurrentBitDepth() override;
+  int getCurrentBitDepth() override;
 
-    BigInteger getActiveOutputChannels() const override;
-    BigInteger getActiveInputChannels() const override;
+  BigInteger getActiveOutputChannels() const override;
+  BigInteger getActiveInputChannels() const override;
 
-    int getOutputLatencyInSamples() override;
-    int getInputLatencyInSamples() override;
+  int getOutputLatencyInSamples() override;
+  int getInputLatencyInSamples() override;
 
-    int getXRunCount() const noexcept override;
+  int getXRunCount() const noexcept override;
 
-    AudioWorkgroup getWorkgroup() const override;
+  AudioWorkgroup getWorkgroup() const override;
 
-    //==============================================================================
-    void setMidiMessageCollector (MidiMessageCollector*);
-    AudioPlayHead* getAudioPlayHead() const;
+  //==============================================================================
+  void setMidiMessageCollector(MidiMessageCollector *);
+  AudioPlayHead *getAudioPlayHead() const;
 
-    //==============================================================================
-    bool isInterAppAudioConnected() const;
-   #if JUCE_MODULE_AVAILABLE_juce_graphics
-    Image getIcon (int size);
-   #endif
-    void switchApplication();
+  //==============================================================================
+  bool isInterAppAudioConnected() const;
+#if JUCE_MODULE_AVAILABLE_juce_graphics
+  Image getIcon(int size);
+#endif
+  void switchApplication();
 
 private:
-    //==============================================================================
-    iOSAudioIODevice (iOSAudioIODeviceType*, const String&, const String&);
+  //==============================================================================
+  iOSAudioIODevice(iOSAudioIODeviceType *, const String &, const String &);
 
-    //==============================================================================
-    friend class iOSAudioIODeviceType;
-    friend struct AudioSessionHolder;
+  //==============================================================================
+  friend class iOSAudioIODeviceType;
+  friend struct AudioSessionHolder;
 
-    struct Pimpl;
-    std::unique_ptr<Pimpl> pimpl;
+  struct Pimpl;
+  std::unique_ptr<Pimpl> pimpl;
 
-    JUCE_DECLARE_NON_COPYABLE (iOSAudioIODevice)
+  JUCE_DECLARE_NON_COPYABLE(iOSAudioIODevice)
 };
 
 } // namespace juce

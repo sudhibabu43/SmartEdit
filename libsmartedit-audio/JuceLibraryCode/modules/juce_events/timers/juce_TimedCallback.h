@@ -7,14 +7,14 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User
    Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-7-licence
+   End User  Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   www.gnu.org/s).
 
    JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
    EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
@@ -23,42 +23,39 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
 /** Utility class wrapping a single non-null callback called by a Timer.
 
-    You can use the usual Timer functions to start and stop the TimedCallback. Deleting the
-    TimedCallback will automatically stop the underlying Timer.
+    You can use the usual Timer functions to start and stop the TimedCallback.
+   Deleting the TimedCallback will automatically stop the underlying Timer.
 
     With this class you can use the Timer facility without inheritance.
 
     @see Timer
     @tags{Events}
 */
-class TimedCallback final : private Timer
-{
+class TimedCallback final : private Timer {
 public:
-    /** Constructor. The passed in callback must be non-null. */
-    explicit TimedCallback (std::function<void()> callbackIn)
-        : callback (std::move (callbackIn))
-    {
-        jassert (callback);
-    }
+  /** Constructor. The passed in callback must be non-null. */
+  explicit TimedCallback(std::function<void()> callbackIn)
+      : callback(std::move(callbackIn)) {
+    jassert(callback);
+  }
 
-    /** Destructor. */
-    ~TimedCallback() noexcept override { stopTimer(); }
+  /** Destructor. */
+  ~TimedCallback() noexcept override { stopTimer(); }
 
-    using Timer::startTimer;
-    using Timer::startTimerHz;
-    using Timer::stopTimer;
-    using Timer::isTimerRunning;
-    using Timer::getTimerInterval;
+  using Timer::getTimerInterval;
+  using Timer::isTimerRunning;
+  using Timer::startTimer;
+  using Timer::startTimerHz;
+  using Timer::stopTimer;
 
 private:
-    void timerCallback() override { callback(); }
+  void timerCallback() override { callback(); }
 
-    std::function<void()> callback;
+  std::function<void()> callback;
 };
 
 } // namespace juce

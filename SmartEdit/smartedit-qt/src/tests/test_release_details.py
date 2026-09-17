@@ -3,7 +3,7 @@
  @brief Unit tests for SmartEdit release details helpers
  @author SmartEdit Studios, LLC
 
- @section LICENSE
+ @section 
 
  Copyright (c) 2008-2026 SmartEdit Studios, LLC
  (http://www.smarteditstudios.com). This file is part of

@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,8 +20,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
 //==============================================================================
 /**
@@ -31,40 +30,39 @@ namespace juce
 
     @tags{Events}
 */
-class JUCE_API  MessageListener
-{
+class JUCE_API MessageListener {
 public:
-    //==============================================================================
-    MessageListener() noexcept;
+  //==============================================================================
+  MessageListener() noexcept;
 
-    /** Destructor. */
-    virtual ~MessageListener();
+  /** Destructor. */
+  virtual ~MessageListener();
 
-    //==============================================================================
-    /** This is the callback method that receives incoming messages.
+  //==============================================================================
+  /** This is the callback method that receives incoming messages.
 
-        This is called by the MessageManager from its dispatch loop.
+      This is called by the MessageManager from its dispatch loop.
 
-        @see postMessage
-    */
-    virtual void handleMessage (const Message& message) = 0;
+      @see postMessage
+  */
+  virtual void handleMessage(const Message &message) = 0;
 
-    //==============================================================================
-    /** Sends a message to the message queue, for asynchronous delivery to this listener
-        later on.
+  //==============================================================================
+  /** Sends a message to the message queue, for asynchronous delivery to this
+     listener later on.
 
-        This method can be called safely by any thread.
+      This method can be called safely by any thread.
 
-        @param message      the message object to send - this will be deleted
-                            automatically by the message queue, so make sure it's
-                            allocated on the heap, not the stack!
-        @see handleMessage
-    */
-    void postMessage (Message* message) const;
+      @param message      the message object to send - this will be deleted
+                          automatically by the message queue, so make sure it's
+                          allocated on the heap, not the stack!
+      @see handleMessage
+  */
+  void postMessage(Message *message) const;
 
 private:
-    WeakReference<MessageListener>::Master masterReference;
-    friend class WeakReference<MessageListener>;
+  WeakReference<MessageListener>::Master masterReference;
+  friend class WeakReference<MessageListener>;
 };
 
 } // namespace juce

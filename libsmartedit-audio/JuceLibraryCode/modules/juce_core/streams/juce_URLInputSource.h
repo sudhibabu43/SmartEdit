@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,8 +20,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
 //==============================================================================
 /**
@@ -31,31 +30,30 @@ namespace juce
 
     @tags{Core}
 */
-class JUCE_API  URLInputSource     : public InputSource
-{
+class JUCE_API URLInputSource : public InputSource {
 public:
-    //==============================================================================
-    /** Creates a URLInputSource for a url. */
-    URLInputSource (const URL& url);
+  //==============================================================================
+  /** Creates a URLInputSource for a url. */
+  URLInputSource(const URL &url);
 
-    /** Move constructor which will move the URL into the InputSource.
+  /** Move constructor which will move the URL into the InputSource.
 
-        This is useful when the url carries any security credentials.
-    */
-    URLInputSource (URL&& url);
+      This is useful when the url carries any security credentials.
+  */
+  URLInputSource(URL &&url);
 
-    /** Destructor. */
-    ~URLInputSource() override;
+  /** Destructor. */
+  ~URLInputSource() override;
 
-    InputStream* createInputStream() override;
-    InputStream* createInputStreamFor (const String& relatedItemPath) override;
-    int64 hashCode() const override;
+  InputStream *createInputStream() override;
+  InputStream *createInputStreamFor(const String &relatedItemPath) override;
+  int64 hashCode() const override;
 
 private:
-    //==============================================================================
-    const URL u;
+  //==============================================================================
+  const URL u;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (URLInputSource)
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(URLInputSource)
 };
 
-}
+} // namespace juce

@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,8 +20,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
 //==============================================================================
 /**
@@ -35,42 +34,41 @@ namespace juce
 
     @tags{Audio}
 */
-class JUCE_API  PositionableAudioSource  : public AudioSource
-{
+class JUCE_API PositionableAudioSource : public AudioSource {
 protected:
-    //==============================================================================
-    /** Creates the PositionableAudioSource. */
-    PositionableAudioSource() = default;
+  //==============================================================================
+  /** Creates the PositionableAudioSource. */
+  PositionableAudioSource() = default;
 
 public:
-    /** Destructor */
-    ~PositionableAudioSource() override = default;
+  /** Destructor */
+  ~PositionableAudioSource() override = default;
 
-    //==============================================================================
-    /** Tells the stream to move to a new position.
+  //==============================================================================
+  /** Tells the stream to move to a new position.
 
-        Calling this indicates that the next call to AudioSource::getNextAudioBlock()
-        should return samples from this position.
+      Calling this indicates that the next call to
+     AudioSource::getNextAudioBlock() should return samples from this position.
 
-        Note that this may be called on a different thread to getNextAudioBlock(),
-        so the subclass should make sure it's synchronised.
-    */
-    virtual void setNextReadPosition (int64 newPosition) = 0;
+      Note that this may be called on a different thread to getNextAudioBlock(),
+      so the subclass should make sure it's synchronised.
+  */
+  virtual void setNextReadPosition(int64 newPosition) = 0;
 
-    /** Returns the position from which the next block will be returned.
+  /** Returns the position from which the next block will be returned.
 
-        @see setNextReadPosition
-    */
-    virtual int64 getNextReadPosition() const = 0;
+      @see setNextReadPosition
+  */
+  virtual int64 getNextReadPosition() const = 0;
 
-    /** Returns the total length of the stream (in samples). */
-    virtual int64 getTotalLength() const = 0;
+  /** Returns the total length of the stream (in samples). */
+  virtual int64 getTotalLength() const = 0;
 
-    /** Returns true if this source is actually playing in a loop. */
-    virtual bool isLooping() const = 0;
+  /** Returns true if this source is actually playing in a loop. */
+  virtual bool isLooping() const = 0;
 
-    /** Tells the source whether you'd like it to play in a loop. */
-    virtual void setLooping (bool shouldLoop);
+  /** Tells the source whether you'd like it to play in a loop. */
+  virtual void setLooping(bool shouldLoop);
 };
 
 } // namespace juce

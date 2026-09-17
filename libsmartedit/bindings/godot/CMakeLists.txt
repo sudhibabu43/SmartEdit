@@ -2,11 +2,11 @@
 # @brief CMake build file for libsmartedit-godot (used to generate GDExtension)
 # @author Jonathan Thomas <jonathan@smartedit.org>
 #
-# @section LICENSE
+# @section 
 #
 # Copyright (c) 2008-2025 SmartEdit Studios, LLC
 #
-# SPDX-License-Identifier: LGPL-3.0-or-later
+# SPDX--Identifier: LGPL-3.0-or-later
 
 cmake_minimum_required(VERSION 3.17)
 

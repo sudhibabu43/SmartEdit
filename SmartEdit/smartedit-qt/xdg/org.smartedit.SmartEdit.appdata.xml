@@ -2,8 +2,8 @@
 <component type="desktop-application">
   <id>org.smartedit.SmartEdit</id>
   <launchable type="desktop-id">org.smartedit.SmartEdit.desktop</launchable>
-  <metadata_license>CC0-1.0</metadata_license>
-  <project_license>GPL-3.0-or-later</project_license>
+  <metadata_>CC0-1.0</metadata_>
+  <project_>GPL-3.0-or-later</project_>
   <name>SmartEdit Video Editor</name>
   <developer_name>SmartEdit Studios, LLC</developer_name>
   <summary>An easy to use, quick to learn, and surprisingly powerful video editor</summary>
@@ -15,7 +15,7 @@
     </p>
         <p><em>Features include:</em></p>
     <ul>
-        <li><em>Free &amp; open-source</em> (licensed under GPLv3)</li>
+        <li><em>Free &amp; open-source</em> (d under GPLv3)</li>
         <li><em>Cross-platform</em> (Linux, OS X, Chrome OS, and Windows)</li>
         <li><em>Easy-to-use user interface</em> (designed for beginners, built-in tutorial)</li>
         <li><em>Supports most video, audio, &amp; image formats</em> (based on FFmpeg)</li>

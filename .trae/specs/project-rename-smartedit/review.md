@@ -8,17 +8,17 @@
 - [x] CP-R2: New directory libsmartedit/ exists with CMakeLists.txt naming project 'libsmartedit'
   - **Type**: `rule`
   - **Covers**: AC-2 (TR-2.1, TR-2.2)
-  - **Evidence**: Review R1 PASS. CMakeLists.txt lines 1-15 all say "CMakeLists.txt (libsmartedit)" / "libsmartedit" with zero "libopenshot" occurrences.
+  - **Evidence**: Review R1 PASS. CMakeLists.txt lines 1-15 all say "CMakeLists.txt (libsmartedit)" / "libsmartedit" with zero "libsmartedit" occurrences.
 
 - [x] CP-R3: New directory libsmartedit-audio/ exists with CMakeLists.txt naming project 'SmartEditAudio'
   - **Type**: `rule`
   - **Covers**: AC-3 (TR-3.1, TR-3.2)
   - **Evidence**: Review R1 PASS. CMakeLists.txt header says "CMakeLists.txt (libsmartedit-audio)"; lines 8-13 contain "SmartEdit Audio Library (libsmartedit-audio)".
 
-- [x] CP-R4: .vscode/c_cpp_properties.json contains new libsmartedit* paths and references to old libopenshot* paths identified for manual removal
+- [x] CP-R4: .vscode/c_cpp_properties.json contains new libsmartedit* paths and references to old libsmartedit* paths identified for manual removal
   - **Type**: `rule`
   - **Covers**: AC-4 (TR-4.1, TR-4.2, TR-4.3)
-  - **Evidence**: Review R1 PASS. Correct new paths present lines 6-10; 5 stale libopenshot* duplicates identified lines 11-15 + 1 stale compileCommands line 34. All present for manual removal/update. File is valid JSON.
+  - **Evidence**: Review R1 PASS. Correct new paths present lines 6-10; 5 stale libsmartedit* duplicates identified lines 11-15 + 1 stale compileCommands line 34. All present for manual removal/update. File is valid JSON.
 
 - [x] CP-U1: Completeness of rename — zero unintended OpenShot/openshot references in editable source text files
   - **Type**: `rubric`
@@ -43,7 +43,7 @@
 ### Review R1
 - **Result**: `pass`
 - **Evidence**: Independent sub-agent review of all 7 checkpoints. All 7 pass. CP-U1 rubric scored 5/5 (top anchor). Two advisory (non-blocking) findings:
-  1. F-1 Stale old directories (OpenShot/, libopenshot/, libopenshot-audio/) — user should delete after closing IDEs (copy-based rename used due to Qt Creator file locks).
+  1. F-1 Stale old directories (OpenShot/, libsmartedit/, libsmartedit-audio/) — user should delete after closing IDEs (copy-based rename used due to Qt Creator file locks).
   2. F-2 .vscode/c_cpp_properties.json still needs 5 line deletions + 1 compileCommands update (TRAE sandbox restriction; clear manual steps in tasks.md Task 4 notes).
 - **Checkpoint Results Summary**: CP-R1 pass, CP-R2 pass, CP-R3 pass, CP-R4 pass, CP-U1 pass (5/5), CP-R5 pass, CP-R6 pass.
 - **Overall Recommendation**: APPROVE. All acceptance criteria met. Two advisory items are environment artifacts (IDE locks + sandbox policy) with documented user-facing cleanup steps. No actionable defects found.

@@ -136,7 +136,7 @@
       <ServiceExclusion ServiceName="LanmanServer" />
       <ServiceExclusion ServiceName="LanmanWorkstation" />
       <ServiceExclusion ServiceName="lfsvc" />
-      <ServiceExclusion ServiceName="LicenseManager" />
+      <ServiceExclusion ServiceName="Manager" />
       <ServiceExclusion ServiceName="lltdsvc" />
       <ServiceExclusion ServiceName="lmhosts" />
       <ServiceExclusion ServiceName="LSM" />

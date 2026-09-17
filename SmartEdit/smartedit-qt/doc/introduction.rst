@@ -5,17 +5,17 @@
  to the world.
 
 .. SmartEdit Video Editor is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
+ it under the terms of the GNU General Public  as published by
+ the Free Software Foundation, either version 3 of the , or
  (at your option) any later version.
 
 .. SmartEdit Video Editor is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+ GNU General Public  for more details.
 
-.. You should have received a copy of the GNU General Public License
- along with SmartEdit Library.  If not, see <http://www.gnu.org/licenses/>.
+.. You should have received a copy of the GNU General Public 
+ along with SmartEdit Library.  If not, see <http://www.gnu.org/s/>.
 
 Introduction
 ============
@@ -28,7 +28,7 @@ easy-to-use interface and rich feature-set.
 
 Features
 --------
-- **Free & open-source** (licensed under GPLv3)
+- **Free & open-source** (d under GPLv3)
 - **Cross-platform** (Linux, macOS, Chrome OS, and Windows)
 - **Easy-to-use UI** (beginner-friendly, built-in tutorial)
 - **Supports most formats** (video, audio, images - FFmpeg-based)
@@ -99,14 +99,14 @@ Minimum Specifications
 - Optional: Solid-state drive (SSD), if utilizing disk-caching add an additional 10GB of hard-disk space
 - For factors related to real-time previews, see :ref:`playback_ref`.
 
-License
+
 -------
 SmartEdit Video Editor is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
+it under the terms of the GNU General Public  as published by
+the Free Software Foundation, either version 3 of the , or
 (at your option) any later version.
 
 SmartEdit Video Editor is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GNU General Public  for more details.

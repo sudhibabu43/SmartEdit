@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -22,8 +22,7 @@
 
 #ifndef DOXYGEN
 
-namespace juce::universal_midi_packets
-{
+namespace juce::universal_midi_packets {
 
 /**
     This struct acts as a single-file namespace for Universal MIDI Packet
@@ -31,42 +30,40 @@ namespace juce::universal_midi_packets
 
     @tags{Audio}
 */
-struct SysEx7
-{
-    /** Returns the number of 64-bit packets required to hold a series of
-        SysEx bytes.
+struct SysEx7 {
+  /** Returns the number of 64-bit packets required to hold a series of
+      SysEx bytes.
 
-        The number passed to this function should exclude the leading/trailing
-        SysEx bytes used in an old midi bytestream, as these are not required
-        when using Universal MIDI Packets.
-    */
-    static uint32_t getNumPacketsRequiredForDataSize (uint32_t);
+      The number passed to this function should exclude the leading/trailing
+      SysEx bytes used in an old midi bytestream, as these are not required
+      when using Universal MIDI Packets.
+  */
+  static uint32_t getNumPacketsRequiredForDataSize(uint32_t);
 
-    /** The different kinds of UMP SysEx-7 message. */
-    enum class Kind : uint8_t
-    {
-        /** The whole message fits in a single 2-word packet. */
-        complete     = 0,
+  /** The different kinds of UMP SysEx-7 message. */
+  enum class Kind : uint8_t {
+    /** The whole message fits in a single 2-word packet. */
+    complete = 0,
 
-        /** The packet begins a SysEx message that will continue in subsequent packets. */
-        begin        = 1,
+    /** The packet begins a SysEx message that will continue in subsequent
+       packets. */
+    begin = 1,
 
-        /** The packet is a continuation of an ongoing SysEx message. */
-        continuation = 2,
+    /** The packet is a continuation of an ongoing SysEx message. */
+    continuation = 2,
 
-        /** The packet terminates an ongoing SysEx message. */
-        end          = 3
-    };
+    /** The packet terminates an ongoing SysEx message. */
+    end = 3
+  };
 
-    /** Holds the bytes from a single SysEx-7 packet. */
-    struct PacketBytes
-    {
-        std::array<std::byte, 6> data;
-        uint8_t size;
-    };
+  /** Holds the bytes from a single SysEx-7 packet. */
+  struct PacketBytes {
+    std::array<std::byte, 6> data;
+    uint8_t size;
+  };
 
-    /** Extracts the data bytes from a 64-bit data message. */
-    static PacketBytes getDataBytes (const PacketX2& packet);
+  /** Extracts the data bytes from a 64-bit data message. */
+  static PacketBytes getDataBytes(const PacketX2 &packet);
 };
 
 } // namespace juce::universal_midi_packets

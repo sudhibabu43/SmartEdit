@@ -369,7 +369,7 @@ Processing: d:/mini project updation/smartEdit1/SmartEdit/smartedit-qt/src\windo
 Processing: d:/mini project updation/smartEdit1/SmartEdit/smartedit-qt/src\windows\ui\export-clips.ui
 Processing: d:/mini project updation/smartEdit1/SmartEdit/smartedit-qt/src\windows\ui\export.ui
 Processing: d:/mini project updation/smartEdit1/SmartEdit/smartedit-qt/src\windows\ui\file-properties.ui
-Processing: d:/mini project updation/smartEdit1/SmartEdit/smartedit-qt/src\windows\ui\license.ui
+Processing: d:/mini project updation/smartEdit1/SmartEdit/smartedit-qt/src\windows\ui\.ui
 Processing: d:/mini project updation/smartEdit1/SmartEdit/smartedit-qt/src\windows\ui\main-window.ui
 Modified: d:/mini project updation/smartEdit1/SmartEdit/smartedit-qt/src\windows\ui\main-window.ui
 Processing: d:/mini project updation/smartEdit1/SmartEdit/smartedit-qt/src\windows\ui\preferences.ui

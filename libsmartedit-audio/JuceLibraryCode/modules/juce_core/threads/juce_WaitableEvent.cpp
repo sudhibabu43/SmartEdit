@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,51 +20,40 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
-WaitableEvent::WaitableEvent (bool manualReset) noexcept
-    : useManualReset (manualReset)
-{
-}
+WaitableEvent::WaitableEvent(bool manualReset) noexcept
+    : useManualReset(manualReset) {}
 
-bool WaitableEvent::wait (double timeOutMilliseconds) const
-{
-    std::unique_lock<std::mutex> lock (mutex);
+bool WaitableEvent::wait(double timeOutMilliseconds) const {
+  std::unique_lock<std::mutex> lock(mutex);
 
-    if (! triggered)
-    {
-        if (timeOutMilliseconds < 0.0)
-        {
-            condition.wait (lock, [this] { return triggered == true; });
-        }
-        else
-        {
-            if (! condition.wait_for (lock, std::chrono::duration<double, std::milli> { timeOutMilliseconds },
-                                      [this] { return triggered == true; }))
-            {
-                return false;
-            }
-        }
+  if (!triggered) {
+    if (timeOutMilliseconds < 0.0) {
+      condition.wait(lock, [this] { return triggered == true; });
+    } else {
+      if (!condition.wait_for(
+              lock,
+              std::chrono::duration<double, std::milli>{timeOutMilliseconds},
+              [this] { return triggered == true; })) {
+        return false;
+      }
     }
+  }
 
-    if (! useManualReset)
-        reset();
+  if (!useManualReset)
+    reset();
 
-    return true;
+  return true;
 }
 
-void WaitableEvent::signal() const
-{
-    std::lock_guard<std::mutex> lock (mutex);
+void WaitableEvent::signal() const {
+  std::lock_guard<std::mutex> lock(mutex);
 
-    triggered = true;
-    condition.notify_all();
+  triggered = true;
+  condition.notify_all();
 }
 
-void WaitableEvent::reset() const
-{
-    triggered = false;
-}
+void WaitableEvent::reset() const { triggered = false; }
 
 } // namespace juce

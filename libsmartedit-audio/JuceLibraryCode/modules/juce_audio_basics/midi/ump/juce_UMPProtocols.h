@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -22,22 +22,20 @@
 
 #ifndef DOXYGEN
 
-namespace juce::universal_midi_packets
-{
+namespace juce::universal_midi_packets {
 
-/** The kinds of MIDI protocol that can be formatted into Universal MIDI Packets. */
-enum class PacketProtocol
-{
-    MIDI_1_0,
-    MIDI_2_0,
+/** The kinds of MIDI protocol that can be formatted into Universal MIDI
+ * Packets. */
+enum class PacketProtocol {
+  MIDI_1_0,
+  MIDI_2_0,
 };
 
 /** All kinds of MIDI protocol understood by JUCE. */
-enum class MidiProtocol
-{
-    bytestream,
-    UMP_MIDI_1_0,
-    UMP_MIDI_2_0,
+enum class MidiProtocol {
+  bytestream,
+  UMP_MIDI_1_0,
+  UMP_MIDI_2_0,
 };
 
 } // namespace juce::universal_midi_packets

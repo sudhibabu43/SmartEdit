@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,8 +20,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
 //==============================================================================
 /**
@@ -33,71 +32,70 @@ namespace juce
 
     @tags{Audio}
 */
-class JUCE_API  MPEValue
-{
+class JUCE_API MPEValue {
 public:
-    //==============================================================================
-    /** Default constructor.
+  //==============================================================================
+  /** Default constructor.
 
-        Constructs an MPEValue corresponding to the centre value.
-    */
-    MPEValue() noexcept;
+      Constructs an MPEValue corresponding to the centre value.
+  */
+  MPEValue() noexcept;
 
-    /** Constructs an MPEValue from an integer between 0 and 127
-        (using 7-bit precision).
-    */
-    static MPEValue from7BitInt (int value) noexcept;
+  /** Constructs an MPEValue from an integer between 0 and 127
+      (using 7-bit precision).
+  */
+  static MPEValue from7BitInt(int value) noexcept;
 
-    /** Constructs an MPEValue from an integer between 0 and 16383
-        (using 14-bit precision).
-    */
-    static MPEValue from14BitInt (int value) noexcept;
+  /** Constructs an MPEValue from an integer between 0 and 16383
+      (using 14-bit precision).
+  */
+  static MPEValue from14BitInt(int value) noexcept;
 
-    /** Constructs an MPEValue from a float between 0.0f and 1.0f. */
-    static MPEValue fromUnsignedFloat (float value) noexcept;
+  /** Constructs an MPEValue from a float between 0.0f and 1.0f. */
+  static MPEValue fromUnsignedFloat(float value) noexcept;
 
-    /** Constructs an MPEValue from a float between -1.0f and 1.0f. */
-    static MPEValue fromSignedFloat (float value) noexcept;
+  /** Constructs an MPEValue from a float between -1.0f and 1.0f. */
+  static MPEValue fromSignedFloat(float value) noexcept;
 
-    /** Constructs an MPEValue corresponding to the centre value. */
-    static MPEValue centreValue() noexcept;
+  /** Constructs an MPEValue corresponding to the centre value. */
+  static MPEValue centreValue() noexcept;
 
-    /** Constructs an MPEValue corresponding to the minimum value. */
-    static MPEValue minValue() noexcept;
+  /** Constructs an MPEValue corresponding to the minimum value. */
+  static MPEValue minValue() noexcept;
 
-    /** Constructs an MPEValue corresponding to the maximum value. */
-    static MPEValue maxValue() noexcept;
+  /** Constructs an MPEValue corresponding to the maximum value. */
+  static MPEValue maxValue() noexcept;
 
-    /** Retrieves the current value as an integer between 0 and 127.
+  /** Retrieves the current value as an integer between 0 and 127.
 
-        Information will be lost if the value was initialised with a precision
-        higher than 7-bit.
-    */
-    int as7BitInt() const noexcept;
+      Information will be lost if the value was initialised with a precision
+      higher than 7-bit.
+  */
+  int as7BitInt() const noexcept;
 
-    /** Retrieves the current value as an integer between 0 and 16383.
+  /** Retrieves the current value as an integer between 0 and 16383.
 
-        Resolution will be lost if the value was initialised with a precision
-        higher than 14-bit.
-    */
-    int as14BitInt() const noexcept;
+      Resolution will be lost if the value was initialised with a precision
+      higher than 14-bit.
+  */
+  int as14BitInt() const noexcept;
 
-    /** Retrieves the current value mapped to a float between -1.0f and 1.0f. */
-    float asSignedFloat() const noexcept;
+  /** Retrieves the current value mapped to a float between -1.0f and 1.0f. */
+  float asSignedFloat() const noexcept;
 
-    /** Retrieves the current value mapped to a float between 0.0f and 1.0f. */
-    float asUnsignedFloat() const noexcept;
+  /** Retrieves the current value mapped to a float between 0.0f and 1.0f. */
+  float asUnsignedFloat() const noexcept;
 
-    /** Returns true if two values are equal. */
-    bool operator== (const MPEValue& other) const noexcept;
+  /** Returns true if two values are equal. */
+  bool operator==(const MPEValue &other) const noexcept;
 
-    /** Returns true if two values are not equal. */
-    bool operator!= (const MPEValue& other) const noexcept;
+  /** Returns true if two values are not equal. */
+  bool operator!=(const MPEValue &other) const noexcept;
 
 private:
-    //==============================================================================
-    MPEValue (int normalisedValue);
-    int normalisedValue = 8192;
+  //==============================================================================
+  MPEValue(int normalisedValue);
+  int normalisedValue = 8192;
 };
 
 } // namespace juce

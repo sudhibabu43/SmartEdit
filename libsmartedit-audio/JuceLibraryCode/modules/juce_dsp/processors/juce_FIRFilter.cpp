@@ -7,14 +7,14 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User
    Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-7-licence
+   End User  Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   www.gnu.org/s).
 
    JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
    EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
@@ -23,132 +23,128 @@
   ==============================================================================
 */
 
-namespace juce::dsp
-{
+namespace juce::dsp {
 
 template <typename NumericType>
-double FIR::Coefficients<NumericType>::Coefficients::getMagnitudeForFrequency (double frequency, double theSampleRate) const noexcept
-{
-    jassert (theSampleRate > 0.0);
-    jassert (frequency >= 0.0 && frequency <= theSampleRate * 0.5);
+double FIR::Coefficients<NumericType>::Coefficients::getMagnitudeForFrequency(
+    double frequency, double theSampleRate) const noexcept {
+  jassert(theSampleRate > 0.0);
+  jassert(frequency >= 0.0 && frequency <= theSampleRate * 0.5);
 
-    constexpr Complex<double> j (0, 1);
-    auto order = getFilterOrder();
+  constexpr Complex<double> j(0, 1);
+  auto order = getFilterOrder();
 
-    Complex<double> numerator = 0.0, factor = 1.0;
-    Complex<double> jw = std::exp (-MathConstants<double>::twoPi * frequency * j / theSampleRate);
+  Complex<double> numerator = 0.0, factor = 1.0;
+  Complex<double> jw =
+      std::exp(-MathConstants<double>::twoPi * frequency * j / theSampleRate);
 
-    const auto* coefs = coefficients.begin();
+  const auto *coefs = coefficients.begin();
 
-    for (size_t n = 0; n <= order; ++n)
-    {
-        numerator += static_cast<double> (coefs[n]) * factor;
-        factor *= jw;
-    }
+  for (size_t n = 0; n <= order; ++n) {
+    numerator += static_cast<double>(coefs[n]) * factor;
+    factor *= jw;
+  }
 
-    return std::abs (numerator);
+  return std::abs(numerator);
 }
 
 //==============================================================================
 template <typename NumericType>
-void FIR::Coefficients<NumericType>::Coefficients::getMagnitudeForFrequencyArray (double* frequencies, double* magnitudes,
-                                                                        size_t numSamples, double theSampleRate) const noexcept
-{
-    jassert (theSampleRate > 0.0);
+void FIR::Coefficients<NumericType>::Coefficients::
+    getMagnitudeForFrequencyArray(double *frequencies, double *magnitudes,
+                                  size_t numSamples,
+                                  double theSampleRate) const noexcept {
+  jassert(theSampleRate > 0.0);
 
-    constexpr Complex<double> j (0, 1);
-    const auto* coefs = coefficients.begin();
-    auto order = getFilterOrder();
+  constexpr Complex<double> j(0, 1);
+  const auto *coefs = coefficients.begin();
+  auto order = getFilterOrder();
 
-    for (size_t i = 0; i < numSamples; ++i)
-    {
-        jassert (frequencies[i] >= 0.0 && frequencies[i] <= theSampleRate * 0.5);
-
-        Complex<double> numerator = 0.0;
-        Complex<double> factor = 1.0;
-        Complex<double> jw = std::exp (-MathConstants<double>::twoPi * frequencies[i] * j / theSampleRate);
-
-        for (size_t n = 0; n <= order; ++n)
-        {
-            numerator += static_cast<double> (coefs[n]) * factor;
-            factor *= jw;
-        }
-
-        magnitudes[i] = std::abs (numerator);
-    }
-}
-
-//==============================================================================
-template <typename NumericType>
-double FIR::Coefficients<NumericType>::Coefficients::getPhaseForFrequency (double frequency, double theSampleRate) const noexcept
-{
-    jassert (theSampleRate > 0.0);
-    jassert (frequency >= 0.0 && frequency <= theSampleRate * 0.5);
-
-    constexpr Complex<double> j (0, 1);
+  for (size_t i = 0; i < numSamples; ++i) {
+    jassert(frequencies[i] >= 0.0 && frequencies[i] <= theSampleRate * 0.5);
 
     Complex<double> numerator = 0.0;
     Complex<double> factor = 1.0;
-    Complex<double> jw = std::exp (-MathConstants<double>::twoPi * frequency * j / theSampleRate);
+    Complex<double> jw = std::exp(-MathConstants<double>::twoPi *
+                                  frequencies[i] * j / theSampleRate);
 
-    const auto* coefs = coefficients.begin();
-    auto order = getFilterOrder();
-
-    for (size_t n = 0; n <= order; ++n)
-    {
-        numerator += static_cast<double> (coefs[n]) * factor;
-        factor *= jw;
+    for (size_t n = 0; n <= order; ++n) {
+      numerator += static_cast<double>(coefs[n]) * factor;
+      factor *= jw;
     }
 
-    return std::arg (numerator);
+    magnitudes[i] = std::abs(numerator);
+  }
 }
 
 //==============================================================================
 template <typename NumericType>
-void FIR::Coefficients<NumericType>::Coefficients::getPhaseForFrequencyArray (double* frequencies, double* phases,
-                                                                    size_t numSamples, double theSampleRate) const noexcept
-{
-    jassert (theSampleRate > 0.0);
+double FIR::Coefficients<NumericType>::Coefficients::getPhaseForFrequency(
+    double frequency, double theSampleRate) const noexcept {
+  jassert(theSampleRate > 0.0);
+  jassert(frequency >= 0.0 && frequency <= theSampleRate * 0.5);
 
-    constexpr Complex<double> j (0, 1);
-    const auto* coefs = coefficients.begin();
-    auto order = getFilterOrder();
+  constexpr Complex<double> j(0, 1);
 
-    for (size_t i = 0; i < numSamples; ++i)
-    {
-        jassert (frequencies[i] >= 0.0 && frequencies[i] <= theSampleRate * 0.5);
+  Complex<double> numerator = 0.0;
+  Complex<double> factor = 1.0;
+  Complex<double> jw =
+      std::exp(-MathConstants<double>::twoPi * frequency * j / theSampleRate);
 
-        Complex<double> numerator = 0.0, factor = 1.0;
-        Complex<double> jw = std::exp (-MathConstants<double>::twoPi * frequencies[i] * j / theSampleRate);
+  const auto *coefs = coefficients.begin();
+  auto order = getFilterOrder();
 
-        for (size_t n = 0; n <= order; ++n)
-        {
-            numerator += static_cast<double> (coefs[n]) * factor;
-            factor *= jw;
-        }
+  for (size_t n = 0; n <= order; ++n) {
+    numerator += static_cast<double>(coefs[n]) * factor;
+    factor *= jw;
+  }
 
-        phases[i] = std::arg (numerator);
-    }
+  return std::arg(numerator);
 }
 
 //==============================================================================
 template <typename NumericType>
-void FIR::Coefficients<NumericType>::Coefficients::normalise() noexcept
-{
-    auto magnitude = static_cast<NumericType> (0);
+void FIR::Coefficients<NumericType>::Coefficients::getPhaseForFrequencyArray(
+    double *frequencies, double *phases, size_t numSamples,
+    double theSampleRate) const noexcept {
+  jassert(theSampleRate > 0.0);
 
-    auto* coefs = coefficients.getRawDataPointer();
-    auto n = static_cast<size_t> (coefficients.size());
+  constexpr Complex<double> j(0, 1);
+  const auto *coefs = coefficients.begin();
+  auto order = getFilterOrder();
 
-    for (size_t i = 0; i < n; ++i)
-    {
-        auto c = coefs[i];
-        magnitude += c * c;
+  for (size_t i = 0; i < numSamples; ++i) {
+    jassert(frequencies[i] >= 0.0 && frequencies[i] <= theSampleRate * 0.5);
+
+    Complex<double> numerator = 0.0, factor = 1.0;
+    Complex<double> jw = std::exp(-MathConstants<double>::twoPi *
+                                  frequencies[i] * j / theSampleRate);
+
+    for (size_t n = 0; n <= order; ++n) {
+      numerator += static_cast<double>(coefs[n]) * factor;
+      factor *= jw;
     }
 
-    auto magnitudeInv = 1 / (4 * std::sqrt (magnitude));
+    phases[i] = std::arg(numerator);
+  }
+}
 
-    FloatVectorOperations::multiply (coefs, magnitudeInv, static_cast<int> (n));
+//==============================================================================
+template <typename NumericType>
+void FIR::Coefficients<NumericType>::Coefficients::normalise() noexcept {
+  auto magnitude = static_cast<NumericType>(0);
+
+  auto *coefs = coefficients.getRawDataPointer();
+  auto n = static_cast<size_t>(coefficients.size());
+
+  for (size_t i = 0; i < n; ++i) {
+    auto c = coefs[i];
+    magnitude += c * c;
+  }
+
+  auto magnitudeInv = 1 / (4 * std::sqrt(magnitude));
+
+  FloatVectorOperations::multiply(coefs, magnitudeInv, static_cast<int>(n));
 }
 
 //==============================================================================

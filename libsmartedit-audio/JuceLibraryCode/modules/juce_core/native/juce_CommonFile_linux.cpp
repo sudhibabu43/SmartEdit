@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,124 +20,110 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
-bool File::copyInternal (const File& dest) const
-{
-    FileInputStream in (*this);
+bool File::copyInternal(const File &dest) const {
+  FileInputStream in(*this);
 
-    if (dest.deleteFile())
+  if (dest.deleteFile()) {
     {
-        {
-            FileOutputStream out (dest);
+      FileOutputStream out(dest);
 
-            if (out.failedToOpen())
-                return false;
+      if (out.failedToOpen())
+        return false;
 
-            if (out.writeFromInputStream (in, -1) == getSize())
-                return true;
-        }
-
-        dest.deleteFile();
+      if (out.writeFromInputStream(in, -1) == getSize())
+        return true;
     }
 
-    return false;
+    dest.deleteFile();
+  }
+
+  return false;
 }
 
-void File::findFileSystemRoots (Array<File>& destArray)
-{
-    destArray.add (File ("/"));
+void File::findFileSystemRoots(Array<File> &destArray) {
+  destArray.add(File("/"));
 }
 
-bool File::isHidden() const
-{
-    return getFileName().startsWithChar ('.');
+bool File::isHidden() const { return getFileName().startsWithChar('.'); }
+
+bool File::isSymbolicLink() const {
+  return getNativeLinkedTarget().isNotEmpty();
 }
 
-bool File::isSymbolicLink() const
-{
-    return getNativeLinkedTarget().isNotEmpty();
-}
-
-String File::getNativeLinkedTarget() const
-{
-    constexpr int bufferSize = 8194;
-    HeapBlock<char> buffer (bufferSize);
-    auto numBytes = (int) readlink (getFullPathName().toRawUTF8(), buffer, bufferSize - 2);
-    return String::fromUTF8 (buffer, jmax (0, numBytes));
+String File::getNativeLinkedTarget() const {
+  constexpr int bufferSize = 8194;
+  HeapBlock<char> buffer(bufferSize);
+  auto numBytes =
+      (int)readlink(getFullPathName().toRawUTF8(), buffer, bufferSize - 2);
+  return String::fromUTF8(buffer, jmax(0, numBytes));
 }
 
 //==============================================================================
-class DirectoryIterator::NativeIterator::Pimpl
-{
+class DirectoryIterator::NativeIterator::Pimpl {
 public:
-    Pimpl (const File& directory, const String& wc)
-        : parentDir (File::addTrailingSeparator (directory.getFullPathName())),
-          wildCard (wc), dir (opendir (directory.getFullPathName().toUTF8()))
-    {
-    }
+  Pimpl(const File &directory, const String &wc)
+      : parentDir(File::addTrailingSeparator(directory.getFullPathName())),
+        wildCard(wc), dir(opendir(directory.getFullPathName().toUTF8())) {}
 
-    ~Pimpl()
-    {
-        if (dir != nullptr)
-            closedir (dir);
-    }
+  ~Pimpl() {
+    if (dir != nullptr)
+      closedir(dir);
+  }
 
-    bool next (String& filenameFound,
-               bool* const isDir, bool* const isHidden, int64* const fileSize,
-               Time* const modTime, Time* const creationTime, bool* const isReadOnly)
-    {
-        if (dir != nullptr)
-        {
-            const char* wildcardUTF8 = nullptr;
+  bool next(String &filenameFound, bool *const isDir, bool *const isHidden,
+            int64 *const fileSize, Time *const modTime,
+            Time *const creationTime, bool *const isReadOnly) {
+    if (dir != nullptr) {
+      const char *wildcardUTF8 = nullptr;
 
-            for (;;)
-            {
-                struct dirent* const de = readdir (dir);
+      for (;;) {
+        struct dirent *const de = readdir(dir);
 
-                if (de == nullptr)
-                    break;
+        if (de == nullptr)
+          break;
 
-                if (wildcardUTF8 == nullptr)
-                    wildcardUTF8 = wildCard.toUTF8();
+        if (wildcardUTF8 == nullptr)
+          wildcardUTF8 = wildCard.toUTF8();
 
-                if (fnmatch (wildcardUTF8, de->d_name, FNM_CASEFOLD) == 0)
-                {
-                    filenameFound = CharPointer_UTF8 (de->d_name);
+        if (fnmatch(wildcardUTF8, de->d_name, FNM_CASEFOLD) == 0) {
+          filenameFound = CharPointer_UTF8(de->d_name);
 
-                    updateStatInfoForFile (parentDir + filenameFound, isDir, fileSize, modTime, creationTime, isReadOnly);
+          updateStatInfoForFile(parentDir + filenameFound, isDir, fileSize,
+                                modTime, creationTime, isReadOnly);
 
-                    if (isHidden != nullptr)
-                        *isHidden = filenameFound.startsWithChar ('.');
+          if (isHidden != nullptr)
+            *isHidden = filenameFound.startsWithChar('.');
 
-                    return true;
-                }
-            }
+          return true;
         }
-
-        return false;
+      }
     }
+
+    return false;
+  }
 
 private:
-    String parentDir, wildCard;
-    DIR* dir;
+  String parentDir, wildCard;
+  DIR *dir;
 
-    JUCE_DECLARE_NON_COPYABLE (Pimpl)
+  JUCE_DECLARE_NON_COPYABLE(Pimpl)
 };
 
-DirectoryIterator::NativeIterator::NativeIterator (const File& directory, const String& wildCardStr)
-    : pimpl (new DirectoryIterator::NativeIterator::Pimpl (directory, wildCardStr))
-{
-}
+DirectoryIterator::NativeIterator::NativeIterator(const File &directory,
+                                                  const String &wildCardStr)
+    : pimpl(new DirectoryIterator::NativeIterator::Pimpl(directory,
+                                                         wildCardStr)) {}
 
 DirectoryIterator::NativeIterator::~NativeIterator() {}
 
-bool DirectoryIterator::NativeIterator::next (String& filenameFound,
-                                              bool* isDir, bool* isHidden, int64* fileSize,
-                                              Time* modTime, Time* creationTime, bool* isReadOnly)
-{
-    return pimpl->next (filenameFound, isDir, isHidden, fileSize, modTime, creationTime, isReadOnly);
+bool DirectoryIterator::NativeIterator::next(String &filenameFound, bool *isDir,
+                                             bool *isHidden, int64 *fileSize,
+                                             Time *modTime, Time *creationTime,
+                                             bool *isReadOnly) {
+  return pimpl->next(filenameFound, isDir, isHidden, fileSize, modTime,
+                     creationTime, isReadOnly);
 }
 
 } // namespace juce

@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,8 +20,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
 //==============================================================================
 /**
@@ -48,37 +47,39 @@ namespace juce
 
     @tags{Core}
 */
-class JUCE_API  ScopedWriteLock
-{
+class JUCE_API ScopedWriteLock {
 public:
-    //==============================================================================
-    /** Creates a ScopedWriteLock.
+  //==============================================================================
+  /** Creates a ScopedWriteLock.
 
-        As soon as it is created, this will call ReadWriteLock::enterWrite(), and
-        when the ScopedWriteLock object is deleted, the ReadWriteLock will
-        be unlocked.
+      As soon as it is created, this will call ReadWriteLock::enterWrite(), and
+      when the ScopedWriteLock object is deleted, the ReadWriteLock will
+      be unlocked.
 
-        Make sure this object is created and deleted by the same thread,
-        otherwise there are no guarantees what will happen! Best just to use it
-        as a local stack object, rather than creating one with the new() operator.
-    */
-    inline explicit ScopedWriteLock (const ReadWriteLock& lock) noexcept : lock_ (lock) { lock.enterWrite(); }
+      Make sure this object is created and deleted by the same thread,
+      otherwise there are no guarantees what will happen! Best just to use it
+      as a local stack object, rather than creating one with the new() operator.
+  */
+  inline explicit ScopedWriteLock(const ReadWriteLock &lock) noexcept
+      : lock_(lock) {
+    lock.enterWrite();
+  }
 
-    /** Destructor.
+  /** Destructor.
 
-        The ReadWriteLock's exitWrite() method will be called when the destructor is called.
+      The ReadWriteLock's exitWrite() method will be called when the destructor
+     is called.
 
-        Make sure this object is created and deleted by the same thread,
-        otherwise there are no guarantees what will happen!
-    */
-    inline ~ScopedWriteLock() noexcept                                   { lock_.exitWrite(); }
-
+      Make sure this object is created and deleted by the same thread,
+      otherwise there are no guarantees what will happen!
+  */
+  inline ~ScopedWriteLock() noexcept { lock_.exitWrite(); }
 
 private:
-    //==============================================================================
-    const ReadWriteLock& lock_;
+  //==============================================================================
+  const ReadWriteLock &lock_;
 
-    JUCE_DECLARE_NON_COPYABLE (ScopedWriteLock)
+  JUCE_DECLARE_NON_COPYABLE(ScopedWriteLock)
 };
 
 //==============================================================================
@@ -95,8 +96,10 @@ private:
     {
         const ScopedTryWriteLock myScopedTryLock (myLock);
 
-        // Unlike using a ScopedWriteLock, this may fail to actually get the lock, so you
-        // should test this with the isLocked() method before doing your thread-unsafe
+        // Unlike using a ScopedWriteLock, this may fail to actually get the
+   lock, so you
+        // should test this with the isLocked() method before doing your
+   thread-unsafe
         // action.
 
         if (myScopedTryLock.isLocked())
@@ -105,7 +108,8 @@ private:
         }
         else
         {
-            ..our attempt at locking failed because some other thread has already locked the object..
+            ..our attempt at locking failed because some other thread has
+   already locked the object..
         }
 
         // myLock gets unlocked here (if it was locked).
@@ -116,55 +120,62 @@ private:
 
     @tags{Core}
 */
-class JUCE_API  ScopedTryWriteLock
-{
+class JUCE_API ScopedTryWriteLock {
 public:
-    //==============================================================================
-    /** Creates a ScopedTryWriteLock and calls ReadWriteLock::tryEnterWrite() immediately.
-        When the ScopedTryWriteLock object is destructed, the ReadWriteLock will be unlocked
-        (if it was successfully acquired).
+  //==============================================================================
+  /** Creates a ScopedTryWriteLock and calls ReadWriteLock::tryEnterWrite()
+     immediately. When the ScopedTryWriteLock object is destructed, the
+     ReadWriteLock will be unlocked (if it was successfully acquired).
 
-        Make sure this object is created and destructed by the same thread, otherwise there are no
-        guarantees what will happen! Best just to use it as a local stack object, rather than creating
-        one with the new() operator.
-    */
-    ScopedTryWriteLock (ReadWriteLock& lockIn) noexcept
-            : ScopedTryWriteLock (lockIn, true) {}
+      Make sure this object is created and destructed by the same thread,
+     otherwise there are no guarantees what will happen! Best just to use it as
+     a local stack object, rather than creating one with the new() operator.
+  */
+  ScopedTryWriteLock(ReadWriteLock &lockIn) noexcept
+      : ScopedTryWriteLock(lockIn, true) {}
 
-    /** Creates a ScopedTryWriteLock.
+  /** Creates a ScopedTryWriteLock.
 
-        If acquireLockOnInitialisation is true then as soon as it is created, this will call
-        ReadWriteLock::tryEnterWrite(), and when the ScopedTryWriteLock object is destructed, the
-        ReadWriteLock will be unlocked (if it was successfully acquired).
+      If acquireLockOnInitialisation is true then as soon as it is created, this
+     will call ReadWriteLock::tryEnterWrite(), and when the ScopedTryWriteLock
+     object is destructed, the ReadWriteLock will be unlocked (if it was
+     successfully acquired).
 
-        Make sure this object is created and destructed by the same thread, otherwise there are no
-        guarantees what will happen! Best just to use it as a local stack object, rather than creating
-        one with the new() operator.
-    */
-    ScopedTryWriteLock (ReadWriteLock& lockIn, bool acquireLockOnInitialisation) noexcept
-        : lock (lockIn), lockWasSuccessful (acquireLockOnInitialisation && lock.tryEnterWrite()) {}
+      Make sure this object is created and destructed by the same thread,
+     otherwise there are no guarantees what will happen! Best just to use it as
+     a local stack object, rather than creating one with the new() operator.
+  */
+  ScopedTryWriteLock(ReadWriteLock &lockIn,
+                     bool acquireLockOnInitialisation) noexcept
+      : lock(lockIn),
+        lockWasSuccessful(acquireLockOnInitialisation && lock.tryEnterWrite()) {
+  }
 
-    /** Destructor.
+  /** Destructor.
 
-        The ReadWriteLock's exitWrite() method will be called when the destructor is called.
+      The ReadWriteLock's exitWrite() method will be called when the destructor
+     is called.
 
-        Make sure this object is created and destructed by the same thread,
-        otherwise there are no guarantees what will happen!
-    */
-    ~ScopedTryWriteLock() noexcept                  { if (lockWasSuccessful) lock.exitWrite(); }
+      Make sure this object is created and destructed by the same thread,
+      otherwise there are no guarantees what will happen!
+  */
+  ~ScopedTryWriteLock() noexcept {
+    if (lockWasSuccessful)
+      lock.exitWrite();
+  }
 
-    /** Returns true if the mutex was successfully locked. */
-    bool isLocked() const noexcept                  { return lockWasSuccessful; }
+  /** Returns true if the mutex was successfully locked. */
+  bool isLocked() const noexcept { return lockWasSuccessful; }
 
-    /** Retry gaining the lock by calling tryEnter on the underlying lock. */
-    bool retryLock() noexcept                       { return lockWasSuccessful = lock.tryEnterWrite(); }
+  /** Retry gaining the lock by calling tryEnter on the underlying lock. */
+  bool retryLock() noexcept { return lockWasSuccessful = lock.tryEnterWrite(); }
 
 private:
-    //==============================================================================
-    ReadWriteLock& lock;
-    bool lockWasSuccessful;
+  //==============================================================================
+  ReadWriteLock &lock;
+  bool lockWasSuccessful;
 
-    JUCE_DECLARE_NON_COPYABLE (ScopedTryWriteLock)
+  JUCE_DECLARE_NON_COPYABLE(ScopedTryWriteLock)
 };
 
-}
+} // namespace juce

@@ -26,14 +26,12 @@ rem ----- Auto-detect correct SmartEdit source folder -----
 rem   Works both BEFORE and AFTER top-level folder rename!
 set "BASE=%~dp0"
 set "SRC="
-if exist "%BASE%OpenShot\smartedit-qt\src\launch.py"    set "SRC=%BASE%OpenShot\smartedit-qt\src"
 if exist "%BASE%SmartEdit\smartedit-qt\src\launch.py"   set "SRC=%BASE%SmartEdit\smartedit-qt\src"
 
 if "%SRC%"=="" (
     echo [ERROR] Could not find smartedit-qt\src\launch.py.
     echo.
     echo Tried these paths:
-    echo   - %%BASE%%OpenShot\smartedit-qt\src\launch.py
     echo   - %%BASE%%SmartEdit\smartedit-qt\src\launch.py
     echo.
     echo BASE = %BASE%
@@ -46,8 +44,8 @@ echo [OK] Python: %PYTHON_EXE%
 echo.
 
 rem ----- Ensure binary compatibility copies exist -----
-if exist "%SRC%\libsmartedit.dll" if not exist "%SRC%\libopenshot.dll" copy /y "%SRC%\libsmartedit.dll" "%SRC%\libopenshot.dll" >nul
-if exist "%SRC%\libsmartedit-audio.dll" if not exist "%SRC%\libopenshot-audio.dll" copy /y "%SRC%\libsmartedit-audio.dll" "%SRC%\libopenshot-audio.dll" >nul
+if exist "%SRC%\libsmartedit.dll" if not exist "%SRC%\libsmartedit.dll" copy /y "%SRC%\libsmartedit.dll" "%SRC%\libsmartedit.dll" >nul
+if exist "%SRC%\libsmartedit-audio.dll" if not exist "%SRC%\libsmartedit-audio.dll" copy /y "%SRC%\libsmartedit-audio.dll" "%SRC%\libsmartedit-audio.dll" >nul
 if exist "%SRC%\_smartedit.pyd" if not exist "%SRC%\_openshot.pyd" copy /y "%SRC%\_smartedit.pyd" "%SRC%\_openshot.pyd" >nul
 
 echo Starting SmartEdit...

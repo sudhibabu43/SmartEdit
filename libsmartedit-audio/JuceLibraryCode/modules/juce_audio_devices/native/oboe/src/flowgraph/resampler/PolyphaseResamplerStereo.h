@@ -1,17 +1,17 @@
 /*
  * Copyright 2019 The Android Open Source Project
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * d under the Apache , Version 2.0 (the "");
+ * you may not use this file except in compliance with the .
+ * You may obtain a copy of the  at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/s/-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the  is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * See the  for the specific language governing permissions and
+ * limitations under the .
  */
 
 #ifndef RESAMPLER_POLYPHASE_RESAMPLER_STEREO_H
@@ -27,15 +27,16 @@ namespace RESAMPLER_OUTER_NAMESPACE::resampler {
 
 class PolyphaseResamplerStereo : public PolyphaseResampler {
 public:
-    explicit PolyphaseResamplerStereo(const MultiChannelResampler::Builder &builder);
+  explicit PolyphaseResamplerStereo(
+      const MultiChannelResampler::Builder &builder);
 
-    virtual ~PolyphaseResamplerStereo() = default;
+  virtual ~PolyphaseResamplerStereo() = default;
 
-    void writeFrame(const float *frame) override;
+  void writeFrame(const float *frame) override;
 
-    void readFrame(float *frame) override;
+  void readFrame(float *frame) override;
 };
 
 } /* namespace RESAMPLER_OUTER_NAMESPACE::resampler */
 
-#endif //RESAMPLER_POLYPHASE_RESAMPLER_STEREO_H
+#endif // RESAMPLER_POLYPHASE_RESAMPLER_STEREO_H

@@ -12,7 +12,7 @@ class CosmicDuskTimelineTheme(TimelineTheme):
         super().__init__()
 
         # Cosmic custom settings + Humanity base settings
-        self.background             = QColor("#141923")
+        self.background             = QColor("#121212")
         self.background2            = QColor()
         self.playhead_color         = QColor("#FABE0A")
         self.playhead_width         = 2.0
@@ -22,14 +22,14 @@ class CosmicDuskTimelineTheme(TimelineTheme):
         self.selection_border_width = 1.0
         self.playback_cache_color   = QColor("#4B92AD")
         self.playback_cache_height  = 5.0
-        self.ruler_name_background  = QColor("#141923")
+        self.ruler_name_background  = QColor("#121212")
         self.ruler_name_background2 = QColor()
         self.ruler_time_font_size   = 13
         self.ruler_time_pad_left    = 17
         self.ruler_time_pad_top     = 12
         self.ruler_label_top        = 6
         self.scrollbar_handle       = QColor("#4B92AD")
-        self.scrollbar_track        = QColor("#141923")
+        self.scrollbar_track        = QColor("#121212")
         self.scrollbar_width        = 8
         self.waveform_color         = QColor("#2A82DA")
         self.waveform_peak_color    = QColor(42, 130, 218, 128)
@@ -45,7 +45,7 @@ class CosmicDuskTimelineTheme(TimelineTheme):
         self.keyframe_panel_marker_border    = QColor()
 
         # Clip properties
-        self.clip.background    = QColor("#192332")
+        self.clip.background    = QColor("#1e1e1e")
         self.clip.background2   = QColor()
         self.clip.top_overlay   = QColor(255, 255, 255, 51)
         self.clip.top_overlay2  = QColor(255, 255, 255, 0)
@@ -59,22 +59,22 @@ class CosmicDuskTimelineTheme(TimelineTheme):
         self.clip.shadow_blur   = 10
 
         # Track properties
-        self.track.background               = QColor("#283241")
+        self.track.background               = QColor("#252526")
         self.track.background2              = QColor()
-        self.track.border_color             = QColor("#283241")
+        self.track.border_color             = QColor("#252526")
         self.track.border_radius            = 0
         self.track.height                   = 48
         self.track.gap                      = 8
         self.track.margin_top               = -1
         self.track.font_color               = QColor("#FFFFFF")
         self.track.font_size                = 9
-        self.track.name_background          = QColor("#192332")
+        self.track.name_background          = QColor("#1e1e1e")
         self.track.name_width               = 140
         self.track.name_border_color        = QColor("#0078FF")
         self.track.name_border_width        = 4
-        self.track.name_border_top_color    = QColor("#192332")
+        self.track.name_border_top_color    = QColor("#1e1e1e")
         self.track.name_border_top_width    = 1
-        self.track.name_border_bottom_color = QColor("#192332")
+        self.track.name_border_bottom_color = QColor("#1e1e1e")
         self.track.name_border_bottom_width = 1
         self.track.name_radius_tl           = 0
         self.track.name_radius_bl           = 0
@@ -93,7 +93,7 @@ class CosmicDuskTimelineTheme(TimelineTheme):
         self.transition.background_image = _icon("themes/cosmic/images/transition.svg")
 
         # Ruler properties
-        self.ruler.background   = QColor("#141923")
+        self.ruler.background   = QColor("#121212")
         self.ruler.background2  = QColor()
         self.ruler.border_color = QColor("#ACACAC")
         self.ruler.font_color   = QColor("#999999")

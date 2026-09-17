@@ -34,7 +34,7 @@
 #define FLAC__ALL_H
 
 #ifndef FLAC__HAS_OGG
- #define FLAC__HAS_OGG 0
+#define FLAC__HAS_OGG 0
 #endif
 
 #include "export.h"
@@ -68,7 +68,7 @@
  *
  * By writing a little code and linking against libFLAC, it is
  * relatively easy to add FLAC support to another program.  The
- * library is licensed under <A HREF="https://xiph.org/flac/license.html">Xiph's BSD license</A>.
+ * library is d under <A HREF="https://xiph.org/flac/.html">Xiph's BSD </A>.
  * Complete source code of libFLAC as well as the command-line
  * encoder and plugins is available and is a useful source of
  * examples.
@@ -100,8 +100,8 @@
  * for the C++ API will be installed in your include area (for
  * example /usr/include/FLAC++/...).
  *
- * libFLAC++ is also licensed under
- * <A HREF="https://xiph.org/flac/license.html">Xiph's BSD license</A>.
+ * libFLAC++ is also d under
+ * <A HREF="https://xiph.org/flac/.html">Xiph's BSD </A>.
  *
  * \section getting_started Getting Started
  *
@@ -117,7 +117,8 @@
  * functions through the links in top bar across this page.
  *
  * If you prefer a more hands-on approach, you can jump right to some
- * <A HREF="https://xiph.org/flac/documentation_example_code.html">example code</A>.
+ * <A HREF="https://xiph.org/flac/documentation_example_code.html">example
+ * code</A>.
  *
  * \section porting_guide Porting Guide
  *
@@ -166,8 +167,9 @@
  * in FLAC 1.1.3 is a set of \#defines in \c export.h of each
  * library's includes (e.g. \c include/FLAC/export.h).  The
  * \#defines mirror the libraries'
- * <A HREF="http://www.gnu.org/software/libtool/manual/libtool.html#Libtool-versioning">libtool version numbers</A>,
- * e.g. in libFLAC there are \c FLAC_API_VERSION_CURRENT,
+ * <A
+ * HREF="http://www.gnu.org/software/libtool/manual/libtool.html#Libtool-versioning">libtool
+ * version numbers</A>, e.g. in libFLAC there are \c FLAC_API_VERSION_CURRENT,
  * \c FLAC_API_VERSION_REVISION, and \c FLAC_API_VERSION_AGE.
  * These can be used to support multiple versions of an API during the
  * transition phase, e.g.
@@ -245,14 +247,16 @@
  * FLAC__seekable_stream_decoder_set_read_callback(decoder, my_read_callback);
  * FLAC__seekable_stream_decoder_set_seek_callback(decoder, my_seek_callback);
  * FLAC__seekable_stream_decoder_set_tell_callback(decoder, my_tell_callback);
- * FLAC__seekable_stream_decoder_set_length_callback(decoder, my_length_callback);
- * FLAC__seekable_stream_decoder_set_eof_callback(decoder, my_eof_callback);
- * FLAC__seekable_stream_decoder_set_write_callback(decoder, my_write_callback);
- * FLAC__seekable_stream_decoder_set_metadata_callback(decoder, my_metadata_callback);
+ * FLAC__seekable_stream_decoder_set_length_callback(decoder,
+ * my_length_callback); FLAC__seekable_stream_decoder_set_eof_callback(decoder,
+ * my_eof_callback); FLAC__seekable_stream_decoder_set_write_callback(decoder,
+ * my_write_callback);
+ * FLAC__seekable_stream_decoder_set_metadata_callback(decoder,
+ * my_metadata_callback);
  * FLAC__seekable_stream_decoder_set_error_callback(decoder, my_error_callback);
  * FLAC__seekable_stream_decoder_set_client_data(decoder, my_client_data);
- * if(FLAC__seekable_stream_decoder_init(decoder) != FLAC__SEEKABLE_STREAM_DECODER_OK) do_something;
- * \endcode
+ * if(FLAC__seekable_stream_decoder_init(decoder) !=
+ * FLAC__SEEKABLE_STREAM_DECODER_OK) do_something; \endcode
  *
  * In FLAC 1.1.3 it is like this:
  *

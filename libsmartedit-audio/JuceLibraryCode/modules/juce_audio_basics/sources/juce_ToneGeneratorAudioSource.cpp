@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,59 +20,46 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
 ToneGeneratorAudioSource::ToneGeneratorAudioSource()
-    : frequency (1000.0),
-      sampleRate (44100.0),
-      currentPhase (0.0),
-      phasePerSample (0.0),
-      amplitude (0.5f)
-{
+    : frequency(1000.0), sampleRate(44100.0), currentPhase(0.0),
+      phasePerSample(0.0), amplitude(0.5f) {}
+
+ToneGeneratorAudioSource::~ToneGeneratorAudioSource() {}
+
+//==============================================================================
+void ToneGeneratorAudioSource::setAmplitude(const float newAmplitude) {
+  amplitude = newAmplitude;
 }
 
-ToneGeneratorAudioSource::~ToneGeneratorAudioSource()
-{
+void ToneGeneratorAudioSource::setFrequency(const double newFrequencyHz) {
+  frequency = newFrequencyHz;
+  phasePerSample = 0.0;
 }
 
 //==============================================================================
-void ToneGeneratorAudioSource::setAmplitude (const float newAmplitude)
-{
-    amplitude = newAmplitude;
+void ToneGeneratorAudioSource::prepareToPlay(int /*samplesPerBlockExpected*/,
+                                             double rate) {
+  currentPhase = 0.0;
+  phasePerSample = 0.0;
+  sampleRate = rate;
 }
 
-void ToneGeneratorAudioSource::setFrequency (const double newFrequencyHz)
-{
-    frequency = newFrequencyHz;
-    phasePerSample = 0.0;
-}
+void ToneGeneratorAudioSource::releaseResources() {}
 
-//==============================================================================
-void ToneGeneratorAudioSource::prepareToPlay (int /*samplesPerBlockExpected*/, double rate)
-{
-    currentPhase = 0.0;
-    phasePerSample = 0.0;
-    sampleRate = rate;
-}
+void ToneGeneratorAudioSource::getNextAudioBlock(
+    const AudioSourceChannelInfo &info) {
+  if (approximatelyEqual(phasePerSample, 0.0))
+    phasePerSample = MathConstants<double>::twoPi / (sampleRate / frequency);
 
-void ToneGeneratorAudioSource::releaseResources()
-{
-}
+  for (int i = 0; i < info.numSamples; ++i) {
+    const float sample = amplitude * (float)std::sin(currentPhase);
+    currentPhase += phasePerSample;
 
-void ToneGeneratorAudioSource::getNextAudioBlock (const AudioSourceChannelInfo& info)
-{
-    if (approximatelyEqual (phasePerSample, 0.0))
-        phasePerSample = MathConstants<double>::twoPi / (sampleRate / frequency);
-
-    for (int i = 0; i < info.numSamples; ++i)
-    {
-        const float sample = amplitude * (float) std::sin (currentPhase);
-        currentPhase += phasePerSample;
-
-        for (int j = info.buffer->getNumChannels(); --j >= 0;)
-            info.buffer->setSample (j, info.startSample + i, sample);
-    }
+    for (int j = info.buffer->getNumChannels(); --j >= 0;)
+      info.buffer->setSample(j, info.startSample + i, sample);
+  }
 }
 
 } // namespace juce

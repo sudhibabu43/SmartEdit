@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,13 +20,11 @@
   ==============================================================================
 */
 
-namespace juce::universal_midi_packets
-{
+namespace juce::universal_midi_packets {
 
-uint32_t View::size() const noexcept
-{
-    jassert (ptr != nullptr);
-    return Utils::getNumWordsForMessageType (*ptr);
+uint32_t View::size() const noexcept {
+  jassert(ptr != nullptr);
+  return Utils::getNumWordsForMessageType(*ptr);
 }
 
 } // namespace juce::universal_midi_packets

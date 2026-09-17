@@ -1,6 +1,6 @@
 ﻿# SOME DESCRIPTIVE TITLE.
 # Copyright (C) SmartEdit Studios, LLC
-# This file is distributed under the same license as the SmartEdit Video
+# This file is distributed under the same  as the SmartEdit Video
 # Editor package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
@@ -2957,7 +2957,7 @@ msgstr "`` (float, 0 to 255)``   윤곽선의 투명도(알파) 값."
 msgid ""
 "The Pixelate effect increases or decreases the size of the pixels in the "
 "video, creating a mosaic-like appearance. This can be used to obscure "
-"details (such as faces or license plates for privacy reasons), or as a "
+"details (such as faces or  plates for privacy reasons), or as a "
 "stylistic effect to evoke a retro, digital, or abstract aesthetic."
 msgstr ""
 "Pixelate 효과는 비디오 내 픽셀 크기를 키우거나 줄여 모자이크 같은 모습을 만듭"

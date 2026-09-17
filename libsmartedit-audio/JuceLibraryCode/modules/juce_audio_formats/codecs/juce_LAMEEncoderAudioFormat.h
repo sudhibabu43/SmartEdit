@@ -7,14 +7,14 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User
    Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-7-licence
+   End User  Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   www.gnu.org/s).
 
    JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
    EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
@@ -23,8 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
 #if JUCE_USE_LAME_AUDIO_FORMAT || DOXYGEN
 
@@ -44,35 +43,37 @@ namespace juce
 
     @tags{Audio}
 */
-class JUCE_API  LAMEEncoderAudioFormat    : public AudioFormat
-{
+class JUCE_API LAMEEncoderAudioFormat : public AudioFormat {
 public:
-    /** Creates a LAMEEncoderAudioFormat that expects to find a working LAME
-        executable at the location given.
-    */
-    LAMEEncoderAudioFormat (const File& lameExecutableToUse);
-    ~LAMEEncoderAudioFormat();
+  /** Creates a LAMEEncoderAudioFormat that expects to find a working LAME
+      executable at the location given.
+  */
+  LAMEEncoderAudioFormat(const File &lameExecutableToUse);
+  ~LAMEEncoderAudioFormat();
 
-    bool canHandleFile (const File&);
-    Array<int> getPossibleSampleRates();
-    Array<int> getPossibleBitDepths();
-    bool canDoStereo();
-    bool canDoMono();
-    bool isCompressed();
-    StringArray getQualityOptions();
+  bool canHandleFile(const File &);
+  Array<int> getPossibleSampleRates();
+  Array<int> getPossibleBitDepths();
+  bool canDoStereo();
+  bool canDoMono();
+  bool isCompressed();
+  StringArray getQualityOptions();
 
-    AudioFormatReader* createReaderFor (InputStream*, bool deleteStreamIfOpeningFails);
+  AudioFormatReader *createReaderFor(InputStream *,
+                                     bool deleteStreamIfOpeningFails);
 
-    AudioFormatWriter* createWriterFor (OutputStream*, double sampleRateToUse,
-                                        unsigned int numberOfChannels, int bitsPerSample,
-                                        const StringPairArray& metadataValues, int qualityOptionIndex);
-    using AudioFormat::createWriterFor;
+  AudioFormatWriter *createWriterFor(OutputStream *, double sampleRateToUse,
+                                     unsigned int numberOfChannels,
+                                     int bitsPerSample,
+                                     const StringPairArray &metadataValues,
+                                     int qualityOptionIndex);
+  using AudioFormat::createWriterFor;
 
 private:
-    File lameApp;
-    class Writer;
+  File lameApp;
+  class Writer;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LAMEEncoderAudioFormat)
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LAMEEncoderAudioFormat)
 };
 
 #endif

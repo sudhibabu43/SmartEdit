@@ -8,11 +8,7 @@
                 "${workspaceFolder}/libsmartedit/build/src/**",
                 "${workspaceFolder}/libsmartedit-audio/include/**",
                 "${workspaceFolder}/libsmartedit-audio/JuceLibraryCode/**",
-                "${workspaceFolder}/libopenshot/include/**",
-                "${workspaceFolder}/libopenshot/src/**",
-                "${workspaceFolder}/libopenshot/build/src/**",
-                "${workspaceFolder}/libopenshot-audio/include/**",
-                "${workspaceFolder}/libopenshot-audio/JuceLibraryCode/**",
+
                 "C:/msys64/ucrt64/include/**",
                 "C:/msys64/ucrt64/include/qt5/**",
                 "C:/msys64/ucrt64/include/QtCore",
@@ -31,7 +27,7 @@
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "windows-gcc-x64",
-            "compileCommands": "${workspaceFolder}/libopenshot/build/compile_commands.json"
+            "compileCommands": "${workspaceFolder}/libsmartedit/build/compile_commands.json"
         }
     ],
     "version": 4

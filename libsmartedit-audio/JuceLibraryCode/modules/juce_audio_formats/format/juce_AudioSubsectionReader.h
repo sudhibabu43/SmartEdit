@@ -7,14 +7,14 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User
    Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-7-licence
+   End User  Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   www.gnu.org/s).
 
    JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
    EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
@@ -23,8 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
 //==============================================================================
 /**
@@ -41,46 +40,45 @@ namespace juce
 
     @tags{Audio}
 */
-class JUCE_API  AudioSubsectionReader  : public AudioFormatReader
-{
+class JUCE_API AudioSubsectionReader : public AudioFormatReader {
 public:
-    //==============================================================================
-    /** Creates an AudioSubsectionReader for a given data source.
+  //==============================================================================
+  /** Creates an AudioSubsectionReader for a given data source.
 
-        @param sourceReader             the source reader from which we'll be taking data
-        @param subsectionStartSample    the sample within the source reader which will be
-                                        mapped onto sample 0 for this reader.
-        @param subsectionLength         the number of samples from the source that will
-                                        make up the subsection. If this reader is asked for
-                                        any samples beyond this region, it will return zero.
-        @param deleteSourceWhenDeleted  if true, the sourceReader object will be deleted when
-                                        this object is deleted.
-    */
-    AudioSubsectionReader (AudioFormatReader* sourceReader,
-                           int64 subsectionStartSample,
-                           int64 subsectionLength,
-                           bool deleteSourceWhenDeleted);
+      @param sourceReader             the source reader from which we'll be
+     taking data
+      @param subsectionStartSample    the sample within the source reader which
+     will be mapped onto sample 0 for this reader.
+      @param subsectionLength         the number of samples from the source that
+     will make up the subsection. If this reader is asked for any samples beyond
+     this region, it will return zero.
+      @param deleteSourceWhenDeleted  if true, the sourceReader object will be
+     deleted when this object is deleted.
+  */
+  AudioSubsectionReader(AudioFormatReader *sourceReader,
+                        int64 subsectionStartSample, int64 subsectionLength,
+                        bool deleteSourceWhenDeleted);
 
-    /** Destructor. */
-    ~AudioSubsectionReader() override;
+  /** Destructor. */
+  ~AudioSubsectionReader() override;
 
+  //==============================================================================
+  bool readSamples(int *const *destSamples, int numDestChannels,
+                   int startOffsetInDestBuffer, int64 startSampleInFile,
+                   int numSamples) override;
 
-    //==============================================================================
-    bool readSamples (int* const* destSamples, int numDestChannels, int startOffsetInDestBuffer,
-                      int64 startSampleInFile, int numSamples) override;
+  void readMaxLevels(int64 startSample, int64 numSamples, Range<float> *results,
+                     int numChannelsToRead) override;
 
-    void readMaxLevels (int64 startSample, int64 numSamples,
-                        Range<float>* results, int numChannelsToRead) override;
-
-    using AudioFormatReader::readMaxLevels;
+  using AudioFormatReader::readMaxLevels;
 
 private:
-    //==============================================================================
-    AudioFormatReader* const source;
-    int64 startSample, length;
-    const bool deleteSourceWhenDeleted;
+  //==============================================================================
+  AudioFormatReader *const source;
+  int64 startSample, length;
+  const bool deleteSourceWhenDeleted;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioSubsectionReader)
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioSubsectionReader)
 };
 
 } // namespace juce

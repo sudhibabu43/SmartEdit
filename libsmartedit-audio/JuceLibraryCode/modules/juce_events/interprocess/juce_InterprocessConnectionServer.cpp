@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,61 +20,52 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
-InterprocessConnectionServer::InterprocessConnectionServer() : Thread ("JUCE IPC server")
-{
-}
+InterprocessConnectionServer::InterprocessConnectionServer()
+    : Thread("JUCE IPC server") {}
 
-InterprocessConnectionServer::~InterprocessConnectionServer()
-{
-    stop();
-}
+InterprocessConnectionServer::~InterprocessConnectionServer() { stop(); }
 
 //==============================================================================
-bool InterprocessConnectionServer::beginWaitingForSocket (const int portNumber, const String& bindAddress)
-{
-    stop();
+bool InterprocessConnectionServer::beginWaitingForSocket(
+    const int portNumber, const String &bindAddress) {
+  stop();
 
-    socket.reset (new StreamingSocket());
+  socket.reset(new StreamingSocket());
 
-    if (socket->createListener (portNumber, bindAddress))
-    {
-        startThread();
-        return true;
-    }
+  if (socket->createListener(portNumber, bindAddress)) {
+    startThread();
+    return true;
+  }
 
-    socket.reset();
-    return false;
+  socket.reset();
+  return false;
 }
 
-void InterprocessConnectionServer::stop()
-{
-    signalThreadShouldExit();
+void InterprocessConnectionServer::stop() {
+  signalThreadShouldExit();
 
-    if (socket != nullptr)
-        socket->close();
+  if (socket != nullptr)
+    socket->close();
 
-    stopThread (4000);
-    socket.reset();
+  stopThread(4000);
+  socket.reset();
 }
 
-int InterprocessConnectionServer::getBoundPort() const noexcept
-{
-    return (socket == nullptr) ? -1 : socket->getBoundPort();
+int InterprocessConnectionServer::getBoundPort() const noexcept {
+  return (socket == nullptr) ? -1 : socket->getBoundPort();
 }
 
-void InterprocessConnectionServer::run()
-{
-    while ((! threadShouldExit()) && socket != nullptr)
-    {
-        std::unique_ptr<StreamingSocket> clientSocket (socket->waitForNextConnection());
+void InterprocessConnectionServer::run() {
+  while ((!threadShouldExit()) && socket != nullptr) {
+    std::unique_ptr<StreamingSocket> clientSocket(
+        socket->waitForNextConnection());
 
-        if (clientSocket != nullptr)
-            if (auto* newConnection = createConnectionObject())
-                newConnection->initialiseWithSocket (std::move (clientSocket));
-    }
+    if (clientSocket != nullptr)
+      if (auto *newConnection = createConnectionObject())
+        newConnection->initialiseWithSocket(std::move(clientSocket));
+  }
 }
 
 } // namespace juce

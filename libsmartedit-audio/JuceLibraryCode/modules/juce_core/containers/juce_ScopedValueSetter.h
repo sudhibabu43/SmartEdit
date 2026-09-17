@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,8 +20,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
 //==============================================================================
 /**
@@ -50,44 +49,35 @@ namespace juce
 
     @tags{Core}
 */
-template <typename ValueType>
-class ScopedValueSetter
-{
+template <typename ValueType> class ScopedValueSetter {
 public:
-    /** Creates a ScopedValueSetter that will immediately change the specified value to the
-        given new value, and will then reset it to its original value when this object is deleted.
-    */
-    ScopedValueSetter (ValueType& valueToSet,
-                       ValueType newValue)
-        : value (valueToSet),
-          originalValue (valueToSet)
-    {
-        valueToSet = newValue;
-    }
+  /** Creates a ScopedValueSetter that will immediately change the specified
+     value to the given new value, and will then reset it to its original value
+     when this object is deleted.
+  */
+  ScopedValueSetter(ValueType &valueToSet, ValueType newValue)
+      : value(valueToSet), originalValue(valueToSet) {
+    valueToSet = newValue;
+  }
 
-    /** Creates a ScopedValueSetter that will immediately change the specified value to the
-        given new value, and will then reset it to be valueWhenDeleted when this object is deleted.
-    */
-    ScopedValueSetter (ValueType& valueToSet,
-                       ValueType newValue,
-                       ValueType valueWhenDeleted)
-        : value (valueToSet),
-          originalValue (valueWhenDeleted)
-    {
-        valueToSet = newValue;
-    }
+  /** Creates a ScopedValueSetter that will immediately change the specified
+     value to the given new value, and will then reset it to be valueWhenDeleted
+     when this object is deleted.
+  */
+  ScopedValueSetter(ValueType &valueToSet, ValueType newValue,
+                    ValueType valueWhenDeleted)
+      : value(valueToSet), originalValue(valueWhenDeleted) {
+    valueToSet = newValue;
+  }
 
-    ~ScopedValueSetter()
-    {
-        value = originalValue;
-    }
+  ~ScopedValueSetter() { value = originalValue; }
 
 private:
-    //==============================================================================
-    ValueType& value;
-    const ValueType originalValue;
+  //==============================================================================
+  ValueType &value;
+  const ValueType originalValue;
 
-    JUCE_DECLARE_NON_COPYABLE (ScopedValueSetter)
+  JUCE_DECLARE_NON_COPYABLE(ScopedValueSetter)
 };
 
 } // namespace juce

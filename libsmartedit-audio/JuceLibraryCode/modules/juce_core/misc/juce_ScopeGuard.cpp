@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,36 +20,28 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
-ErasedScopeGuard::ErasedScopeGuard (std::function<void()> d)
-    : detach (std::move (d)) {}
+ErasedScopeGuard::ErasedScopeGuard(std::function<void()> d)
+    : detach(std::move(d)) {}
 
-ErasedScopeGuard::ErasedScopeGuard (ErasedScopeGuard&& other) noexcept
-    : detach (std::exchange (other.detach, nullptr)) {}
+ErasedScopeGuard::ErasedScopeGuard(ErasedScopeGuard &&other) noexcept
+    : detach(std::exchange(other.detach, nullptr)) {}
 
-ErasedScopeGuard& ErasedScopeGuard::operator= (ErasedScopeGuard&& other) noexcept
-{
-    ErasedScopeGuard token { std::move (other) };
-    std::swap (token.detach, detach);
-    return *this;
+ErasedScopeGuard &
+ErasedScopeGuard::operator=(ErasedScopeGuard &&other) noexcept {
+  ErasedScopeGuard token{std::move(other)};
+  std::swap(token.detach, detach);
+  return *this;
 }
 
-ErasedScopeGuard::~ErasedScopeGuard() noexcept
-{
-    reset();
+ErasedScopeGuard::~ErasedScopeGuard() noexcept { reset(); }
+
+void ErasedScopeGuard::reset() {
+  if (auto d = std::exchange(detach, nullptr))
+    d();
 }
 
-void ErasedScopeGuard::reset()
-{
-    if (auto d = std::exchange (detach, nullptr))
-        d();
-}
-
-void ErasedScopeGuard::release()
-{
-    detach = nullptr;
-}
+void ErasedScopeGuard::release() { detach = nullptr; }
 
 } // namespace juce

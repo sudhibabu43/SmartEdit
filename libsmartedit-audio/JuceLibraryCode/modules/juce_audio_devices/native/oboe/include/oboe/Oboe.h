@@ -1,17 +1,17 @@
 /*
  * Copyright (C) 2016 The Android Open Source Project
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * d under the Apache , Version 2.0 (the "");
+ * you may not use this file except in compliance with the .
+ * You may obtain a copy of the  at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/s/-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the  is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * See the  for the specific language governing permissions and
+ * limitations under the .
  */
 
 #ifndef OBOE_OBOE_H
@@ -20,21 +20,23 @@
 /**
  * \mainpage API reference
  *
- * All documentation is found in the <a href="namespaceoboe.html">oboe namespace section</a>
+ * All documentation is found in the <a href="namespaceoboe.html">oboe namespace
+ * section</a>
  *
  */
 
-#include "oboe/Definitions.h"
-#include "oboe/ResultWithValue.h"
-#include "oboe/LatencyTuner.h"
 #include "oboe/AudioStream.h"
 #include "oboe/AudioStreamBase.h"
 #include "oboe/AudioStreamBuilder.h"
+#include "oboe/Definitions.h"
+#include "oboe/FifoBuffer.h"
+#include "oboe/FullDuplexStream.h"
+#include "oboe/LatencyTuner.h"
+#include "oboe/OboeExtensions.h"
+#include "oboe/ResultWithValue.h"
+#include "oboe/StabilizedCallback.h"
 #include "oboe/Utilities.h"
 #include "oboe/Version.h"
-#include "oboe/StabilizedCallback.h"
-#include "oboe/FifoBuffer.h"
-#include "oboe/OboeExtensions.h"
-#include "oboe/FullDuplexStream.h"
 
-#endif //OBOE_OBOE_H
+
+#endif // OBOE_OBOE_H

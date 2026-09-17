@@ -1,17 +1,17 @@
 /*
  * Copyright 2020 The Android Open Source Project
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * d under the Apache , Version 2.0 (the "");
+ * you may not use this file except in compliance with the .
+ * You may obtain a copy of the  at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/s/-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the  is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * See the  for the specific language governing permissions and
+ * limitations under the .
  */
 
 #include <algorithm>
@@ -27,28 +27,27 @@
 using namespace FLOWGRAPH_OUTER_NAMESPACE::flowgraph;
 
 SourceI32::SourceI32(int32_t channelCount)
-        : FlowGraphSourceBuffered(channelCount) {
-}
+    : FlowGraphSourceBuffered(channelCount) {}
 
 int32_t SourceI32::onProcess(int32_t numFrames) {
-    float *floatData = output.getBuffer();
-    const int32_t channelCount = output.getSamplesPerFrame();
+  float *floatData = output.getBuffer();
+  const int32_t channelCount = output.getSamplesPerFrame();
 
-    const int32_t framesLeft = mSizeInFrames - mFrameIndex;
-    const int32_t framesToProcess = std::min(numFrames, framesLeft);
-    const int32_t numSamples = framesToProcess * channelCount;
+  const int32_t framesLeft = mSizeInFrames - mFrameIndex;
+  const int32_t framesToProcess = std::min(numFrames, framesLeft);
+  const int32_t numSamples = framesToProcess * channelCount;
 
-    const int32_t *intBase = static_cast<const int32_t *>(mData);
-    const int32_t *intData = &intBase[mFrameIndex * channelCount];
+  const int32_t *intBase = static_cast<const int32_t *>(mData);
+  const int32_t *intData = &intBase[mFrameIndex * channelCount];
 
 #if FLOWGRAPH_ANDROID_INTERNAL
-    memcpy_to_float_from_i32(floatData, intData, numSamples);
+  memcpy_to_float_from_i32(floatData, intData, numSamples);
 #else
-    for (int i = 0; i < numSamples; i++) {
-        *floatData++ = *intData++ * kScale;
-    }
+  for (int i = 0; i < numSamples; i++) {
+    *floatData++ = *intData++ * kScale;
+  }
 #endif
 
-    mFrameIndex += framesToProcess;
-    return framesToProcess;
+  mFrameIndex += framesToProcess;
+  return framesToProcess;
 }

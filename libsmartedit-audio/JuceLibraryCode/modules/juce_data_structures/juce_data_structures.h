@@ -7,14 +7,14 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User
    Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-7-licence
+   End User  Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   www.gnu.org/s).
 
    JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
    EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
@@ -22,7 +22,6 @@
 
   ==============================================================================
 */
-
 
 /*******************************************************************************
  The block below describes the properties of this module, and is read by
@@ -37,9 +36,8 @@
   vendor:             juce
   version:            7.0.10
   name:               JUCE data model helper classes
-  description:        Classes for undo/redo management, and smart data structures.
-  website:            http://www.juce.com/juce
-  license:            GPL/Commercial
+  description:        Classes for undo/redo management, and smart data
+structures. website:            http://www.juce.com/juce : GPL/Commercial
   minimumCppStandard: 17
 
   dependencies:       juce_events
@@ -48,19 +46,19 @@
 
 *******************************************************************************/
 
-
 #pragma once
 #define JUCE_DATA_STRUCTURES_H_INCLUDED
 
 //==============================================================================
 #include <juce_events/juce_events.h>
 
-#include "undomanager/juce_UndoableAction.h"
+#include "app_properties/juce_ApplicationProperties.h"
+#include "app_properties/juce_PropertiesFile.h"
 #include "undomanager/juce_UndoManager.h"
+#include "undomanager/juce_UndoableAction.h"
+#include "values/juce_CachedValue.h"
 #include "values/juce_Value.h"
 #include "values/juce_ValueTree.h"
-#include "values/juce_ValueTreeSynchroniser.h"
-#include "values/juce_CachedValue.h"
 #include "values/juce_ValueTreePropertyWithDefault.h"
-#include "app_properties/juce_PropertiesFile.h"
-#include "app_properties/juce_ApplicationProperties.h"
+#include "values/juce_ValueTreeSynchroniser.h"
+

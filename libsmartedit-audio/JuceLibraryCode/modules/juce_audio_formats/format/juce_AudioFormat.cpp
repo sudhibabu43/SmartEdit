@@ -7,14 +7,14 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User
    Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-7-licence
+   End User  Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   www.gnu.org/s).
 
    JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
    EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
@@ -23,69 +23,60 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
-AudioFormat::AudioFormat (String name, StringArray extensions)
-   : formatName (name), fileExtensions (extensions)
-{
+AudioFormat::AudioFormat(String name, StringArray extensions)
+    : formatName(name), fileExtensions(extensions) {}
+
+AudioFormat::AudioFormat(StringRef name, StringRef extensions)
+    : formatName(name.text),
+      fileExtensions(StringArray::fromTokens(extensions, false)) {}
+
+AudioFormat::~AudioFormat() {}
+
+bool AudioFormat::canHandleFile(const File &f) {
+  for (auto &e : getFileExtensions())
+    if (f.hasFileExtension(e))
+      return true;
+
+  return false;
 }
 
-AudioFormat::AudioFormat (StringRef name, StringRef extensions)
-   : formatName (name.text), fileExtensions (StringArray::fromTokens (extensions, false))
-{
+const String &AudioFormat::getFormatName() const { return formatName; }
+StringArray AudioFormat::getFileExtensions() const { return fileExtensions; }
+bool AudioFormat::isCompressed() { return false; }
+StringArray AudioFormat::getQualityOptions() { return {}; }
+
+MemoryMappedAudioFormatReader *
+AudioFormat::createMemoryMappedReader(const File &) {
+  return nullptr;
 }
 
-AudioFormat::~AudioFormat()
-{
+MemoryMappedAudioFormatReader *
+AudioFormat::createMemoryMappedReader(FileInputStream *fin) {
+  delete fin;
+  return nullptr;
 }
 
-bool AudioFormat::canHandleFile (const File& f)
-{
-    for (auto& e : getFileExtensions())
-        if (f.hasFileExtension (e))
-            return true;
+bool AudioFormat::isChannelLayoutSupported(const AudioChannelSet &channelSet) {
+  if (channelSet == AudioChannelSet::mono())
+    return canDoMono();
+  if (channelSet == AudioChannelSet::stereo())
+    return canDoStereo();
 
-    return false;
+  return false;
 }
 
-const String& AudioFormat::getFormatName() const                { return formatName; }
-StringArray AudioFormat::getFileExtensions() const              { return fileExtensions; }
-bool AudioFormat::isCompressed()                                { return false; }
-StringArray AudioFormat::getQualityOptions()                    { return {}; }
+AudioFormatWriter *AudioFormat::createWriterFor(
+    OutputStream *streamToWriteTo, double sampleRateToUse,
+    const AudioChannelSet &channelLayout, int bitsPerSample,
+    const StringPairArray &metadataValues, int qualityOptionIndex) {
+  if (isChannelLayoutSupported(channelLayout))
+    return createWriterFor(streamToWriteTo, sampleRateToUse,
+                           static_cast<unsigned int>(channelLayout.size()),
+                           bitsPerSample, metadataValues, qualityOptionIndex);
 
-MemoryMappedAudioFormatReader* AudioFormat::createMemoryMappedReader (const File&)
-{
-    return nullptr;
-}
-
-MemoryMappedAudioFormatReader* AudioFormat::createMemoryMappedReader (FileInputStream* fin)
-{
-    delete fin;
-    return nullptr;
-}
-
-bool AudioFormat::isChannelLayoutSupported (const AudioChannelSet& channelSet)
-{
-    if (channelSet == AudioChannelSet::mono())      return canDoMono();
-    if (channelSet == AudioChannelSet::stereo())    return canDoStereo();
-
-    return false;
-}
-
-AudioFormatWriter* AudioFormat::createWriterFor (OutputStream* streamToWriteTo,
-                                                 double sampleRateToUse,
-                                                 const AudioChannelSet& channelLayout,
-                                                 int bitsPerSample,
-                                                 const StringPairArray& metadataValues,
-                                                 int qualityOptionIndex)
-{
-    if (isChannelLayoutSupported (channelLayout))
-        return createWriterFor (streamToWriteTo, sampleRateToUse,
-                                static_cast<unsigned int> (channelLayout.size()),
-                                bitsPerSample, metadataValues, qualityOptionIndex);
-
-    return nullptr;
+  return nullptr;
 }
 
 } // namespace juce

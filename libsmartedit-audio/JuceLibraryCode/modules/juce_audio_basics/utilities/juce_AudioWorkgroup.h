@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,8 +20,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
 //==============================================================================
 /**
@@ -32,61 +31,64 @@ namespace juce
 
     @tags{Audio}
 */
-class WorkgroupToken
-{
+class WorkgroupToken {
 public:
-    /** @internal */
-    class TokenProvider;
+  /** @internal */
+  class TokenProvider;
 
-    /** @internal */
-    using Erased = FixedSizeFunction<64, const TokenProvider*()>;
+  /** @internal */
+  using Erased = FixedSizeFunction<64, const TokenProvider *()>;
 
-    /** @internal
+  /** @internal
 
-        Creates a WorkgroupToken from a function returning a TokenProvider.
-    */
-    explicit WorkgroupToken (Erased e) : erased (std::move (e)) {}
+      Creates a WorkgroupToken from a function returning a TokenProvider.
+  */
+  explicit WorkgroupToken(Erased e) : erased(std::move(e)) {}
 
-    /** @internal
+  /** @internal
 
-        Creates a disengaged WorkgroupToken, i.e. create a token without joining the thread to a
-        workgroup.
-    */
-    WorkgroupToken()                                  = default;
+      Creates a disengaged WorkgroupToken, i.e. create a token without joining
+     the thread to a workgroup.
+  */
+  WorkgroupToken() = default;
 
-    /** If the token joined the calling thread to a workgroup during construction, the destructor
-        will cause the calling thread to leave that workgroup.
-    */
-    ~WorkgroupToken()                                 = default;
+  /** If the token joined the calling thread to a workgroup during construction,
+     the destructor will cause the calling thread to leave that workgroup.
+  */
+  ~WorkgroupToken() = default;
 
-    /** @internal */
-    WorkgroupToken (const WorkgroupToken&)            = delete;
+  /** @internal */
+  WorkgroupToken(const WorkgroupToken &) = delete;
 
-    WorkgroupToken (WorkgroupToken&&) noexcept        = default;
+  WorkgroupToken(WorkgroupToken &&) noexcept = default;
 
-    /** @internal */
-    WorkgroupToken& operator= (const WorkgroupToken&) = delete;
+  /** @internal */
+  WorkgroupToken &operator=(const WorkgroupToken &) = delete;
 
-    WorkgroupToken& operator= (WorkgroupToken&&)      = default;
+  WorkgroupToken &operator=(WorkgroupToken &&) = default;
 
-    /** Returns true if and only if getTokenProvider() returns non-null. */
-    explicit operator bool() const { return getTokenProvider() != nullptr; }
+  /** Returns true if and only if getTokenProvider() returns non-null. */
+  explicit operator bool() const { return getTokenProvider() != nullptr; }
 
-    /** The result of this function can be compared to nullptr to check whether the token
-        successfully joined the calling thread to a workgroup.
+  /** The result of this function can be compared to nullptr to check whether
+     the token successfully joined the calling thread to a workgroup.
 
-        Used in the implementation to provide platform-specific information about this token.
-    */
-    [[nodiscard]] const TokenProvider* getTokenProvider() const { return erased != nullptr ? erased() : nullptr; }
+      Used in the implementation to provide platform-specific information about
+     this token.
+  */
+  [[nodiscard]] const TokenProvider *getTokenProvider() const {
+    return erased != nullptr ? erased() : nullptr;
+  }
 
-    /** If this token was engaged by joining a workgroup, leaves that workgroup and disengages the token.
+  /** If this token was engaged by joining a workgroup, leaves that workgroup
+     and disengages the token.
 
-        After this call, getTokenProvider() will return nullptr.
-    */
-    void reset() { erased = nullptr; }
+      After this call, getTokenProvider() will return nullptr.
+  */
+  void reset() { erased = nullptr; }
 
 private:
-    Erased erased;
+  Erased erased;
 };
 
 //==============================================================================
@@ -107,9 +109,10 @@ private:
     @code
     Constructor()
     {
-        startRealtimeThread (RealtimeThreadOptions{}.withApproximateAudioProcessingTime (samplesPerFrame, sampleRate));
-        or
-        startRealtimeThread (RealtimeThreadOptions{}.withProcessingTimeMs (10));
+        startRealtimeThread
+   (RealtimeThreadOptions{}.withApproximateAudioProcessingTime (samplesPerFrame,
+   sampleRate)); or startRealtimeThread
+   (RealtimeThreadOptions{}.withProcessingTimeMs (10));
     }
 
     void Thread::run() override
@@ -120,9 +123,8 @@ private:
 
         while (wait (-1) && ! threadShouldExit())
         {
-            // If the workgroup has changed, rejoin the workgroup with the same token.
-            if (workgroupChanged())
-                getWorkgroup().join (token);
+            // If the workgroup has changed, rejoin the workgroup with the same
+   token. if (workgroupChanged()) getWorkgroup().join (token);
 
             // Perform the work here
         }
@@ -138,84 +140,89 @@ private:
 
     @tags{Audio}
 */
-class AudioWorkgroup
-{
+class AudioWorkgroup {
 public:
-    /** @internal */
-    class WorkgroupProvider;
+  /** @internal */
+  class WorkgroupProvider;
 
-    /** @internal */
-    using Erased = FixedSizeFunction<64, const WorkgroupProvider*()>;
+  /** @internal */
+  using Erased = FixedSizeFunction<64, const WorkgroupProvider *()>;
 
-    /** @internal
+  /** @internal
 
-        Creates an AudioWorkgroup from a function returning a WorkgroupProvider.
-    */
-    explicit AudioWorkgroup (Erased e) : erased (std::move (e)) {}
+      Creates an AudioWorkgroup from a function returning a WorkgroupProvider.
+  */
+  explicit AudioWorkgroup(Erased e) : erased(std::move(e)) {}
 
-    /** Move constructor. */
-    AudioWorkgroup (AudioWorkgroup&&) = default;
+  /** Move constructor. */
+  AudioWorkgroup(AudioWorkgroup &&) = default;
 
-    /** Move assignment operator. */
-    AudioWorkgroup& operator= (AudioWorkgroup&&) = default;
+  /** Move assignment operator. */
+  AudioWorkgroup &operator=(AudioWorkgroup &&) = default;
 
-    /** Copy constructor. */
-    AudioWorkgroup (const AudioWorkgroup&);
+  /** Copy constructor. */
+  AudioWorkgroup(const AudioWorkgroup &);
 
-    /** Copy assignment operator. */
-    AudioWorkgroup& operator= (const AudioWorkgroup& other)
-    {
-        AudioWorkgroup { other }.swap (*this);
-        return *this;
-    }
+  /** Copy assignment operator. */
+  AudioWorkgroup &operator=(const AudioWorkgroup &other) {
+    AudioWorkgroup{other}.swap(*this);
+    return *this;
+  }
 
-    /** Constructs a disengaged handle that does not represent any workgroup. */
-    AudioWorkgroup() = default;
+  /** Constructs a disengaged handle that does not represent any workgroup. */
+  AudioWorkgroup() = default;
 
-    /**
-        This method attempts to join the calling thread to this workgroup.
+  /**
+      This method attempts to join the calling thread to this workgroup.
 
-        If the join operation is successful, the token will be engaged, i.e. its
-        getTokenProvider() function will return non-null.
+      If the join operation is successful, the token will be engaged, i.e. its
+      getTokenProvider() function will return non-null.
 
-        If the token is already engaged and represents a join to another workgroup,
-        the thread will leave that workgroup before joining the workgroup represented by this
-        object. If the 'token' is already engaged and is passed to the same workgroup, the method
-        will not perform any action.
+      If the token is already engaged and represents a join to another
+     workgroup, the thread will leave that workgroup before joining the
+     workgroup represented by this object. If the 'token' is already engaged and
+     is passed to the same workgroup, the method will not perform any action.
 
-        It's important to note that the lifetime of the token should not exceed the lifetime
-        of the associated thread and must be destroyed on the same thread.
-    */
-    void join (WorkgroupToken& token) const;
+      It's important to note that the lifetime of the token should not exceed
+     the lifetime of the associated thread and must be destroyed on the same
+     thread.
+  */
+  void join(WorkgroupToken &token) const;
 
-    /** Equality operator. */
-    bool operator== (const AudioWorkgroup& other) const;
+  /** Equality operator. */
+  bool operator==(const AudioWorkgroup &other) const;
 
-    /** Inequality operator. */
-    bool operator!= (const AudioWorkgroup& other) const { return ! operator== (other); }
+  /** Inequality operator. */
+  bool operator!=(const AudioWorkgroup &other) const {
+    return !operator==(other);
+  }
 
-    /** Returns true if and only if this object represents a workgroup. */
-    explicit operator bool() const;
+  /** Returns true if and only if this object represents a workgroup. */
+  explicit operator bool() const;
 
-    /** Disengages this instance so that it no longer represents a workgroup.
+  /** Disengages this instance so that it no longer represents a workgroup.
 
-        After this call, operator bool() will return false.
-    */
-    void reset() { erased = nullptr; }
+      After this call, operator bool() will return false.
+  */
+  void reset() { erased = nullptr; }
 
-    /** Returns the recommended maximum number of parallel threads that should join this workgroup.
+  /** Returns the recommended maximum number of parallel threads that should
+     join this workgroup.
 
-        This recommendation is based on the workgroup attributes and current hardware, but not on
-        system load. On a very busy system, it may be more effective to use fewer parallel threads.
-    */
-    size_t getMaxParallelThreadCount() const;
+      This recommendation is based on the workgroup attributes and current
+     hardware, but not on system load. On a very busy system, it may be more
+     effective to use fewer parallel threads.
+  */
+  size_t getMaxParallelThreadCount() const;
 
 private:
-    const WorkgroupProvider* getWorkgroupProvider() const { return erased != nullptr ? erased() : nullptr; }
+  const WorkgroupProvider *getWorkgroupProvider() const {
+    return erased != nullptr ? erased() : nullptr;
+  }
 
-    void swap (AudioWorkgroup& other) noexcept { std::swap (other.erased, erased); }
+  void swap(AudioWorkgroup &other) noexcept { std::swap(other.erased, erased); }
 
-    Erased erased;
+  Erased erased;
 };
 
 } // namespace juce

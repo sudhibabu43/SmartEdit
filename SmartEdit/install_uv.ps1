@@ -1,5 +1,5 @@
-# Licensed under the MIT license
-# <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+# d under the MIT 
+# <-MIT or https://opensource.org/s/MIT>, at your
 # option. This file may not be copied, modified, or distributed
 # except according to those terms.
 
@@ -29,25 +29,29 @@ Print help
 #>
 
 param (
-    [Parameter(HelpMessage = "Don't add the install directory to PATH")]
-    [switch]$NoModifyPath,
-    [Parameter(HelpMessage = "Print Help")]
-    [switch]$Help
+  [Parameter(HelpMessage = "Don't add the install directory to PATH")]
+  [switch]$NoModifyPath,
+  [Parameter(HelpMessage = "Print Help")]
+  [switch]$Help
 )
 
 $app_name = 'uv'
 $app_version = '0.12.10'
 if ($env:UV_DOWNLOAD_URL) {
   $ArtifactDownloadUrls = @($env:UV_DOWNLOAD_URL)
-} elseif ($env:INSTALLER_DOWNLOAD_URL) {
+}
+elseif ($env:INSTALLER_DOWNLOAD_URL) {
   $ArtifactDownloadUrls = @($env:INSTALLER_DOWNLOAD_URL)
-} elseif ($env:UV_INSTALLER_GHE_BASE_URL) {
+}
+elseif ($env:UV_INSTALLER_GHE_BASE_URL) {
   $installer_base_url = $env:UV_INSTALLER_GHE_BASE_URL
   $ArtifactDownloadUrls = @("$installer_base_url/astral-sh/uv/releases/download/0.12.10")
-} elseif ($env:UV_INSTALLER_GITHUB_BASE_URL) {
+}
+elseif ($env:UV_INSTALLER_GITHUB_BASE_URL) {
   $installer_base_url = $env:UV_INSTALLER_GITHUB_BASE_URL
   $ArtifactDownloadUrls = @("$installer_base_url/astral-sh/uv/releases/download/0.12.10")
-} else {
+}
+else {
   $ArtifactDownloadUrls = @("https://releases.astral.sh/github/uv/releases/download/0.12.10", "https://github.com/astral-sh/uv/releases/download/0.12.10")
 }
 
@@ -58,22 +62,24 @@ $receipt = @"
 "@
 if ($env:XDG_CONFIG_HOME) {
   $receipt_home = "${env:XDG_CONFIG_HOME}\uv"
-} else {
+}
+else {
   $receipt_home = "${env:LOCALAPPDATA}\uv"
 }
 
 if ($env:UV_DISABLE_UPDATE) {
   $install_updater = $false
-} else {
+}
+else {
   $install_updater = $true
 }
 
 if ($NoModifyPath) {
-    Write-Information "-NoModifyPath has been deprecated; please set UV_NO_MODIFY_PATH=1 in the environment"
+  Write-Information "-NoModifyPath has been deprecated; please set UV_NO_MODIFY_PATH=1 in the environment"
 }
 
 if ($env:UV_NO_MODIFY_PATH) {
-    $NoModifyPath = $true
+  $NoModifyPath = $true
 }
 
 $unmanaged_install = $env:UV_UNMANAGED_INSTALL
@@ -93,65 +99,65 @@ function Install-Binary($install_args) {
 
   # Platform info injected by dist
   $platforms = @{
-    "aarch64-pc-windows-gnu" = @{
+    "aarch64-pc-windows-gnu"  = @{
       "artifact_name" = "uv-aarch64-pc-windows-msvc.zip"
-      "bins" = @("uv.exe", "uvx.exe", "uvw.exe")
-      "libs" = @()
-      "staticlibs" = @()
-      "zip_ext" = ".zip"
-      "aliases" = @{
+      "bins"          = @("uv.exe", "uvx.exe", "uvw.exe")
+      "libs"          = @()
+      "staticlibs"    = @()
+      "zip_ext"       = ".zip"
+      "aliases"       = @{
       }
-      "aliases_json" = '{}'
+      "aliases_json"  = '{}'
     }
     "aarch64-pc-windows-msvc" = @{
       "artifact_name" = "uv-aarch64-pc-windows-msvc.zip"
-      "bins" = @("uv.exe", "uvx.exe", "uvw.exe")
-      "libs" = @()
-      "staticlibs" = @()
-      "zip_ext" = ".zip"
-      "aliases" = @{
+      "bins"          = @("uv.exe", "uvx.exe", "uvw.exe")
+      "libs"          = @()
+      "staticlibs"    = @()
+      "zip_ext"       = ".zip"
+      "aliases"       = @{
       }
-      "aliases_json" = '{}'
+      "aliases_json"  = '{}'
     }
-    "i686-pc-windows-gnu" = @{
+    "i686-pc-windows-gnu"     = @{
       "artifact_name" = "uv-i686-pc-windows-msvc.zip"
-      "bins" = @("uv.exe", "uvx.exe", "uvw.exe")
-      "libs" = @()
-      "staticlibs" = @()
-      "zip_ext" = ".zip"
-      "aliases" = @{
+      "bins"          = @("uv.exe", "uvx.exe", "uvw.exe")
+      "libs"          = @()
+      "staticlibs"    = @()
+      "zip_ext"       = ".zip"
+      "aliases"       = @{
       }
-      "aliases_json" = '{}'
+      "aliases_json"  = '{}'
     }
-    "i686-pc-windows-msvc" = @{
+    "i686-pc-windows-msvc"    = @{
       "artifact_name" = "uv-i686-pc-windows-msvc.zip"
-      "bins" = @("uv.exe", "uvx.exe", "uvw.exe")
-      "libs" = @()
-      "staticlibs" = @()
-      "zip_ext" = ".zip"
-      "aliases" = @{
+      "bins"          = @("uv.exe", "uvx.exe", "uvw.exe")
+      "libs"          = @()
+      "staticlibs"    = @()
+      "zip_ext"       = ".zip"
+      "aliases"       = @{
       }
-      "aliases_json" = '{}'
+      "aliases_json"  = '{}'
     }
-    "x86_64-pc-windows-gnu" = @{
+    "x86_64-pc-windows-gnu"   = @{
       "artifact_name" = "uv-x86_64-pc-windows-msvc.zip"
-      "bins" = @("uv.exe", "uvx.exe", "uvw.exe")
-      "libs" = @()
-      "staticlibs" = @()
-      "zip_ext" = ".zip"
-      "aliases" = @{
+      "bins"          = @("uv.exe", "uvx.exe", "uvw.exe")
+      "libs"          = @()
+      "staticlibs"    = @()
+      "zip_ext"       = ".zip"
+      "aliases"       = @{
       }
-      "aliases_json" = '{}'
+      "aliases_json"  = '{}'
     }
-    "x86_64-pc-windows-msvc" = @{
+    "x86_64-pc-windows-msvc"  = @{
       "artifact_name" = "uv-x86_64-pc-windows-msvc.zip"
-      "bins" = @("uv.exe", "uvx.exe", "uvw.exe")
-      "libs" = @()
-      "staticlibs" = @()
-      "zip_ext" = ".zip"
-      "aliases" = @{
+      "bins"          = @("uv.exe", "uvx.exe", "uvw.exe")
+      "libs"          = @()
+      "staticlibs"    = @()
+      "zip_ext"       = ".zip"
+      "aliases"       = @{
       }
-      "aliases_json" = '{}'
+      "aliases_json"  = '{}'
     }
   }
 
@@ -174,7 +180,8 @@ function Install-Binary($install_args) {
       $fetched = Download -download_url "$url" -platforms $platforms -arch $arch
       $download_result = $true
       break
-    } catch {
+    }
+    catch {
       Write-Information "failed to download from $url"
       Write-Information "  $(Get-ExceptionMessage $_.Exception)"
       # keep going, maybe we have backup download URLs
@@ -187,7 +194,8 @@ function Install-Binary($install_args) {
   # FIXME: add a flag that lets the user not do this step
   try {
     Invoke-Installer -artifacts $fetched -platforms $platforms "$install_args"
-  } catch {
+  }
+  catch {
     throw @"
 We encountered an error trying to perform the installation;
 please review the error messages below.
@@ -201,7 +209,8 @@ function Get-TargetTriple($platforms) {
   $double = Get-Arch
   if ($platforms.Contains("$double-msvc")) {
     return "$double-msvc"
-  } else {
+  }
+  else {
     return "$double-gnu"
   }
 }
@@ -218,14 +227,14 @@ function Get-Arch() {
     $p = $t.GetProperty("OSArchitecture")
     # Possible OSArchitecture Values: https://learn.microsoft.com/dotnet/api/system.runtime.interopservices.architecture
     # Rust supported platforms: https://doc.rust-lang.org/stable/rustc/platform-support.html
-    switch ($p.GetValue($null).ToString())
-    {
+    switch ($p.GetValue($null).ToString()) {
       "X86" { return "i686-pc-windows" }
       "X64" { return "x86_64-pc-windows" }
       "Arm" { return "thumbv7a-pc-windows" }
       "Arm64" { return "aarch64-pc-windows" }
     }
-  } catch {
+  }
+  catch {
     # The above was added in .NET 4.7.1, so Windows PowerShell in versions of Windows
     # prior to Windows 10 v1709 may not have this API.
     Write-Verbose "Get-TargetTriple: Exception when trying to determine OS architecture."
@@ -236,47 +245,48 @@ function Get-Arch() {
   Write-Verbose("Get-TargetTriple: falling back to Is64BitOperatingSystem.")
   if ([System.Environment]::Is64BitOperatingSystem) {
     return "x86_64-pc-windows"
-  } else {
+  }
+  else {
     return "i686-pc-windows"
   }
 }
 
 function WebProxyFromUrl {
-    param([string]$ProxyUrl)
+  param([string]$ProxyUrl)
 
-    if ([string]::IsNullOrWhiteSpace($ProxyUrl)) {
-        return $null
+  if ([string]::IsNullOrWhiteSpace($ProxyUrl)) {
+    return $null
+  }
+
+  try {
+    # Parse the proxy URL
+    $uri = [System.Uri]$ProxyUrl
+
+    # Create WebProxy instance
+    $webProxy = New-Object System.Net.WebProxy($uri)
+
+    # Set credentials if provided in URL
+    if (-not [string]::IsNullOrEmpty($uri.UserInfo)) {
+      $userInfo = $uri.UserInfo.Split(':')
+      $username = [System.Uri]::UnescapeDataString($userInfo[0])
+      $password = if ($null -eq $userInfo[1]) { "" } else { [System.Uri]::UnescapeDataString($userInfo[1]) }
+      $webProxy.Credentials = New-Object System.Net.NetworkCredential($username, $password)
     }
 
-    try {
-        # Parse the proxy URL
-        $uri = [System.Uri]$ProxyUrl
-
-        # Create WebProxy instance
-        $webProxy = New-Object System.Net.WebProxy($uri)
-
-        # Set credentials if provided in URL
-        if (-not [string]::IsNullOrEmpty($uri.UserInfo)) {
-            $userInfo = $uri.UserInfo.Split(':')
-            $username = [System.Uri]::UnescapeDataString($userInfo[0])
-            $password = if ($null -eq $userInfo[1]) { "" } else { [System.Uri]::UnescapeDataString($userInfo[1]) }
-            $webProxy.Credentials = New-Object System.Net.NetworkCredential($username, $password)
-        }
-
-        return $webProxy
-    }
-    catch {
-        Write-Verbose("Failed to parse proxy URL '$ProxyUrl': $($_.Exception.Message)")
-        return $null
-    }
+    return $webProxy
+  }
+  catch {
+    Write-Verbose("Failed to parse proxy URL '$ProxyUrl': $($_.Exception.Message)")
+    return $null
+  }
 }
 
 function WebProxyFromEnvironment {
-    $httpsProxy = [System.Environment]::GetEnvironmentVariable("HTTPS_PROXY")
-    $allProxy = [System.Environment]::GetEnvironmentVariable("ALL_PROXY")
-    $proxyUrl = if (-not [string]::IsNullOrWhiteSpace($httpsProxy)) { $httpsProxy } else { $allProxy }
-    $webProxy = WebProxyFromUrl -ProxyUrl $proxyUrl
-    return $webProxy
+  $httpsProxy = [System.Environment]::GetEnvironmentVariable("HTTPS_PROXY")
+  $allProxy = [System.Environment]::GetEnvironmentVariable("ALL_PROXY")
+  $proxyUrl = if (-not [string]::IsNullOrWhiteSpace($httpsProxy)) { $httpsProxy } else { $allProxy }
+  $webProxy = WebProxyFromUrl -ProxyUrl $proxyUrl
+  return $webProxy
 }
 
 function Get-ExceptionMessage($exception) {
@@ -294,7 +304,8 @@ function Get-ExceptionMessage($exception) {
 function Invoke-DownloadFile($client, $url, $path) {
   try {
     $client.DownloadFile($url, $path)
-  } catch {
+  }
+  catch {
     $message = Get-ExceptionMessage $_.Exception
     throw "failed to download $url to ${path}: $message"
   }
@@ -375,8 +386,8 @@ function Download($download_url, $platforms, $arch) {
   }
 
   return @{
-    "bin_paths" = $bin_paths
-    "lib_paths" = $lib_paths
+    "bin_paths"       = $bin_paths
+    "lib_paths"       = $lib_paths
     "staticlib_paths" = $staticlib_paths
   }
 }
@@ -400,10 +411,12 @@ function Invoke-Installer($artifacts, $platforms) {
   if (($env:UV_INSTALL_DIR)) {
     $force_install_dir = $env:UV_INSTALL_DIR
     $install_layout = "flat"
-  } elseif (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
+  }
+  elseif (($env:CARGO_DIST_FORCE_INSTALL_DIR)) {
     $force_install_dir = $env:CARGO_DIST_FORCE_INSTALL_DIR
     $install_layout = "flat"
-  } elseif ($unmanaged_install) {
+  }
+  elseif ($unmanaged_install) {
     $force_install_dir = $unmanaged_install
     $install_layout = "flat"
   }
@@ -417,7 +430,7 @@ function Invoke-Installer($artifacts, $platforms) {
     # `\` so we normalize for comparison. We don't use `Resolve-Path` because they
     # may not exist.
     $cargo_home = if ($env:CARGO_HOME) { $env:CARGO_HOME } else {
-        Join-Path $(if ($HOME) { $HOME } else { "." }) ".cargo"
+      Join-Path $(if ($HOME) { $HOME } else { "." }) ".cargo"
     }
     if ($force_install_dir.Replace('\\', '\') -eq $cargo_home) {
       $install_layout = "cargo-home"
@@ -489,7 +502,7 @@ function Invoke-Installer($artifacts, $platforms) {
 
   # The replace call here ensures proper escaping is inlined into the receipt
   $receipt = $receipt.Replace('AXO_INSTALL_PREFIX', $receipt_dest_dir.replace("\", "\\"))
-  $receipt = $receipt.Replace('"install_layout":"unspecified"', -join('"install_layout":"', $install_layout, '"'))
+  $receipt = $receipt.Replace('"install_layout":"unspecified"', -join ('"install_layout":"', $install_layout, '"'))
 
   $dest_dir = New-Item -Force -ItemType Directory -Path $dest_dir
   $dest_dir_lib = New-Item -Force -ItemType Directory -Path $dest_dir_lib
@@ -504,8 +517,8 @@ function Invoke-Installer($artifacts, $platforms) {
     if (($dests = $info["aliases"][$installed_file])) {
       $source = Join-Path "$dest_dir" "$installed_file"
       foreach ($dest_name in $dests) {
-          $dest = Join-Path $dest_dir $dest_name
-          $null = New-Item -ItemType HardLink -Target "$source" -Path "$dest" -Force -ErrorAction Stop
+        $dest = Join-Path $dest_dir $dest_name
+        $null = New-Item -ItemType HardLink -Target "$source" -Path "$dest" -Force -ErrorAction Stop
       }
     }
   }
@@ -529,7 +542,7 @@ function Invoke-Installer($artifacts, $platforms) {
   $formatted_staticlibs = ($info["staticlibs"] | ForEach-Object { '"' + $_ + '"' }) -join ","
   $receipt = $receipt.Replace('"CARGO_DIST_STATICLIBS"', $formatted_staticlibs)
   # Also replace the aliases with the arch-specific one
-  $receipt = $receipt.Replace('"binary_aliases":{}', -join('"binary_aliases":',  $info['aliases_json']))
+  $receipt = $receipt.Replace('"binary_aliases":{}', -join ('"binary_aliases":', $info['aliases_json']))
   if ($NoModifyPath) {
     $receipt = $receipt.Replace('"modify_path":true', '"modify_path":false')
   }
@@ -554,11 +567,11 @@ function Invoke-Installer($artifacts, $platforms) {
   if (-not $NoModifyPath) {
     Add-Ci-Path $dest_dir
     if (Add-Path $dest_dir) {
-        Write-Information ""
-        Write-Information "To add $dest_dir to your PATH, either restart your shell or run:"
-        Write-Information ""
-        Write-Information "    set Path=$dest_dir;%Path%   (cmd)"
-        Write-Information "    `$env:Path = `"$dest_dir;`$env:Path`"   (powershell)"
+      Write-Information ""
+      Write-Information "To add $dest_dir to your PATH, either restart your shell or run:"
+      Write-Information ""
+      Write-Information "    set Path=$dest_dir;%Path%   (cmd)"
+      Write-Information "    `$env:Path = `"$dest_dir;`$env:Path`"   (powershell)"
     }
   }
 }
@@ -604,7 +617,7 @@ function Add-Path($LiteralPath) {
   # Add the new path to the front of the PATH.
   # The ',' turns $LiteralPath into an array, which the array of
   # $CurrentDirectories is then added to.
-  $NewPath = (,$LiteralPath + $CurrentDirectories) -join ';'
+  $NewPath = (, $LiteralPath + $CurrentDirectories) -join ';'
 
   # Update the registry. Will create the property if it did not already exist.
   # Note the use of ExpandString to create a registry property with a REG_EXPAND_SZ data type.
@@ -670,7 +683,8 @@ $InformationPreference = "Continue"
 # The default interactive handler
 try {
   Install-Binary "$Args"
-} catch {
+}
+catch {
   Write-Information $_
   exit 1
 }

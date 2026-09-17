@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,16 +20,15 @@
   ==============================================================================
 */
 
-namespace juce
-{
-#if (defined (MAC_OS_VERSION_11_0) || defined (__IPHONE_14_0))
- #define JUCE_AUDIOWORKGROUP_TYPES_AVAILABLE    1
+namespace juce {
+#if (defined(MAC_OS_VERSION_11_0) || defined(__IPHONE_14_0))
+#define JUCE_AUDIOWORKGROUP_TYPES_AVAILABLE 1
 #else
- #define JUCE_AUDIOWORKGROUP_TYPES_AVAILABLE    0
+#define JUCE_AUDIOWORKGROUP_TYPES_AVAILABLE 0
 #endif
 
 #if JUCE_AUDIOWORKGROUP_TYPES_AVAILABLE
- AudioWorkgroup makeRealAudioWorkgroup (os_workgroup_t handle);
+AudioWorkgroup makeRealAudioWorkgroup(os_workgroup_t handle);
 #endif
 
-}
+} // namespace juce

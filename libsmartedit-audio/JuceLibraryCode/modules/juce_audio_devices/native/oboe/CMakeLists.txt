@@ -78,7 +78,7 @@ target_include_directories(oboe
 
 # JUCE CHANGE STARTS HERE
 
-# This comment provided for Apache License compliance. We've removed the extra warnings flags and
+# This comment provided for Apache  compliance. We've removed the extra warnings flags and
 # the `-Werror` option, to avoid cases where compilers produce unexpected errors and fail the build.
 # We've also removed the explicit `-std=c++17` compile option, and replaced it with a more
 # cmake-friendly way of specifying the language standard.

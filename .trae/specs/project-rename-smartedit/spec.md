@@ -7,7 +7,7 @@
 
 ## Goals
 - Rename the top-level `OpenShot/` directory to `SmartEdit/`
-- Rename library directories `libopenshot/` to `libsmartedit/` and `libopenshot-audio/` to `libsmartedit-audio/`
+- Rename library directories `libsmartedit/` to `libsmartedit/` and `libsmartedit-audio/` to `libsmartedit-audio/`
 - Update all path references in IDE configuration files (.vscode/c_cpp_properties.json)
 - Ensure no broken paths or imports are created by the rename
 - Verify CMake/build files still work with new paths
@@ -33,13 +33,13 @@
   - CMakeLists.txt files already use project name "libsmartedit" and "SmartEditAudio"
 - Remaining items requiring rename:
   1. Directory: `OpenShot/` → `SmartEdit/`
-  2. Directory: `libopenshot/` → `libsmartedit/`
-  3. Directory: `libopenshot-audio/` → `libsmartedit-audio/`
+  2. Directory: `libsmartedit/` → `libsmartedit/`
+  3. Directory: `libsmartedit-audio/` → `libsmartedit-audio/`
   4. File: `.vscode/c_cpp_properties.json` - paths referencing old directory names
 - The `_libsmartedit.py` file contains an intentional compatibility shim (lines 26-81) that creates bidirectional aliases between OPENSHOT_* ↔ SMARTEDIT_* and OpenShot* ↔ SmartEdit* symbols. This shim exists because pre-compiled binaries (_smartedit.pyd, libsmartedit.dll) were compiled before the rename and still export original symbols. This shim MUST be preserved.
 
 ## Functional Requirements
-- **FR-1**: All three top-level directories (OpenShot, libopenshot, libopenshot-audio) must be renamed to their SmartEdit equivalents
+- **FR-1**: All three top-level directories (OpenShot, libsmartedit, libsmartedit-audio) must be renamed to their SmartEdit equivalents
 - **FR-2**: All file content references to old directory names must be updated to match new names
 - **FR-3**: IDE configuration (.vscode/c_cpp_properties.json) must reflect correct include paths and compile_commands.json location
 - **FR-4**: All existing imports and module references in source code must resolve correctly after rename
@@ -72,28 +72,28 @@
 - **Pass Condition**: `Test-Path "d:\mini project updation\smartEdit1\SmartEdit"` returns True AND `Test-Path "d:\mini project updation\smartEdit1\OpenShot"` returns False
 - **Evidence**: File system listing of project root showing SmartEdit directory and no OpenShot directory
 
-### AC-2: Directory rename - libopenshot to libsmartedit
+### AC-2: Directory rename - libsmartedit to libsmartedit
 - **Type**: `rule`
 - **Given**: Project root directory exists
 - **When**: Directory rename operations are completed
-- **Then**: `libopenshot/` directory no longer exists and `libsmartedit/` directory exists with identical contents
-- **Pass Condition**: `Test-Path "d:\mini project updation\smartEdit1\libsmartedit"` returns True AND `Test-Path "d:\mini project updation\smartEdit1\libopenshot"` returns False
-- **Evidence**: File system listing of project root showing libsmartedit directory and no libopenshot directory
+- **Then**: `libsmartedit/` directory no longer exists and `libsmartedit/` directory exists with identical contents
+- **Pass Condition**: `Test-Path "d:\mini project updation\smartEdit1\libsmartedit"` returns True AND `Test-Path "d:\mini project updation\smartEdit1\libsmartedit"` returns False
+- **Evidence**: File system listing of project root showing libsmartedit directory and no libsmartedit directory
 
-### AC-3: Directory rename - libopenshot-audio to libsmartedit-audio
+### AC-3: Directory rename - libsmartedit-audio to libsmartedit-audio
 - **Type**: `rule`
 - **Given**: Project root directory exists
 - **When**: Directory rename operations are completed
-- **Then**: `libopenshot-audio/` directory no longer exists and `libsmartedit-audio/` directory exists with identical contents
-- **Pass Condition**: `Test-Path "d:\mini project updation\smartEdit1\libsmartedit-audio"` returns True AND `Test-Path "d:\mini project updation\smartEdit1\libopenshot-audio"` returns False
-- **Evidence**: File system listing of project root showing libsmartedit-audio directory and no libopenshot-audio directory
+- **Then**: `libsmartedit-audio/` directory no longer exists and `libsmartedit-audio/` directory exists with identical contents
+- **Pass Condition**: `Test-Path "d:\mini project updation\smartEdit1\libsmartedit-audio"` returns True AND `Test-Path "d:\mini project updation\smartEdit1\libsmartedit-audio"` returns False
+- **Evidence**: File system listing of project root showing libsmartedit-audio directory and no libsmartedit-audio directory
 
 ### AC-4: IDE configuration paths updated
 - **Type**: `rule`
 - **Given**: Directory renames are complete
 - **When**: Reading `.vscode/c_cpp_properties.json`
-- **Then**: All includePath entries and compileCommands path reference `libsmartedit` and `libsmartedit-audio` (not libopenshot or libopenshot-audio)
-- **Pass Condition**: Grep for `libopenshot` in c_cpp_properties.json returns 0 matches; grep for `libsmartedit` returns matches for the correct new paths
+- **Then**: All includePath entries and compileCommands path reference `libsmartedit` and `libsmartedit-audio` (not libsmartedit or libsmartedit-audio)
+- **Pass Condition**: Grep for `libsmartedit` in c_cpp_properties.json returns 0 matches; grep for `libsmartedit` returns matches for the correct new paths
 - **Evidence**: File contents of updated c_cpp_properties.json showing correct new paths
 
 ### AC-5: No unintended OpenShot references remain in source text files

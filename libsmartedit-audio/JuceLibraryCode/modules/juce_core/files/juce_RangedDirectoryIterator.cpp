@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,57 +20,44 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
-JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wdeprecated-declarations")
-JUCE_BEGIN_IGNORE_WARNINGS_MSVC (4996)
+JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE("-Wdeprecated-declarations")
+JUCE_BEGIN_IGNORE_WARNINGS_MSVC(4996)
 
-float DirectoryEntry::getEstimatedProgress() const
-{
-    if (auto it = iterator.lock())
-        return it->getEstimatedProgress();
+float DirectoryEntry::getEstimatedProgress() const {
+  if (auto it = iterator.lock())
+    return it->getEstimatedProgress();
 
-    return 0.0f;
+  return 0.0f;
 }
 
 // We implement this in terms of the deprecated DirectoryIterator,
 // but the old DirectoryIterator might go away in the future!
-RangedDirectoryIterator::RangedDirectoryIterator (const File& directory,
-                                                  bool isRecursive,
-                                                  const String& wildCard,
-                                                  int whatToLookFor,
-                                                  File::FollowSymlinks followSymlinks)
-    : iterator (new DirectoryIterator (directory,
-                                       isRecursive,
-                                       wildCard,
-                                       whatToLookFor,
-                                       followSymlinks))
-{
-    entry.iterator = iterator;
-    increment();
+RangedDirectoryIterator::RangedDirectoryIterator(
+    const File &directory, bool isRecursive, const String &wildCard,
+    int whatToLookFor, File::FollowSymlinks followSymlinks)
+    : iterator(new DirectoryIterator(directory, isRecursive, wildCard,
+                                     whatToLookFor, followSymlinks)) {
+  entry.iterator = iterator;
+  increment();
 }
 
-bool RangedDirectoryIterator::next()
-{
-    const auto result = iterator->next (&entry.directory,
-                                        &entry.hidden,
-                                        &entry.fileSize,
-                                        &entry.modTime,
-                                        &entry.creationTime,
-                                        &entry.readOnly);
-    if (result)
-        entry.file = iterator->getFile();
-    else
-        entry = {};
+bool RangedDirectoryIterator::next() {
+  const auto result =
+      iterator->next(&entry.directory, &entry.hidden, &entry.fileSize,
+                     &entry.modTime, &entry.creationTime, &entry.readOnly);
+  if (result)
+    entry.file = iterator->getFile();
+  else
+    entry = {};
 
-    return result;
+  return result;
 }
 
-void RangedDirectoryIterator::increment()
-{
-    if (iterator != nullptr && ! next())
-        iterator = nullptr;
+void RangedDirectoryIterator::increment() {
+  if (iterator != nullptr && !next())
+    iterator = nullptr;
 }
 
 JUCE_END_IGNORE_WARNINGS_GCC_LIKE

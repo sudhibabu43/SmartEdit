@@ -1,25 +1,26 @@
 /*
  * Copyright 2018 The Android Open Source Project
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * d under the Apache , Version 2.0 (the "");
+ * you may not use this file except in compliance with the .
+ * You may obtain a copy of the  at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/s/-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the  is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * See the  for the specific language governing permissions and
+ * limitations under the .
  */
 
 #ifndef FLOWGRAPH_MANY_TO_MULTI_CONVERTER_H
 #define FLOWGRAPH_MANY_TO_MULTI_CONVERTER_H
 
-#include <unistd.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include <vector>
+
 
 #include "FlowGraphNode.h"
 
@@ -30,24 +31,22 @@ namespace FLOWGRAPH_OUTER_NAMESPACE::flowgraph {
  */
 class ManyToMultiConverter : public flowgraph::FlowGraphNode {
 public:
-    explicit ManyToMultiConverter(int32_t channelCount);
+  explicit ManyToMultiConverter(int32_t channelCount);
 
-    virtual ~ManyToMultiConverter() = default;
+  virtual ~ManyToMultiConverter() = default;
 
-    int32_t onProcess(int numFrames) override;
+  int32_t onProcess(int numFrames) override;
 
-    void setEnabled(bool /*enabled*/) {}
+  void setEnabled(bool /*enabled*/) {}
 
-    std::vector<std::unique_ptr<flowgraph::FlowGraphPortFloatInput>> inputs;
-    flowgraph::FlowGraphPortFloatOutput output;
+  std::vector<std::unique_ptr<flowgraph::FlowGraphPortFloatInput>> inputs;
+  flowgraph::FlowGraphPortFloatOutput output;
 
-    const char *getName() override {
-        return "ManyToMultiConverter";
-    }
+  const char *getName() override { return "ManyToMultiConverter"; }
 
 private:
 };
 
 } /* namespace FLOWGRAPH_OUTER_NAMESPACE::flowgraph */
 
-#endif //FLOWGRAPH_MANY_TO_MULTI_CONVERTER_H
+#endif // FLOWGRAPH_MANY_TO_MULTI_CONVERTER_H

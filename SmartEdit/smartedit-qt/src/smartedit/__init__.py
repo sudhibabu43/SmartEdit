@@ -22,8 +22,8 @@ if _SRC_DIR not in _sys.path:
 
 if _os.name == "nt":
     for _src_name, _dst_name in [
-        ("libsmartedit.dll", "libopenshot.dll"),
-        ("libsmartedit-audio.dll", "libopenshot-audio.dll"),
+        ("libsmartedit.dll", "libsmartedit.dll"),
+        ("libsmartedit-audio.dll", "libsmartedit-audio.dll"),
         ("_smartedit.pyd", "_openshot.pyd"),
     ]:
         _s = _os.path.join(_SRC_DIR, _src_name)

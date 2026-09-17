@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,8 +20,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
 //==============================================================================
 /**
@@ -60,67 +59,65 @@ namespace juce
 
     @tags{Core}
 */
-class SingleThreadedAbstractFifo
-{
+class SingleThreadedAbstractFifo {
 public:
-    /** Creates a SingleThreadedAbstractFifo with no size. */
-    SingleThreadedAbstractFifo() = default;
+  /** Creates a SingleThreadedAbstractFifo with no size. */
+  SingleThreadedAbstractFifo() = default;
 
-    /** Creates a SingleThreadedAbstractFifo that can manage a buffer of the specified size. */
-    explicit SingleThreadedAbstractFifo (int sizeIn)
-        : size (sizeIn)
-    {
-        // This class only works properly when the size is a power of two.
-        // Use nextPowerOfTwo() to find a good size, and ensure that your
-        // backing storage is the same size.
-        jassert (isPowerOfTwo (sizeIn));
-    }
+  /** Creates a SingleThreadedAbstractFifo that can manage a buffer of the
+   * specified size. */
+  explicit SingleThreadedAbstractFifo(int sizeIn) : size(sizeIn) {
+    // This class only works properly when the size is a power of two.
+    // Use nextPowerOfTwo() to find a good size, and ensure that your
+    // backing storage is the same size.
+    jassert(isPowerOfTwo(sizeIn));
+  }
 
-    /** Returns the number of unused elements present in the buffer. */
-    int getRemainingSpace() const   { return size - numReadable; }
+  /** Returns the number of unused elements present in the buffer. */
+  int getRemainingSpace() const { return size - numReadable; }
 
-    /** Returns the number of pending elements present in the buffer. */
-    int getNumReadable() const      { return numReadable; }
+  /** Returns the number of pending elements present in the buffer. */
+  int getNumReadable() const { return numReadable; }
 
-    /** Returns the size of the managed buffer. */
-    int getSize() const             { return size; }
+  /** Returns the size of the managed buffer. */
+  int getSize() const { return size; }
 
-    /** Returns two blocks in the buffer where new items may be written.
+  /** Returns two blocks in the buffer where new items may be written.
 
-        Note that if the buffer is running low on free space, the sum of the lengths of
-        the returned ranges may be less than num!
-    */
-    std::array<Range<int>, 2> write (int num)
-    {
-        const auto startPos = (readPos + numReadable) & (size - 1);
-        const auto maxToWrite = jmin (getRemainingSpace(), num);
-        const auto firstBlockSize = jmin (maxToWrite, size - startPos);
+      Note that if the buffer is running low on free space, the sum of the
+     lengths of the returned ranges may be less than num!
+  */
+  std::array<Range<int>, 2> write(int num) {
+    const auto startPos = (readPos + numReadable) & (size - 1);
+    const auto maxToWrite = jmin(getRemainingSpace(), num);
+    const auto firstBlockSize = jmin(maxToWrite, size - startPos);
 
-        numReadable += maxToWrite;
+    numReadable += maxToWrite;
 
-        return { { { startPos, startPos + firstBlockSize }, { 0, maxToWrite - firstBlockSize } } };
-    }
+    return {{{startPos, startPos + firstBlockSize},
+             {0, maxToWrite - firstBlockSize}}};
+  }
 
-    /** Returns two blocks in the buffer from which new items may be read.
+  /** Returns two blocks in the buffer from which new items may be read.
 
-        Note that if the buffer doesn't have the requested number of items available,
-        the sum of the lengths of the returned ranges may be less than num!
-    */
-    std::array<Range<int>, 2> read (int num)
-    {
-        const auto startPos = readPos;
-        const auto maxToRead = jmin (numReadable, num);
-        const auto firstBlockSize = jmin (maxToRead, size - startPos);
+      Note that if the buffer doesn't have the requested number of items
+     available, the sum of the lengths of the returned ranges may be less than
+     num!
+  */
+  std::array<Range<int>, 2> read(int num) {
+    const auto startPos = readPos;
+    const auto maxToRead = jmin(numReadable, num);
+    const auto firstBlockSize = jmin(maxToRead, size - startPos);
 
-        readPos = (startPos + maxToRead) & (size - 1);
-        numReadable -= maxToRead;
+    readPos = (startPos + maxToRead) & (size - 1);
+    numReadable -= maxToRead;
 
-        return { { { startPos, startPos + firstBlockSize }, { 0, maxToRead - firstBlockSize } } };
-    }
+    return {{{startPos, startPos + firstBlockSize},
+             {0, maxToRead - firstBlockSize}}};
+  }
 
 private:
-    int size = 0, readPos = 0, numReadable = 0;
+  int size = 0, readPos = 0, numReadable = 0;
 };
-
 
 } // namespace juce

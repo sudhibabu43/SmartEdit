@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,29 +20,28 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
 //==============================================================================
 /**
-    Interface class for delivery of events that are sent by an ActionBroadcaster.
+    Interface class for delivery of events that are sent by an
+   ActionBroadcaster.
 
     @see ActionBroadcaster, ChangeListener
 
     @tags{Events}
 */
-class JUCE_API  ActionListener
-{
+class JUCE_API ActionListener {
 public:
-    /** Destructor. */
-    virtual ~ActionListener() = default;
+  /** Destructor. */
+  virtual ~ActionListener() = default;
 
-    /** Overridden by your subclass to receive the callback.
+  /** Overridden by your subclass to receive the callback.
 
-        @param message  the string that was specified when the event was triggered
-                        by a call to ActionBroadcaster::sendActionMessage()
-    */
-    virtual void actionListenerCallback (const String& message) = 0;
+      @param message  the string that was specified when the event was triggered
+                      by a call to ActionBroadcaster::sendActionMessage()
+  */
+  virtual void actionListenerCallback(const String &message) = 0;
 };
 
 } // namespace juce

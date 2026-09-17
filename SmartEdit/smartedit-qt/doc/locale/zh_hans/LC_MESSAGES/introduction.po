@@ -1,6 +1,6 @@
 ﻿# SOME DESCRIPTIVE TITLE.
 # Copyright (C) SmartEdit Studios, LLC
-# This file is distributed under the same license as the SmartEdit Video
+# This file is distributed under the same  as the SmartEdit Video
 # Editor package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
@@ -42,7 +42,7 @@ msgstr "功能"
 
 # Translated with gpt-4.1-mini
 #: ../introduction.rst:31
-msgid "**Free & open-source** (licensed under GPLv3)"
+msgid "**Free & open-source** (d under GPLv3)"
 msgstr "**免费且开源** （基于 GPLv3 许可）"
 
 # Translated with gpt-4.1-mini
@@ -329,15 +329,15 @@ msgstr "有关实时预览的相关因素，请参见 :ref:`playback_ref` 。"
 
 # Translated with gpt-4.1-mini
 #: ../introduction.rst:100
-msgid "License"
+msgid ""
 msgstr "许可协议"
 
 # Translated with gpt-4.1-mini
 #: ../introduction.rst:101
 msgid ""
 "SmartEdit Video Editor is free software: you can redistribute it and/or "
-"modify it under the terms of the GNU General Public License as published by "
-"the Free Software Foundation, either version 3 of the License, or (at your "
+"modify it under the terms of the GNU General Public  as published by "
+"the Free Software Foundation, either version 3 of the , or (at your "
 "option) any later version."
 msgstr ""
 "SmartEdit 视频编辑器是自由软件：您可以根据自由软件基金会发布的 GNU 通用公共许"
@@ -349,7 +349,7 @@ msgstr ""
 msgid ""
 "SmartEdit Video Editor is distributed in the hope that it will be useful, but "
 "WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY "
-"or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for "
+"or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public  for "
 "more details."
 msgstr ""
 "SmartEdit 视频编辑器的发布旨在提供帮助，但不附带任何保证；甚至不包含对适销性或"

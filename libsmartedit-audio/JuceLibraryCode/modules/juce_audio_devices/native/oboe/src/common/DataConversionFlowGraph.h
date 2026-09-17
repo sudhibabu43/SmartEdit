@@ -1,17 +1,17 @@
 /*
  * Copyright (C) 2019 The Android Open Source Project
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * d under the Apache , Version 2.0 (the "");
+ * you may not use this file except in compliance with the .
+ * You may obtain a copy of the  at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/s/-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the  is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * See the  for the specific language governing permissions and
+ * limitations under the .
  */
 
 #ifndef OBOE_OBOE_FLOW_GRAPH_H
@@ -21,13 +21,14 @@
 #include <stdint.h>
 #include <sys/types.h>
 
+#include "AudioSourceCaller.h"
+#include "FixedBlockWriter.h"
 #include <flowgraph/ChannelCountConverter.h>
 #include <flowgraph/MonoToMultiConverter.h>
 #include <flowgraph/MultiToMonoConverter.h>
 #include <flowgraph/SampleRateConverter.h>
 #include <oboe/Definitions.h>
-#include "AudioSourceCaller.h"
-#include "FixedBlockWriter.h"
+
 
 namespace oboe {
 
@@ -39,48 +40,45 @@ class AudioSourceCaller;
  */
 class DataConversionFlowGraph : public FixedBlockProcessor {
 public:
+  DataConversionFlowGraph() : mBlockWriter(*this) {}
 
-    DataConversionFlowGraph()
-    : mBlockWriter(*this) {}
+  void setSource(const void *buffer, int32_t numFrames);
 
-    void setSource(const void *buffer, int32_t numFrames);
+  /** Connect several modules together to convert from source to sink.
+   * This should only be called once for each instance.
+   *
+   * @param sourceFormat
+   * @param sourceChannelCount
+   * @param sinkFormat
+   * @param sinkChannelCount
+   * @return
+   */
+  oboe::Result configure(oboe::AudioStream *sourceStream,
+                         oboe::AudioStream *sinkStream);
 
-    /** Connect several modules together to convert from source to sink.
-     * This should only be called once for each instance.
-     *
-     * @param sourceFormat
-     * @param sourceChannelCount
-     * @param sinkFormat
-     * @param sinkChannelCount
-     * @return
-     */
-    oboe::Result configure(oboe::AudioStream *sourceStream, oboe::AudioStream *sinkStream);
+  int32_t read(void *buffer, int32_t numFrames, int64_t timeoutNanos);
 
-    int32_t read(void *buffer, int32_t numFrames, int64_t timeoutNanos);
+  int32_t write(void *buffer, int32_t numFrames);
 
-    int32_t write(void *buffer, int32_t numFrames);
+  int32_t onProcessFixedBlock(uint8_t *buffer, int32_t numBytes) override;
 
-    int32_t onProcessFixedBlock(uint8_t *buffer, int32_t numBytes) override;
-
-    DataCallbackResult getDataCallbackResult() {
-        return mCallbackResult;
-    }
+  DataCallbackResult getDataCallbackResult() { return mCallbackResult; }
 
 private:
-    std::unique_ptr<flowgraph::FlowGraphSourceBuffered>    mSource;
-    std::unique_ptr<AudioSourceCaller>                 mSourceCaller;
-    std::unique_ptr<flowgraph::MonoToMultiConverter>   mMonoToMultiConverter;
-    std::unique_ptr<flowgraph::MultiToMonoConverter>   mMultiToMonoConverter;
-    std::unique_ptr<flowgraph::ChannelCountConverter>  mChannelCountConverter;
-    std::unique_ptr<resampler::MultiChannelResampler>  mResampler;
-    std::unique_ptr<flowgraph::SampleRateConverter>    mRateConverter;
-    std::unique_ptr<flowgraph::FlowGraphSink>              mSink;
+  std::unique_ptr<flowgraph::FlowGraphSourceBuffered> mSource;
+  std::unique_ptr<AudioSourceCaller> mSourceCaller;
+  std::unique_ptr<flowgraph::MonoToMultiConverter> mMonoToMultiConverter;
+  std::unique_ptr<flowgraph::MultiToMonoConverter> mMultiToMonoConverter;
+  std::unique_ptr<flowgraph::ChannelCountConverter> mChannelCountConverter;
+  std::unique_ptr<resampler::MultiChannelResampler> mResampler;
+  std::unique_ptr<flowgraph::SampleRateConverter> mRateConverter;
+  std::unique_ptr<flowgraph::FlowGraphSink> mSink;
 
-    FixedBlockWriter                                   mBlockWriter;
-    DataCallbackResult                                 mCallbackResult = DataCallbackResult::Continue;
-    AudioStream                                       *mFilterStream = nullptr;
-    std::unique_ptr<uint8_t[]>                         mAppBuffer;
+  FixedBlockWriter mBlockWriter;
+  DataCallbackResult mCallbackResult = DataCallbackResult::Continue;
+  AudioStream *mFilterStream = nullptr;
+  std::unique_ptr<uint8_t[]> mAppBuffer;
 };
 
-}
-#endif //OBOE_OBOE_FLOW_GRAPH_H
+} // namespace oboe
+#endif // OBOE_OBOE_FLOW_GRAPH_H

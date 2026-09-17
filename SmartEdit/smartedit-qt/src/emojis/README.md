@@ -44,7 +44,7 @@ As an open source project, attribution is critical from a legal, practical and m
 
 Attribution suggestion:
 
-> All emojis designed by [OpenMoji](https://openmoji.org/) – the open-source emoji and icon project. License: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/#)
+> All emojis designed by [OpenMoji](https://openmoji.org/) – the open-source emoji and icon project. : [CC BY-SA 4.0](https://creativecommons.org/s/by-sa/4.0/#)
 
 
 ## Anatomy of the OpenMoji Repository
@@ -64,14 +64,14 @@ Attribution suggestion:
 `test/` Automated unit tests to ensure consistency across all source .svg files ²
 
 
-## License
-¹ OpenMoji graphics are licensed under the Creative Commons Share Alike License 4.0 ([CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/))
+## 
+¹ OpenMoji graphics are d under the Creative Commons Share Alike  4.0 ([CC BY-SA 4.0](https://creativecommons.org/s/by-sa/4.0/))
 
-[![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
+[![: CC BY-SA 4.0](https://img.shields.io/badge/-CC%20BY--SA%204.0-lightgrey.svg)](https://creativecommons.org/s/by-sa/4.0/)
 
-² Code licensed under the GNU Lesser General Public License v3 ([LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html))
+² Code d under the GNU Lesser General Public  v3 ([LGPL-3.0](https://www.gnu.org/s/lgpl-3.0.en.html))
 
-[![License: LGPL-3.0](https://img.shields.io/badge/License-LGPL%20v3-lightgrey.svg)](https://www.gnu.org/licenses/lgpl-3.0.en.html)
+[![: LGPL-3.0](https://img.shields.io/badge/-LGPL%20v3-lightgrey.svg)](https://www.gnu.org/s/lgpl-3.0.en.html)
 
 ## Instructions for Updating SmartEdit with latest OpenMoji release
 

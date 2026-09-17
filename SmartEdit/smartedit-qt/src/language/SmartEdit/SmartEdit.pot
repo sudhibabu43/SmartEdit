@@ -1,6 +1,6 @@
 ﻿# SmartEdit Video Editor POT Template File.
 # Copyright (C) 2008-2018 SmartEdit Studios, LLC
-# This file is distributed under the same license as SmartEdit.
+# This file is distributed under the same  as SmartEdit.
 # Jonathan Thomas <Jonathan.Oomph@gmail.com>, 2018.
 #
 #, fuzzy
@@ -3623,7 +3623,7 @@ msgstr ""
 #: /home/jonathan/apps/smartedit-qt/src/windows/ui/about.ui:154
 #: /home/jonathan/apps/smartedit-qt/src/windows/ui/changelog.ui:134
 #: /home/jonathan/apps/smartedit-qt/src/windows/ui/credits.ui:134
-#: /home/jonathan/apps/smartedit-qt/src/windows/ui/license.ui:45
+#: /home/jonathan/apps/smartedit-qt/src/windows/ui/.ui:45
 msgid "Close"
 msgstr ""
 
@@ -6148,8 +6148,8 @@ msgid "© 2024 SmartEdit Studios, LLC"
 msgstr ""
 
 #: /home/jonathan/apps/smartedit-qt/src/windows/ui/about.ui:140
-#: /home/jonathan/apps/smartedit-qt/src/windows/ui/license.ui:14
-msgid "License"
+#: /home/jonathan/apps/smartedit-qt/src/windows/ui/.ui:14
+msgid ""
 msgstr ""
 
 #: /home/jonathan/apps/smartedit-qt/src/windows/ui/about.ui:147

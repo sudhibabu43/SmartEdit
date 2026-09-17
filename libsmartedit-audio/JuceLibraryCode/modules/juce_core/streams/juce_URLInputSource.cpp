@@ -7,8 +7,8 @@
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   The code included in this file is provided under the terms of the ISC
+   http://www.isc.org/downloads/software-support-policy/isc-. Permission
    To use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
@@ -20,43 +20,35 @@
   ==============================================================================
 */
 
-namespace juce
-{
+namespace juce {
 
-URLInputSource::URLInputSource (const URL& url)
-    : u (url)
-{
+URLInputSource::URLInputSource(const URL &url) : u(url) {}
+
+URLInputSource::URLInputSource(URL &&url) : u(std::move(url)) {}
+
+URLInputSource::~URLInputSource() {}
+
+InputStream *URLInputSource::createInputStream() {
+  return u
+      .createInputStream(
+          URL::InputStreamOptions(URL::ParameterHandling::inAddress))
+      .release();
 }
 
-URLInputSource::URLInputSource (URL&& url)
-    : u (std::move (url))
-{
+InputStream *
+URLInputSource::createInputStreamFor(const String &relatedItemPath) {
+  auto sub = u.getSubPath();
+  auto parent = sub.containsChar(L'/')
+                    ? sub.upToLastOccurrenceOf("/", false, false)
+                    : String();
+
+  return u.withNewSubPath(parent)
+      .getChildURL(relatedItemPath)
+      .createInputStream(
+          URL::InputStreamOptions(URL::ParameterHandling::inAddress))
+      .release();
 }
 
-URLInputSource::~URLInputSource()
-{
-}
-
-InputStream* URLInputSource::createInputStream()
-{
-    return u.createInputStream (URL::InputStreamOptions (URL::ParameterHandling::inAddress)).release();
-}
-
-InputStream* URLInputSource::createInputStreamFor (const String& relatedItemPath)
-{
-    auto sub = u.getSubPath();
-    auto parent = sub.containsChar (L'/') ? sub.upToLastOccurrenceOf ("/", false, false)
-                                          : String();
-
-    return u.withNewSubPath (parent)
-            .getChildURL (relatedItemPath)
-            .createInputStream (URL::InputStreamOptions (URL::ParameterHandling::inAddress))
-            .release();
-}
-
-int64 URLInputSource::hashCode() const
-{
-    return u.toString (true).hashCode64();
-}
+int64 URLInputSource::hashCode() const { return u.toString(true).hashCode64(); }
 
 } // namespace juce

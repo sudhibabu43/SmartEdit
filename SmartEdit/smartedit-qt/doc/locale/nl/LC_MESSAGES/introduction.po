@@ -1,6 +1,6 @@
 ﻿# SOME DESCRIPTIVE TITLE.
 # Copyright (C) SmartEdit Studios, LLC
-# This file is distributed under the same license as the SmartEdit Video
+# This file is distributed under the same  as the SmartEdit Video
 # Editor package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
@@ -43,7 +43,7 @@ msgstr "Functies"
 
 # Translated with gpt-4.1-mini
 #: ../introduction.rst:31
-msgid "**Free & open-source** (licensed under GPLv3)"
+msgid "**Free & open-source** (d under GPLv3)"
 msgstr "**Gratis & open-source** (gelicentieerd onder GPLv3)"
 
 # Translated with gpt-4.1-mini
@@ -356,19 +356,19 @@ msgstr ""
 
 # Translated with gpt-4.1-mini
 #: ../introduction.rst:100
-msgid "License"
+msgid ""
 msgstr "Licentie"
 
 # Translated with gpt-4.1-mini
 #: ../introduction.rst:101
 msgid ""
 "SmartEdit Video Editor is free software: you can redistribute it and/or "
-"modify it under the terms of the GNU General Public License as published by "
-"the Free Software Foundation, either version 3 of the License, or (at your "
+"modify it under the terms of the GNU General Public  as published by "
+"the Free Software Foundation, either version 3 of the , or (at your "
 "option) any later version."
 msgstr ""
 "SmartEdit Video Editor is vrije software: je mag het herverdelen en/of "
-"aanpassen onder de voorwaarden van de GNU General Public License zoals "
+"aanpassen onder de voorwaarden van de GNU General Public  zoals "
 "gepubliceerd door de Free Software Foundation, versie 3 van de licentie, of "
 "(naar keuze) een latere versie."
 
@@ -377,10 +377,10 @@ msgstr ""
 msgid ""
 "SmartEdit Video Editor is distributed in the hope that it will be useful, but "
 "WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY "
-"or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for "
+"or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public  for "
 "more details."
 msgstr ""
 "SmartEdit Video Editor wordt verspreid in de hoop dat het nuttig zal zijn, "
 "maar ZONDER ENIGE GARANTIE; zelfs zonder de impliciete garantie van "
 "VERKOOPBAARHEID of GESCHIKTHEID VOOR EEN BEPAALD DOEL. Zie de GNU General "
-"Public License voor meer details."
+"Public  voor meer details."

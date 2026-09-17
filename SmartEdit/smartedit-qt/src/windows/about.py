@@ -1,30 +1,4 @@
-"""
- @file
- @brief This file loads the About dialog (i.e about Smartedit Project)
- @author Jonathan Thomas <jonathan@smartedit.org>
- @author Olivier Girard <olivier@smartedit.org>
 
- @section LICENSE
-
- Copyright (c) 2008-2018 SmartEdit Studios, LLC
- (http://www.smarteditstudios.com). This file is part of
- SmartEdit Video Editor (http://www.smartedit.org), an open-source project
- dedicated to delivering high quality video editing and animation solutions
- to the world.
-
- SmartEdit Video Editor is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- SmartEdit Video Editor is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with SmartEdit Library.  If not, see <http://www.gnu.org/licenses/>.
- """
 
 import os
 import codecs
@@ -199,8 +173,8 @@ class About(QDialog):
 
         
         self.btncredit.clicked.connect(self.load_credit)
-        if hasattr(self, "btnlicense"):
-            self.btnlicense.clicked.connect(self.load_license)
+        if hasattr(self, "btn"):
+            self.btn.clicked.connect(self.load_)
         self.btnchangelog.clicked.connect(self.load_changelog)
         self.btnCopyVersionInfo.clicked.connect(self.copy_version_info)
 
@@ -543,10 +517,10 @@ class About(QDialog):
         windo = Credits()
         windo.exec_()
 
-    def load_license(self):
-        """ Load License of the project """
-        log.debug('License screen has been opened')
-        windo = License()
+    def load_(self):
+        """ Load  of the project """
+        log.debug(' screen has been opened')
+        windo = ()
         windo.exec_()
 
     def load_changelog(self):
@@ -556,10 +530,10 @@ class About(QDialog):
         windo.exec_()
 
 
-class License(QDialog):
-    """ License Dialog """
+class (QDialog):
+    """  Dialog """
 
-    ui_path = os.path.join(info.PATH, 'windows', 'ui', 'license.ui')
+    ui_path = os.path.join(info.PATH, 'windows', 'ui', '.ui')
 
     def __init__(self):
         
@@ -576,8 +550,8 @@ class License(QDialog):
         _ = self.app._tr
 
         
-        with open(os.path.join(info.RESOURCES_PATH, 'license.txt'), 'r') as my_license:
-            text = my_license.read()
+        with open(os.path.join(info.RESOURCES_PATH, '.txt'), 'r') as my_:
+            text = my_.read()
             self.textBrowser.append(text)
 
         

@@ -1,6 +1,6 @@
 ﻿# SOME DESCRIPTIVE TITLE.
 # Copyright (C) SmartEdit Studios, LLC
-# This file is distributed under the same license as the SmartEdit Video
+# This file is distributed under the same  as the SmartEdit Video
 # Editor package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
@@ -43,7 +43,7 @@ msgstr "Ominaisuudet"
 
 # Translated with gpt-4.1-mini
 #: ../introduction.rst:31
-msgid "**Free & open-source** (licensed under GPLv3)"
+msgid "**Free & open-source** (d under GPLv3)"
 msgstr "**Ilmainen ja avoimen lähdekoodin** (lisensoitu GPLv3:n alaisena)"
 
 # Translated with gpt-4.1-mini
@@ -351,19 +351,19 @@ msgstr ""
 
 # Translated with gpt-4.1-mini
 #: ../introduction.rst:100
-msgid "License"
+msgid ""
 msgstr "Lisenssi"
 
 # Translated with gpt-4.1-mini
 #: ../introduction.rst:101
 msgid ""
 "SmartEdit Video Editor is free software: you can redistribute it and/or "
-"modify it under the terms of the GNU General Public License as published by "
-"the Free Software Foundation, either version 3 of the License, or (at your "
+"modify it under the terms of the GNU General Public  as published by "
+"the Free Software Foundation, either version 3 of the , or (at your "
 "option) any later version."
 msgstr ""
 "SmartEdit Video Editor on vapaa ohjelmisto: voit levittää ja/tai muokata sitä "
-"GNU General Public License -lisenssin ehtojen mukaisesti, joka on julkaistu "
+"GNU General Public  -lisenssin ehtojen mukaisesti, joka on julkaistu "
 "Free Software Foundationin toimesta, joko version 3 mukaisesti tai "
 "(valintasi mukaan) myöhemmän version mukaisesti."
 
@@ -372,10 +372,10 @@ msgstr ""
 msgid ""
 "SmartEdit Video Editor is distributed in the hope that it will be useful, but "
 "WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY "
-"or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for "
+"or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public  for "
 "more details."
 msgstr ""
 "SmartEdit Video Editoria jaetaan toivossa, että se on hyödyllinen, mutta "
 "ILMAN MITÄÄN TAKUUTA; ei edes oletettua takuuta KAUPALLISESTA KELPOISUUDESTA "
 "tai SOPIVUUDESTA TIETTYYN TARKOITUKSEEN. Lisätietoja GNU General Public "
-"License -lisenssistä."
+" -lisenssistä."

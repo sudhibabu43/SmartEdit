@@ -42,7 +42,7 @@ https://github.com/SmartEdit/libsmartedit-audio/issues
 - https://github.com/SmartEdit/smartedit-qt/ (source code for Qt client)
 - https://launchpad.net/smartedit/
 
-### Copyright & License
+### Copyright & 
 
 Copyright (c) 2008-2024 SmartEdit Studios, LLC. This file is part of
 SmartEdit Video Editor (https://www.smartedit.org), an open-source project
@@ -50,23 +50,23 @@ dedicated to delivering high quality video editing and animation solutions
 to the world.
 
 Copyright 2004-2022 by Raw Material Software Ltd. Some files are included from
-the amazing, open-source JUCE Audio Library. These files are dual-licensed
-under the GPLv3 and also available under a commercial license.
+the amazing, open-source JUCE Audio Library. These files are dual-d
+under the GPLv3 and also available under a commercial .
 
 SmartEdit Audio Library (libsmartedit-audio) is free software: you can redistribute 
-it and/or modify it under the terms of the GNU General Public License as published 
-by the Free Software Foundation, either version 3 of the License, or (at your option) 
+it and/or modify it under the terms of the GNU General Public  as published 
+by the Free Software Foundation, either version 3 of the , or (at your option) 
 any later version.
 
 SmartEdit Audio Library (libsmartedit-audio) is distributed in the hope that it will 
 be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public 
-License for more details.
+ for more details.
 
-You should have received a copy of the GNU General Public License along with 
-SmartEdit Library. If not, see http://www.gnu.org/licenses/.
+You should have received a copy of the GNU General Public  along with 
+SmartEdit Library. If not, see http://www.gnu.org/s/.
 
 To release a commercial product which uses libsmartedit-audio (i.e. audio
-editing and playback), commercial licenses are also available: contact
-sales@smartedit.org for more information. NOTE: commercial licenses are also
+editing and playback), commercial s are also available: contact
+sales@smartedit.org for more information. NOTE: commercial s are also
 available for the JUCE Audio Library, from Raw Material Software Ltd.
