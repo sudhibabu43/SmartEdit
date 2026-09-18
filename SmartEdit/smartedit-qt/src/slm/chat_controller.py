@@ -52,11 +52,15 @@ class ChatController:
             else:
                 return self._create_ai_response("Nothing to undo.")
 
+        # Check if the command actually has recognized actions
+        if not command.actions:
+            return self._create_ai_response("Command not understood. Please specify the clip or action.")
+
         # Otherwise, it's an editing request. Generate a new plan.
         plan = self.editor.generate_plan(command)
         
         if not plan.operations and not plan.items:
-            return self._create_ai_response("I couldn't find any edits to make based on your request.")
+            return self._create_ai_response("Command understood, but this operation is not currently supported.")
             
         # Update pending plan
         self.pending_plan = plan

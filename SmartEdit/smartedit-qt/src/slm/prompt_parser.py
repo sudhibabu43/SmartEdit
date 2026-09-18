@@ -105,13 +105,18 @@ class PromptParser:
 
         # FIX: Any shaky-related prompt always triggers trimming (no labeling)
         # If user mentions shaky in any way, always detect + delete
-        if detect_shaky and not delete_shaky:
-            delete_shaky = True
+        # Allow non-destructive finding/detecting without deleting
+        # if detect_shaky and not delete_shaky:
+        #     delete_shaky = True
 
         # ───────────────────────────────────────────
         # By default, automatically close gaps when trimming, unless the user specifically asks to keep them
         keep_gaps = bool(re.search(r"\b(keep\s+gaps?|leave\s+gaps?|don'?t\s+(?:close|ripple|shift)|preserve\s+(?:spaces?|gaps?|timeline))\b", t))
         close_gaps = not keep_gaps
+
+        if detect_shaky and not delete_shaky:
+            if ActionType.DETECT_SHAKY not in actions:
+                actions.append(ActionType.DETECT_SHAKY)
 
         if delete_shaky:
             if ActionType.DETECT_SHAKY not in actions:
@@ -172,6 +177,48 @@ class PromptParser:
             parameters["remove_scene"] = {"target": scene_val}
 
         # ───────────────────────────────────────────
+        # GENERIC TIMELINE ACTIONS
+        # Delete Clips
+        delete_match = re.search(r"\b(delete|remove|get\s*rid\s*of)\s+(?:the\s+)?(first|last|selected)?\s*(\d+)?\s*(clips?|videos?)\b", t)
+        if delete_match:
+            actions.append(ActionType.DELETE_CLIPS)
+            target = delete_match.group(2) or "ALL"
+            if delete_match.group(3):
+                count = int(delete_match.group(3))
+            else:
+                count = 1
+            parameters["delete_clips"] = {"target": target.upper(), "count": count}
+            
+        elif re.search(r"\b(delete|remove)\s+them\b", t):
+            actions.append(ActionType.DELETE_CLIPS)
+            parameters["delete_clips"] = {"target": "SELECTED", "count": 0}
+
+        # Select Clips
+        select_match = re.search(r"\b(select)\s+(?:the\s+)?(first|last)?\s*(\d+)?\s*(clips?|videos?)\b", t)
+        if select_match:
+            actions.append(ActionType.SELECT_CLIPS)
+            target = select_match.group(2) or "ALL"
+            count = int(select_match.group(3)) if select_match.group(3) else 0
+            parameters["select_clips"] = {"target": target.upper(), "count": count}
+            
+        select_range = re.search(r"\bselect\s+clips?\s+(\d+)\s+to\s+(\d+)\b", t)
+        if select_range:
+            actions.append(ActionType.SELECT_CLIPS)
+            parameters["select_clips"] = {"target": "RANGE", "start": int(select_range.group(1)), "end": int(select_range.group(2))}
+
+        # Split Clip
+        if re.search(r"\b(split|cut)\s+(?:the\s+)?(selected\s+)?(clip|video)\b", t):
+            actions.append(ActionType.SPLIT_CLIP)
+            parameters["split_clip"] = {"target": "SELECTED" if "selected" in t else "PLAYHEAD"}
+
+        # Move Clip
+        move_match = re.search(r"\b(move)\s+(?:the\s+)?(selected\s+)?(clip|video)\s+to\s+(?:the\s+)?(beginning|end)\b", t)
+        if move_match:
+            actions.append(ActionType.MOVE_CLIPS)
+            pos = move_match.group(4)
+            parameters["move_clips"] = {"target": "SELECTED" if "selected" in t else "LAST", "position": pos.upper()}
+
+        # ───────────────────────────────────────────
         # CONVERSATIONAL CONFIRMATIONS
         if re.search(r"\b(yes|apply|do\s*it|confirm|proceed|ok|okay|sure|yep|yeah|remove\s*them|cut\s*them)\b", t):
             if ActionType.APPLY_PLAN not in actions:
@@ -197,9 +244,9 @@ class PromptParser:
 
         system_instruction = (
             "You are an AI video editing assistant for SmartEdit. "
-            "Convert user natural language instructions into a JSON object with 'actions'. "
-            "Supported actions: 'remove_silence', 'arrange_clips', 'detect_shaky', 'label_shaky', 'delete_shaky', 'rough_cut'. "
-            "Example: User: 'Remove silence and identify shaky footage.' -> {\"actions\": [\"remove_silence\", \"detect_shaky\"]} "
+            "Convert user natural language instructions into a JSON object with 'actions' and 'parameters'. "
+            "Supported actions: 'remove_silence', 'arrange_clips', 'detect_shaky', 'label_shaky', 'delete_shaky', 'rough_cut', 'delete_clips', 'select_clips'. "
+            "Example: User: 'Delete the last 5 clips' -> {\"actions\": [\"delete_clips\"], \"parameters\": {\"delete_clips\": {\"target\": \"LAST\", \"count\": 5}}} "
             "Example: User: 'Detect shaky portions and split and remove them. Do not only label.' -> {\"actions\": [\"detect_shaky\", \"delete_shaky\"]} "
             "Only return valid JSON."
         )

@@ -33,6 +33,16 @@ class ActionType:
     REMOVE_SCENE = "remove_scene"
     MARK_SCENES = "mark_scenes"
 
+    # Generic Timeline Actions
+    DELETE_CLIPS = "delete_clips"
+    SELECT_CLIPS = "select_clips"
+    DESELECT_CLIPS = "deselect_clips"
+    MOVE_CLIPS = "move_clips"
+    SPLIT_CLIP = "split_clip"
+    TRIM_CLIP = "trim_clip"
+    DUPLICATE_CLIP = "duplicate_clip"
+    HIGHLIGHT_REGION = "highlight_region"
+
     ALL_ACTIONS = {
         REMOVE_SILENCE,
         ARRANGE_CLIPS,
@@ -48,6 +58,14 @@ class ActionType:
         CUT_SCENES,
         REMOVE_SCENE,
         MARK_SCENES,
+        DELETE_CLIPS,
+        SELECT_CLIPS,
+        DESELECT_CLIPS,
+        MOVE_CLIPS,
+        SPLIT_CLIP,
+        TRIM_CLIP,
+        DUPLICATE_CLIP,
+        HIGHLIGHT_REGION,
     }
 
 
@@ -137,6 +155,22 @@ class CommandSchemaValidator:
                         clean_act = ActionType.REMOVE_SCENE
                     elif clean_act in {"mark_scenes", "mark_scene"}:
                         clean_act = ActionType.MARK_SCENES
+                    elif clean_act in {"delete_clips", "remove_clips", "delete_clip", "delete_selected", "delete"}:
+                        clean_act = ActionType.DELETE_CLIPS
+                    elif clean_act in {"select_clips", "select_clip", "select"}:
+                        clean_act = ActionType.SELECT_CLIPS
+                    elif clean_act in {"deselect_clips", "clear_selection", "deselect"}:
+                        clean_act = ActionType.DESELECT_CLIPS
+                    elif clean_act in {"move_clips", "move_clip", "move"}:
+                        clean_act = ActionType.MOVE_CLIPS
+                    elif clean_act in {"split_clip", "split", "slice_clip"}:
+                        clean_act = ActionType.SPLIT_CLIP
+                    elif clean_act in {"trim_clip", "trim"}:
+                        clean_act = ActionType.TRIM_CLIP
+                    elif clean_act in {"duplicate_clip", "duplicate", "copy"}:
+                        clean_act = ActionType.DUPLICATE_CLIP
+                    elif clean_act in {"highlight_region", "highlight"}:
+                        clean_act = ActionType.HIGHLIGHT_REGION
                     
                     if clean_act in ActionType.ALL_ACTIONS and clean_act not in actions:
                         actions.append(clean_act)

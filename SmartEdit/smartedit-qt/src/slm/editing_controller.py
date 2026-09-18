@@ -139,6 +139,17 @@ class EditingController:
                         "clip_ids": [r.get("clip_id") for r in shaky_regions_found],
                         "close_gaps": close_gaps
                     })
+                elif command.has_action(ActionType.LABEL_SHAKY) or command.has_action(ActionType.DETECT_SHAKY):
+                    plan_items.append(PlanItem(
+                        action=ActionType.LABEL_SHAKY,
+                        description=f"Highlight <b>{len(shaky_regions_found)}</b> shaky segment(s) on the timeline",
+                        icon="📍"
+                    ))
+                    operations.append({
+                        "type": ActionType.LABEL_SHAKY,
+                        "regions": shaky_regions_found,
+                        "clips": shaky_regions_found
+                    })
             else:
                 plan_items.append(PlanItem(
                     action=ActionType.DETECT_SHAKY,
@@ -341,6 +352,112 @@ class EditingController:
                     icon="ℹ️"
                 ))
 
+        # ───────────────────────────────────────────
+        # GENERIC TIMELINE ACTIONS
+        # ───────────────────────────────────────────
+        if command.has_action(ActionType.DELETE_CLIPS):
+            params = command.parameters.get("delete_clips", {})
+            target = params.get("target", "ALL")
+            count = params.get("count", 1)
+            
+            target_clips = []
+            if target == "SELECTED":
+                target_clips = timeline_clips
+            else:
+                all_clips = []
+                try:
+                    all_clips = Clip.filter()
+                    all_clips.sort(key=lambda c: (c.data.get("position", 0.0), c.data.get("layer", 0)))
+                except Exception:
+                    pass
+                if target == "LAST":
+                    target_clips = all_clips[-count:] if count > 0 else all_clips
+                elif target == "FIRST":
+                    target_clips = all_clips[:count] if count > 0 else all_clips
+                elif target == "ALL":
+                    target_clips = all_clips
+
+            if target_clips:
+                clip_ids = [c.id for c in target_clips]
+                plan_items.append(PlanItem(
+                    action=ActionType.DELETE_CLIPS,
+                    description=f"Delete <b>{len(clip_ids)} clip(s)</b> from the timeline",
+                    icon="🗑️"
+                ))
+                operations.append({
+                    "type": ActionType.DELETE_CLIPS,
+                    "clip_ids": clip_ids
+                })
+            else:
+                plan_items.append(PlanItem(
+                    action=ActionType.DELETE_CLIPS,
+                    description="No clips found matching the criteria to delete.",
+                    icon="ℹ️"
+                ))
+
+        if command.has_action(ActionType.SELECT_CLIPS):
+            params = command.parameters.get("select_clips", {})
+            target = params.get("target", "ALL")
+            count = params.get("count", 1)
+            
+            target_clips = []
+            all_clips = []
+            try:
+                all_clips = Clip.filter()
+                all_clips.sort(key=lambda c: (c.data.get("position", 0.0), c.data.get("layer", 0)))
+            except Exception:
+                pass
+                
+            if target == "LAST":
+                target_clips = all_clips[-count:] if count > 0 else all_clips
+            elif target == "FIRST":
+                target_clips = all_clips[:count] if count > 0 else all_clips
+            elif target == "RANGE":
+                start_idx = max(0, params.get("start", 1) - 1)
+                end_idx = min(len(all_clips), params.get("end", 1))
+                target_clips = all_clips[start_idx:end_idx]
+            elif target == "ALL":
+                target_clips = all_clips
+                
+            if target_clips:
+                clip_ids = [c.id for c in target_clips]
+                plan_items.append(PlanItem(
+                    action=ActionType.SELECT_CLIPS,
+                    description=f"Select <b>{len(clip_ids)} clip(s)</b> on the timeline",
+                    icon="🖱️"
+                ))
+                operations.append({
+                    "type": ActionType.SELECT_CLIPS,
+                    "clip_ids": clip_ids
+                })
+
+        if command.has_action(ActionType.SPLIT_CLIP):
+            plan_items.append(PlanItem(
+                action=ActionType.SPLIT_CLIP,
+                description="Split selected clip(s) at the current playhead",
+                icon="✂"
+            ))
+            operations.append({
+                "type": ActionType.SPLIT_CLIP
+            })
+
+        if command.has_action(ActionType.MOVE_CLIPS):
+            params = command.parameters.get("move_clips", {})
+            target = params.get("target", "SELECTED")
+            position = params.get("position", "BEGINNING")
+            
+            plan_items.append(PlanItem(
+                action=ActionType.MOVE_CLIPS,
+                description=f"Move {target.lower()} clip(s) to the {position.lower()}",
+                icon="↔️"
+            ))
+            operations.append({
+                "type": ActionType.MOVE_CLIPS,
+                "target": target,
+                "position": position,
+                "clip_ids": [c.id for c in timeline_clips] if target == "SELECTED" else []
+            })
+
         is_empty = len(operations) == 0
         summary = f"Plan contains {len(operations)} operation(s)."
 
@@ -394,6 +511,73 @@ class EditingController:
                         applied_details.append(f"Removed {len(op.get('clip_ids', []))} shaky clip(s)")
 
                 
+                elif op_type == ActionType.DELETE_CLIPS:
+                    clip_ids = op.get("clip_ids", [])
+                    count = 0
+                    for cid in clip_ids:
+                        clip = Clip.get(id=cid)
+                        if clip:
+                            clip.delete()
+                            count += 1
+                    applied_details.append(f"Deleted {count} clip(s)")
+                    
+                elif op_type == ActionType.SELECT_CLIPS:
+                    clip_ids = op.get("clip_ids", [])
+                    if window and hasattr(window, "timeline"):
+                        window.timeline.ClearAllSelections()
+                        for cid in clip_ids:
+                            window.timeline.addSelection(cid, "clip")
+                    applied_details.append(f"Selected {len(clip_ids)} clip(s)")
+                    
+                elif op_type == ActionType.SPLIT_CLIP:
+                    if window and hasattr(window, "timeline"):
+                        # Uses the existing timeline UI method for splitting at playhead
+                        clip_ids = [c for c in window.selected_clips]
+                        if not clip_ids:
+                            # Split all clips intersecting playhead if nothing selected
+                            from classes.timeline import Timeline
+                            t = Timeline()
+                            intersecting = t.clips(app.window.timeline.get_playhead_position())
+                            clip_ids = [c.id for c in intersecting]
+                        if clip_ids:
+                            window.timeline.Split_Audio_Triggered(None, clip_ids)
+                    applied_details.append("Split clip(s) at playhead")
+                    
+                elif op_type == ActionType.MOVE_CLIPS:
+                    target = op.get("target")
+                    position = op.get("position")
+                    clip_ids = op.get("clip_ids", [])
+                    
+                    if target == "SELECTED" and window:
+                        clip_ids = [c for c in window.selected_clips]
+                        
+                    if clip_ids:
+                        clips = [Clip.get(id=cid) for cid in clip_ids]
+                        clips = [c for c in clips if c]
+                        if clips:
+                            all_clips = Clip.filter()
+                            all_clips.sort(key=lambda c: (c.data.get("position", 0.0), c.data.get("layer", 0)))
+                            if position == "BEGINNING":
+                                # Move to position 0 and shift others
+                                current_pos = 0.0
+                                for c in clips:
+                                    dur = float(c.data.get("end", 0.0)) - float(c.data.get("start", 0.0))
+                                    c.data["position"] = current_pos
+                                    c.save()
+                                    current_pos += dur
+                            elif position == "END":
+                                # Move to end of last clip
+                                max_pos = 0.0
+                                if all_clips:
+                                    last_c = all_clips[-1]
+                                    max_pos = float(last_c.data.get("position", 0.0)) + (float(last_c.data.get("end", 0.0)) - float(last_c.data.get("start", 0.0)))
+                                for c in clips:
+                                    dur = float(c.data.get("end", 0.0)) - float(c.data.get("start", 0.0))
+                                    c.data["position"] = max_pos
+                                    c.save()
+                                    max_pos += dur
+                    applied_details.append(f"Moved {len(clip_ids)} clip(s) to the {position.lower()}")
+
                 elif op_type == ActionType.ARRANGE_CLIPS:
                     source = op.get("source")
                     if source == "timeline":
@@ -542,6 +726,50 @@ class EditingController:
                                         
                                     applied_details.append(f"Removed Scene {target_id}")
                                 break
+                                
+                elif op_type == ActionType.LABEL_SHAKY:
+                    regions = op.get("regions", [])
+                    total_marks = 0
+                    for r in regions:
+                        clip_id = r.get("clip_id")
+                        c_pos = float(r.get("clip_position", 0.0))
+                        c_start = float(r.get("clip_start", 0.0))
+                        s_time = float(r.get("start_time", 0.0))
+                        e_time = float(r.get("end_time", 0.0))
+                        
+                        if clip_id:
+                            clip = Clip.get(id=clip_id)
+                            if clip:
+                                c_pos = float(clip.data.get("position", 0.0))
+                                c_start = float(clip.data.get("start", 0.0))
+                                
+                        # Create marker at start of shaky region
+                        timeline_time = c_pos + (s_time - c_start)
+                        marker = Marker()
+                        marker.data = {
+                            "id": str(uuid.uuid4()),
+                            "position": timeline_time,
+                            "icon": "marker",
+                            "color": "#FF0000",
+                            "title": f"SHAKY ({r.get('shaky_percentage', 0.0):.1f}%)"
+                        }
+                        marker.save()
+                        total_marks += 1
+                        
+                        # Create marker at end of shaky region
+                        timeline_time_end = c_pos + (e_time - c_start)
+                        marker_end = Marker()
+                        marker_end.data = {
+                            "id": str(uuid.uuid4()),
+                            "position": timeline_time_end,
+                            "icon": "marker",
+                            "color": "#FF0000",
+                            "title": "END SHAKY"
+                        }
+                        marker_end.save()
+                        total_marks += 1
+                        
+                    applied_details.append(f"Added {total_marks} markers to highlight shaky regions")
                                 
                 elif op_type == ActionType.MARK_SCENES:
                     scene_ops = op.get("scene_ops", [])
