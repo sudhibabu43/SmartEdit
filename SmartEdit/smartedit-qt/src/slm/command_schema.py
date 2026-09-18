@@ -21,6 +21,17 @@ class ActionType:
     DELETE_SHAKY = "delete_shaky"
     REMOVE_SHAKY = "delete_shaky"  
     TRIM_TO_DURATION = "trim_to_duration"
+    
+    # Chat-based actions
+    APPLY_PLAN = "apply_plan"
+    REJECT_PLAN = "reject_plan"
+    UNDO = "undo"
+    
+    # Scene detection
+    DETECT_SCENES = "detect_scenes"
+    CUT_SCENES = "cut_scenes"
+    REMOVE_SCENE = "remove_scene"
+    MARK_SCENES = "mark_scenes"
 
     ALL_ACTIONS = {
         REMOVE_SILENCE,
@@ -30,6 +41,13 @@ class ActionType:
         ROUGH_CUT,
         DELETE_SHAKY,
         TRIM_TO_DURATION,
+        APPLY_PLAN,
+        REJECT_PLAN,
+        UNDO,
+        DETECT_SCENES,
+        CUT_SCENES,
+        REMOVE_SCENE,
+        MARK_SCENES,
     }
 
 
@@ -101,8 +119,24 @@ class CommandSchemaValidator:
                         clean_act = ActionType.DELETE_SHAKY
                     elif clean_act in {"trim_to_duration", "trim_duration", "target_length"}:
                         clean_act = ActionType.TRIM_TO_DURATION
+                    elif clean_act in {"rough", "rough_cut", "auto_edit", "generate_rough_cut"}:
+                        clean_act = ActionType.ROUGH_CUT
+                    elif clean_act in {"yes", "apply", "apply_plan", "do_it", "confirm"}:
+                        clean_act = ActionType.APPLY_PLAN
+                    elif clean_act in {"no", "reject", "reject_plan", "cancel", "stop"}:
+                        clean_act = ActionType.REJECT_PLAN
+                    elif clean_act in {"undo", "revert", "go_back"}:
+                        clean_act = ActionType.UNDO
                     elif clean_act in {"roughcut", "make_rough_cut", "auto_cut"}:
                         clean_act = ActionType.ROUGH_CUT
+                    elif clean_act in {"detect_scenes", "find_scenes", "detect_scene"}:
+                        clean_act = ActionType.DETECT_SCENES
+                    elif clean_act in {"cut_scenes", "split_scenes", "cut_at_scenes", "cut_scene"}:
+                        clean_act = ActionType.CUT_SCENES
+                    elif clean_act in {"remove_scene", "delete_scene", "drop_scene"}:
+                        clean_act = ActionType.REMOVE_SCENE
+                    elif clean_act in {"mark_scenes", "mark_scene"}:
+                        clean_act = ActionType.MARK_SCENES
                     
                     if clean_act in ActionType.ALL_ACTIONS and clean_act not in actions:
                         actions.append(clean_act)

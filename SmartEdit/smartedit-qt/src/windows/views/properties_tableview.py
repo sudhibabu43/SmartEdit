@@ -613,26 +613,28 @@ class PropertiesTableView(QTableView):
                     self.start_transaction(self.selected_item)
                 self.update_in_progress = True
 
-                
+                # Calculate new value
                 min_max_range = float(property_max) - float(property_min)
 
-                if min_max_range < 1000.0:
-                    
-                    self.new_value = property_min + (min_max_range * cursor_value_percent)
+                if self.new_value is None:
+                    self.new_value = QLocale().system().toDouble(self.selected_item.text())[0]
+
+                # Determine the amount of value change per pixel of mouse movement.
+                # Scaling by min_max_range ensures that properties with vastly different
+                # ranges (e.g. 0 to 1 vs 0 to 1000) scrub at a comfortable relative speed.
+                if property_type == "int":
+                    step = max(1.0, math.floor(min_max_range / 500.0))
                 else:
-                    
+                    step = min_max_range / 500.0
+                    if step == 0.0:
+                        step = 0.01
 
-                    
-                    if self.new_value is None:
-                        self.new_value = QLocale().system().toDouble(self.selected_item.text())[0]
-                    step = 1.0 if property_type == "int" else 0.50
-
-                    if drag_diff > 0:
-                        
-                        self.new_value -= step
-                    elif drag_diff < 0:
-                        
-                        self.new_value += step
+                if drag_diff > 0:
+                    # mouse moved left, decrement value
+                    self.new_value -= step * abs(drag_diff)
+                elif drag_diff < 0:
+                    # mouse moved right, increment value
+                    self.new_value += step * abs(drag_diff)
 
                 
                 self.new_value = max(property_min, self.new_value)

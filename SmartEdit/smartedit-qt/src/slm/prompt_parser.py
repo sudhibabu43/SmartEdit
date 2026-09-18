@@ -145,6 +145,46 @@ class PromptParser:
                 "remove_dead_space": True
             }
 
+        # ───────────────────────────────────────────
+        # SCENE DETECTION & CUTTING
+        if re.search(r"\b(cut|split|divide|slice)[\s\w]*(scene)\b", t) or \
+           re.search(r"\b(scene)[\s\w]*(cut|split|divide|slice)\b", t) or \
+           re.search(r"\b(use\s+scene\s+changes\s+to\s+create\s+the\s+rough\s+cut)\b", t):
+            if ActionType.CUT_SCENES not in actions:
+                actions.append(ActionType.CUT_SCENES)
+                
+        elif re.search(r"\b(detect|find|show)[\s\w]*(scene)\b", t) or \
+             re.search(r"\b(scene\s*detect)\b", t) or \
+             re.search(r"\b(scene\s*detection)\b", t):
+            if ActionType.DETECT_SCENES not in actions:
+                actions.append(ActionType.DETECT_SCENES)
+                
+        elif re.search(r"\b(?:add|place|create)[\s\w]*(?:marker)[\s\w]*(?:scene)\b", t) or \
+             re.search(r"\b(?:mark)[\s\w]*(?:scene)\b", t):
+            if ActionType.MARK_SCENES not in actions:
+                actions.append(ActionType.MARK_SCENES)
+                
+        scene_match = re.search(r"\b(?:remove|delete|drop)\s+(?:the\s+)?(?:scene\s+(\d+)|(\w+)\s+scene)\b", t)
+        if scene_match:
+            if ActionType.REMOVE_SCENE not in actions:
+                actions.append(ActionType.REMOVE_SCENE)
+            scene_val = scene_match.group(1) or scene_match.group(2)
+            parameters["remove_scene"] = {"target": scene_val}
+
+        # ───────────────────────────────────────────
+        # CONVERSATIONAL CONFIRMATIONS
+        if re.search(r"\b(yes|apply|do\s*it|confirm|proceed|ok|okay|sure|yep|yeah|remove\s*them|cut\s*them)\b", t):
+            if ActionType.APPLY_PLAN not in actions:
+                actions.append(ActionType.APPLY_PLAN)
+                
+        if re.search(r"\b(no|reject|cancel|stop|don'?t|abort|nevermind|nope)\b", t):
+            if ActionType.REJECT_PLAN not in actions:
+                actions.append(ActionType.REJECT_PLAN)
+
+        if re.search(r"\b(undo|revert|go\s*back)\b", t):
+            if ActionType.UNDO not in actions:
+                actions.append(ActionType.UNDO)
+
         return {
             "actions": actions,
             "parameters": parameters

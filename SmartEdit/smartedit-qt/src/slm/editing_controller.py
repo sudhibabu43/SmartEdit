@@ -14,6 +14,7 @@ from typing import List, Dict, Any, Optional
 from slm.command_schema import ActionType, SLMCommand
 from slm.video_analyzer import VideoAnalyzer, classify_shake
 from slm.shaky_detector import ShakyFootageService
+from slm.scene_detector import SceneDetectionEngine
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,7 @@ class EditingController:
     def __init__(self, video_analyzer: Optional[VideoAnalyzer] = None):
         self.video_analyzer = video_analyzer or VideoAnalyzer()
         self.shaky_service = ShakyFootageService(self.video_analyzer)
+        self.scene_engine = SceneDetectionEngine()
         self.last_transaction_id: Optional[str] = None
         self.pending_plan: Optional[AIPlan] = None
 
@@ -253,6 +255,92 @@ class EditingController:
                     icon="ℹ️"
                 ))
 
+        # -----------------------------------------------------------
+        # SCENE DETECTION & CUTTING
+        # -----------------------------------------------------------
+        if command.has_action(ActionType.DETECT_SCENES) or command.has_action(ActionType.CUT_SCENES) or command.has_action(ActionType.REMOVE_SCENE) or command.has_action(ActionType.MARK_SCENES):
+            total_scenes_detected = 0
+            scene_ops = []
+            
+            for clip in timeline_clips:
+                path = clip.data.get("reader", {}).get("path") or ""
+                if not path and clip.data.get("file_id"):
+                    f = File.get(id=clip.data.get("file_id"))
+                    if f:
+                        path = f.absolute_path()
+                        
+                if path and os.path.isfile(path):
+                    try:
+                        # Extract max duration based on clip end to save time
+                        max_dur = float(clip.data.get("end", 0)) if clip.data.get("end") else 0.0
+                        self.scene_engine.threshold = 15.0  # Lower threshold for more sensitive detection
+                        res = self.scene_engine.detect_scenes(path, max_duration_sec=max_dur)
+                        scenes = res.get("scenes", [])
+                        boundaries = res.get("boundaries", [])
+                        
+                        if scenes:
+                            total_scenes_detected += len(scenes)
+                            scene_ops.append({
+                                "clip_id": clip.id,
+                                "path": path,
+                                "scenes": scenes,
+                                "boundaries": boundaries,
+                                "clip_data": clip.data
+                            })
+                    except Exception as ex:
+                        logger.error(f"Scene detection failed for {path}: {ex}", exc_info=1)
+
+            if total_scenes_detected > 0:
+                plan_items.append(PlanItem(
+                    action=ActionType.DETECT_SCENES,
+                    description=f"Detected <b>{total_scenes_detected} visual scene(s)</b> across {len(scene_ops)} clip(s)",
+                    icon="🔍"
+                ))
+                
+                # If they explicitly want to cut scenes or remove a specific one
+                if command.has_action(ActionType.CUT_SCENES):
+                    total_cuts = sum(len(op["boundaries"]) for op in scene_ops)
+                    plan_items.append(PlanItem(
+                        action=ActionType.CUT_SCENES,
+                        description=f"Slice timeline at <b>{total_cuts} scene boundary points</b> (non-destructive)",
+                        icon="✂"
+                    ))
+                    operations.append({
+                        "type": ActionType.CUT_SCENES,
+                        "scene_ops": scene_ops
+                    })
+                    
+                if command.has_action(ActionType.MARK_SCENES):
+                    total_marks = sum(len(op["boundaries"]) for op in scene_ops)
+                    plan_items.append(PlanItem(
+                        action=ActionType.MARK_SCENES,
+                        description=f"Add <b>{total_marks} markers</b> at detected edit points",
+                        icon="📍"
+                    ))
+                    operations.append({
+                        "type": ActionType.MARK_SCENES,
+                        "scene_ops": scene_ops
+                    })
+                    
+                if command.has_action(ActionType.REMOVE_SCENE):
+                    target_scene = command.parameters.get("remove_scene", {}).get("target")
+                    plan_items.append(PlanItem(
+                        action=ActionType.REMOVE_SCENE,
+                        description=f"Split and remove <b>Scene {target_scene}</b>",
+                        icon="🗑️"
+                    ))
+                    operations.append({
+                        "type": ActionType.REMOVE_SCENE,
+                        "scene_ops": scene_ops,
+                        "target_scene": target_scene
+                    })
+            else:
+                plan_items.append(PlanItem(
+                    action=ActionType.DETECT_SCENES,
+                    description="Analyzed video for visual scenes: <b>No distinct scene changes detected.</b>",
+                    icon="ℹ️"
+                ))
+
         is_empty = len(operations) == 0
         summary = f"Plan contains {len(operations)} operation(s)."
 
@@ -370,6 +458,120 @@ class EditingController:
                                     clip.data["start"] = float(clip.data.get("start", 0.0)) + first_cut
                                     clip.save()
                     applied_details.append("Processed silence cuts on timeline clips")
+
+                elif op_type == ActionType.CUT_SCENES:
+                    scene_ops = op.get("scene_ops", [])
+                    total_splits = 0
+                    for s_op in scene_ops:
+                        clip_id = s_op.get("clip_id")
+                        boundaries = sorted(s_op.get("boundaries", []))
+                        if not clip_id or not boundaries:
+                            continue
+                            
+                        clip = Clip.get(id=clip_id)
+                        if not clip:
+                            continue
+                            
+                        # Slice clip at each boundary non-destructively
+                        c_start = float(clip.data.get("start", 0.0))
+                        c_end = float(clip.data.get("end", 0.0))
+                        c_pos = float(clip.data.get("position", 0.0))
+                        
+                        current_clip = clip
+                        
+                        for b in boundaries:
+                            # Verify boundary falls within clip bounds
+                            if b > c_start and b < c_end:
+                                # Update current clip end
+                                current_clip.data["end"] = b
+                                current_clip.save()
+                                
+                                # Duplicate for the next segment
+                                new_clip_data = current_clip.data.copy()
+                                new_clip_data["id"] = str(uuid.uuid4())
+                                new_clip_data["start"] = b
+                                new_clip_data["end"] = c_end
+                                new_clip_data["position"] = c_pos + (b - c_start)
+                                
+                                new_clip = Clip()
+                                new_clip.data = new_clip_data
+                                new_clip.save()
+                                
+                                current_clip = new_clip
+                                total_splits += 1
+                                c_start = b
+                                
+                    applied_details.append(f"Sliced clips at {total_splits} scene boundaries")
+
+                elif op_type == ActionType.REMOVE_SCENE:
+                    scene_ops = op.get("scene_ops", [])
+                    target_scene = op.get("target_scene")
+                    try:
+                        target_id = int(target_scene)
+                    except (ValueError, TypeError):
+                        target_id = -1
+                        
+                    for s_op in scene_ops:
+                        clip = Clip.get(id=s_op.get("clip_id"))
+                        if not clip: continue
+                        
+                        scenes = s_op.get("scenes", [])
+                        for scene in scenes:
+                            if scene.get("scene_id") == target_id:
+                                s = max(scene.get("start_time", 0.0), float(clip.data.get("start", 0.0)))
+                                e = min(scene.get("end_time", 0.0), float(clip.data.get("end", 0.0)))
+                                
+                                if s < e:
+                                    c_end = float(clip.data.get("end", 0.0))
+                                    c_pos = float(clip.data.get("position", 0.0))
+                                    c_start = float(clip.data.get("start", 0.0))
+                                    
+                                    clip.data["end"] = s
+                                    clip.save()
+                                    
+                                    if e < c_end:
+                                        new_clip_data = clip.data.copy()
+                                        new_clip_data["id"] = str(uuid.uuid4())
+                                        new_clip_data["start"] = e
+                                        new_clip_data["end"] = c_end
+                                        new_clip_data["position"] = c_pos + (e - c_start)
+                                        
+                                        new_clip = Clip()
+                                        new_clip.data = new_clip_data
+                                        new_clip.save()
+                                        
+                                    applied_details.append(f"Removed Scene {target_id}")
+                                break
+                                
+                elif op_type == ActionType.MARK_SCENES:
+                    scene_ops = op.get("scene_ops", [])
+                    total_marks = 0
+                    for s_op in scene_ops:
+                        clip_id = s_op.get("clip_id")
+                        boundaries = sorted(s_op.get("boundaries", []))
+                        if not clip_id or not boundaries:
+                            continue
+                            
+                        clip = Clip.get(id=clip_id)
+                        if not clip:
+                            continue
+                            
+                        c_start = float(clip.data.get("start", 0.0))
+                        c_pos = float(clip.data.get("position", 0.0))
+                        
+                        for b in boundaries:
+                            timeline_time = c_pos + (b - c_start)
+                            # Create marker
+                            marker = Marker()
+                            marker.data = {
+                                "position": timeline_time,
+                                "icon": "blue.png",
+                                "vector": "blue",
+                            }
+                            marker.save()
+                            total_marks += 1
+                                
+                    applied_details.append(f"Added {total_marks} scene markers to timeline")
 
         finally:
             

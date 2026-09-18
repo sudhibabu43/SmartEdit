@@ -5,40 +5,39 @@
 """
 
 import json
-from typing import Optional
+from datetime import datetime
+from typing import Optional, Dict, Any
 from qt_api import (
     Qt, QDockWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QPlainTextEdit, QFrame, QScrollArea,
-    QProgressBar, QThread, pyqtSignal, pyqtSlot, QSizePolicy, QEvent
+    QProgressBar, QThread, pyqtSignal, pyqtSlot, QSizePolicy, QEvent,
+    QTimer
 )
 
 from slm.prompt_parser import PromptParser
 from slm.editing_controller import EditingController, AIPlan
 from slm.command_schema import SLMCommand
 from classes.logger import log
+from slm.history_store import PromptHistoryStore
+from slm.chat_controller import ChatController
 
 
 class SLMAnalysisWorker(QThread):
     """Background worker to analyze media and generate AI plan without UI freezing."""
     statusSignal = pyqtSignal(str)
-    planReadySignal = pyqtSignal(object)
+    responseReadySignal = pyqtSignal(object)
     failedSignal = pyqtSignal(str)
 
-    def __init__(self, parser: PromptParser, controller: EditingController, prompt: str):
+    def __init__(self, chat_controller: ChatController, prompt: str):
         super().__init__()
-        self.parser = parser
-        self.controller = controller
+        self.chat_controller = chat_controller
         self.prompt = prompt
 
     def run(self):
         try:
-            self.statusSignal.emit("Interpreting prompt with Small Language Model...")
-            command = self.parser.parse(self.prompt)
-            
-            self.statusSignal.emit("Analyzing camera motion...")
-            plan = self.controller.generate_plan(command)
-
-            self.planReadySignal.emit(plan)
+            self.statusSignal.emit("Interpreting instruction and analyzing media...")
+            response = self.chat_controller.process_message(self.prompt)
+            self.responseReadySignal.emit(response)
         except Exception as ex:
             log.error(f"SLM analysis failed: {ex}", exc_info=1)
             self.failedSignal.emit(str(ex))
@@ -72,7 +71,6 @@ class PromptInputTextEdit(QPlainTextEdit):
         return super().viewportEvent(event)
 
     def keyPressEvent(self, event):
-        
         if event.key() in (Qt.Key_Return, Qt.Key_Enter) and not (event.modifiers() & Qt.ShiftModifier):
             self.returnPressed.emit()
             event.accept()
@@ -80,523 +78,300 @@ class PromptInputTextEdit(QPlainTextEdit):
         super().keyPressEvent(event)
 
 
+class ChatBubble(QWidget):
+    """A single chat message bubble."""
+    applyClicked = pyqtSignal(object)
+    rejectClicked = pyqtSignal()
+    
+    def __init__(self, role: str, text: str, plan: Optional[AIPlan] = None, parent=None):
+        super().__init__(parent)
+        self.role = role
+        self.plan = plan
+        
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(4)
+        
+        bubble_frame = QFrame()
+        bubble_layout = QVBoxLayout(bubble_frame)
+        bubble_layout.setContentsMargins(12, 12, 12, 12)
+        bubble_layout.setSpacing(8)
+        
+        text_label = QLabel(text)
+        text_label.setWordWrap(True)
+        text_label.setTextFormat(Qt.RichText)
+        text_label.setStyleSheet("font-size: 12px;")
+        
+        if role == "user":
+            bubble_frame.setStyleSheet("""
+                QFrame {
+                    background-color: #0078d7;
+                    color: #ffffff;
+                    border-radius: 12px;
+                }
+            """)
+            bubble_layout.addWidget(text_label)
+            
+            container_layout = QHBoxLayout()
+            container_layout.setContentsMargins(0, 0, 0, 0)
+            container_layout.addStretch()
+            container_layout.addWidget(bubble_frame)
+            layout.addLayout(container_layout)
+        else:
+            bubble_frame.setStyleSheet("""
+                QFrame {
+                    background-color: #2b303b;
+                    color: #e0e0e0;
+                    border-radius: 12px;
+                }
+            """)
+            
+            header = QLabel("🤖 AI Assistant")
+            header.setStyleSheet("font-size: 10px; font-weight: bold; color: #7f8c8d; margin-bottom: 4px;")
+            bubble_layout.addWidget(header)
+            bubble_layout.addWidget(text_label)
+            
+            if plan and not plan.is_empty:
+                btn_layout = QHBoxLayout()
+                btn_layout.setSpacing(8)
+                
+                self.btn_apply = QPushButton("✓ Apply")
+                self.btn_apply.setFixedHeight(28)
+                self.btn_apply.setStyleSheet("""
+                    QPushButton { background-color: #1a8745; color: white; border-radius: 4px; padding: 0 10px; }
+                    QPushButton:hover { background-color: #1f9c50; }
+                """)
+                self.btn_apply.clicked.connect(self.on_apply)
+                
+                self.btn_reject = QPushButton("✕ Cancel")
+                self.btn_reject.setFixedHeight(28)
+                self.btn_reject.setStyleSheet("""
+                    QPushButton { background-color: #c0392b; color: white; border-radius: 4px; padding: 0 10px; }
+                    QPushButton:hover { background-color: #e74c3c; }
+                """)
+                self.btn_reject.clicked.connect(self.on_reject)
+                
+                btn_layout.addWidget(self.btn_apply)
+                btn_layout.addWidget(self.btn_reject)
+                btn_layout.addStretch()
+                bubble_layout.addLayout(btn_layout)
+            
+            container_layout = QHBoxLayout()
+            container_layout.setContentsMargins(0, 0, 0, 0)
+            container_layout.addWidget(bubble_frame)
+            container_layout.addStretch()
+            layout.addLayout(container_layout)
+            
+    def on_apply(self):
+        self.applyClicked.emit(self.plan)
+        
+    def on_reject(self):
+        self.rejectClicked.emit()
+        
+
 class SLMAssistantPanel(QDockWidget):
     """
-    Native SmartEdit Dock Widget housing the SLM Assistant.
-    Provides natural language prompt input, structured command preview,
-    and human-in-the-loop plan review before applying timeline changes.
+    Chat-based AI Assistant Dock Panel.
     """
 
     def __init__(self, parent=None):
-        super().__init__("SLM Assistant", parent)
+        super().__init__("AI Editing Assistant", parent)
         self.setObjectName("dockSlmAssistant")
         self.setAllowedAreas(Qt.AllDockWidgetAreas)
 
         self.parser = PromptParser()
         self.controller = EditingController()
-        self.current_plan: Optional[AIPlan] = None
+        self.chat_controller = ChatController(self.parser, self.controller)
+        
+        self.history_store = PromptHistoryStore()
         self.worker: Optional[SLMAnalysisWorker] = None
 
         self._setup_ui()
+        self._add_ai_bubble("Hello! I can help you create and modify your video rough cut. Tell me what you'd like to do.")
 
     def _setup_ui(self):
-        
-        scroll = QScrollArea(self)
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setStyleSheet("QScrollArea { background-color: transparent; border: none; }")
-
         main_container = QWidget()
-        scroll.setWidget(main_container)
-        self.setWidget(scroll)
+        main_container.setStyleSheet("background-color: #1a1e24;")
+        self.setWidget(main_container)
 
-        
         root_layout = QVBoxLayout(main_container)
-        root_layout.setContentsMargins(14, 14, 14, 14)
-        root_layout.setSpacing(14)
+        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.setSpacing(0)
 
+        # -----------------------------------------------------
+        # Chat History Scroll Area
+        # -----------------------------------------------------
+        self.chat_scroll = QScrollArea()
+        self.chat_scroll.setWidgetResizable(True)
+        self.chat_scroll.setFrameShape(QFrame.NoFrame)
+        self.chat_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.chat_scroll.setStyleSheet("QScrollArea { background-color: transparent; border: none; }")
+
+        self.chat_container = QWidget()
+        self.chat_container.setStyleSheet("background-color: transparent;")
+        self.chat_layout = QVBoxLayout(self.chat_container)
+        self.chat_layout.setContentsMargins(14, 14, 14, 14)
+        self.chat_layout.setSpacing(12)
+        self.chat_layout.addStretch(1)
+
+        self.chat_scroll.setWidget(self.chat_container)
+        root_layout.addWidget(self.chat_scroll, 1)
+
+        # -----------------------------------------------------
+        # Status Bar
+        # -----------------------------------------------------
+        self.status_bar_frame = QFrame()
+        self.status_bar_frame.setStyleSheet("background-color: #121519; border-top: 1px solid #2a303c;")
+        status_layout = QHBoxLayout(self.status_bar_frame)
+        status_layout.setContentsMargins(10, 4, 10, 4)
         
+        self.status_label = QLabel("Ready")
+        self.status_label.setStyleSheet("color: #8b99a6; font-size: 10px;")
         
-        
-        header_frame = QFrame()
-        header_frame.setObjectName("slmHeaderFrame")
-        header_frame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-        header_frame.setStyleSheet("""
-            QFrame#slmHeaderFrame {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1a2536, stop:1 #111823);
-                border: 1px solid #2a3d54;
-                border-radius: 6px;
-            }
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 0)
+        self.progress_bar.setFixedHeight(6)
+        self.progress_bar.setFixedWidth(100)
+        self.progress_bar.setStyleSheet("""
+            QProgressBar { background-color: #0d131a; border: none; border-radius: 3px; }
+            QProgressBar::chunk { background-color: #0084ff; border-radius: 3px; }
         """)
-        header_layout = QVBoxLayout(header_frame)
-        header_layout.setContentsMargins(10, 8, 10, 8)
-        header_layout.setSpacing(3)
+        self.progress_bar.hide()
+        
+        status_layout.addWidget(self.status_label)
+        status_layout.addStretch()
+        status_layout.addWidget(self.progress_bar)
+        
+        root_layout.addWidget(self.status_bar_frame)
 
-        
-        title_label = QLabel("🤖 SLM Video Editing Assistant")
-        title_label.setStyleSheet("font-size: 13px; font-weight: bold; color: #4da6ff;")
-        
-        desc_label = QLabel("Describe editing changes in natural language. AI plans the edits for your review.")
-        desc_label.setStyleSheet("font-size: 11px; font-weight: normal; color: #9ab4d0;")
-        desc_label.setWordWrap(True)
+        # -----------------------------------------------------
+        # Input Area
+        # -----------------------------------------------------
+        input_frame = QFrame()
+        input_frame.setStyleSheet("background-color: #121519;")
+        input_layout = QVBoxLayout(input_frame)
+        input_layout.setContentsMargins(14, 8, 14, 14)
+        input_layout.setSpacing(8)
 
-        header_layout.addWidget(title_label)
-        header_layout.addWidget(desc_label)
-        root_layout.addWidget(header_frame)
-
-        
-        
-        
-        input_box_frame = QFrame()
-        input_box_frame.setObjectName("slmInputFrame")
-        input_box_frame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-        input_box_layout = QVBoxLayout(input_box_frame)
-        input_box_layout.setContentsMargins(0, 0, 0, 0)
-        input_box_layout.setSpacing(6)
-
-        
-        input_title = QLabel("Type Natural Language Instruction:")
-        input_title.setStyleSheet("font-size: 11px; font-weight: normal; color: #b8c7d6;")
-        input_box_layout.addWidget(input_title)
-
-        
         self.prompt_input = PromptInputTextEdit()
-        self.prompt_input.setPlaceholderText(
-            "Type your instruction here (Press Enter to analyze)...\ne.g. 'Remove silence, arrange the clips, and label shaky footage'"
-        )
-        self.prompt_input.setFixedHeight(68)
+        self.prompt_input.setPlaceholderText("Type an editing instruction...")
+        self.prompt_input.setFixedHeight(50)
         self.prompt_input.setStyleSheet("""
             QPlainTextEdit {
-                background-color: #151b24;
+                background-color: #1a1e24;
                 color: #ffffff;
-                border: 1px solid #2d3e52;
+                border: 1px solid #2a303c;
                 border-radius: 6px;
                 padding: 8px;
                 font-size: 12px;
-                selection-background-color: #0084ff;
             }
             QPlainTextEdit:focus {
-                border: 1.5px solid #0099ff;
-                background-color: #192230;
+                border: 1px solid #0084ff;
             }
         """)
-        self.prompt_input.returnPressed.connect(self.on_run_ai)
-        input_box_layout.addWidget(self.prompt_input)
+        self.prompt_input.returnPressed.connect(self.on_send)
+        input_layout.addWidget(self.prompt_input)
 
+        root_layout.addWidget(input_frame)
+
+    def _scroll_to_bottom(self):
+        QTimer.singleShot(10, self._do_scroll)
         
-        input_box_layout.addSpacing(2)
+    def _do_scroll(self):
+        scrollbar = self.chat_scroll.verticalScrollBar()
+        scrollbar.setValue(scrollbar.maximum())
 
-        
-        chips_scroll = QScrollArea()
-        chips_scroll.setWidgetResizable(True)
-        chips_scroll.setFixedHeight(28)
-        chips_scroll.setFrameShape(QFrame.NoFrame)
-        chips_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        chips_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        chips_scroll.setStyleSheet("QScrollArea { background: transparent; border: none; }")
+    def _add_user_bubble(self, text: str):
+        self._insert_bubble(ChatBubble("user", text))
 
-        chips_container = QWidget()
-        chips_container.setStyleSheet("background: transparent;")
-        chips_layout = QHBoxLayout(chips_container)
-        chips_layout.setContentsMargins(0, 0, 0, 0)
-        chips_layout.setSpacing(6)
+    def _add_ai_bubble(self, text: str, plan: Optional[AIPlan] = None):
+        bubble = ChatBubble("ai", text, plan)
+        bubble.applyClicked.connect(self.on_apply_plan)
+        bubble.rejectClicked.connect(self.on_reject_plan)
+        self._insert_bubble(bubble)
 
-        chip_silence = QPushButton("⚡ Remove silence")
-        chip_arrange = QPushButton("🎬 Arrange clips")
-        chip_shaky = QPushButton("🔍 Remove shaky footage")
-        chip_all = QPushButton("🚀 Silence + Arrange + Shaky")
+    def _insert_bubble(self, bubble: QWidget):
+        count = self.chat_layout.count()
+        if count > 0:
+            self.chat_layout.insertWidget(count - 1, bubble)
+        else:
+            self.chat_layout.addWidget(bubble)
+        self._scroll_to_bottom()
 
-        chip_style = """
-            QPushButton {
-                background-color: #1f2a38;
-                color: #b0c9e2;
-                border: 1px solid #2d3e52;
-                border-radius: 13px;
-                padding: 2px 10px;
-                font-size: 11px;
-                font-weight: normal;
-            }
-            QPushButton:hover {
-                background-color: #2a3a4f;
-                color: #ffffff;
-                border-color: #4d94ff;
-            }
-            QPushButton:pressed {
-                background-color: #182230;
-            }
-        """
-
-        for chip in (chip_silence, chip_arrange, chip_shaky, chip_all):
-            chip.setFixedHeight(26)
-            chip.setStyleSheet(chip_style)
-            chips_layout.addWidget(chip)
-
-        chips_layout.addStretch(1)
-
-        chip_silence.clicked.connect(lambda: self._set_prompt("Remove silence"))
-        chip_arrange.clicked.connect(lambda: self._set_prompt("Arrange the clips in the best order"))
-        chip_shaky.clicked.connect(lambda: self._set_prompt("Find shaky footage and trim "))
-        chip_all.clicked.connect(lambda: self._set_prompt("Remove silence, arrange the clips, and label shaky footage"))
-
-        chips_scroll.setWidget(chips_container)
-        input_box_layout.addWidget(chips_scroll)
-
-        
-        input_box_layout.addSpacing(2)
-
-        
-        self.btn_run_ai = QPushButton("⚡ Run AI / Analyze Plan")
-        self.btn_run_ai.setFixedHeight(34)
-        self.btn_run_ai.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0066cc, stop:1 #0084ff);
-                color: #ffffff;
-                font-weight: bold;
-                font-size: 12px;
-                border: none;
-                border-radius: 6px;
-                padding: 4px 14px;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0077ee, stop:1 #1a94ff);
-            }
-            QPushButton:pressed {
-                background: #0055aa;
-            }
-            QPushButton:disabled {
-                background: #233140;
-                color: #5c7086;
-                border: 1px solid #1c2733;
-            }
-        """)
-        self.btn_run_ai.clicked.connect(self.on_run_ai)
-        input_box_layout.addWidget(self.btn_run_ai)
-
-        root_layout.addWidget(input_box_frame)
-
-        
-        
-        
-        self.status_bar_frame = QFrame()
-        self.status_bar_frame.setObjectName("slmStatusFrame")
-        self.status_bar_frame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-        self.status_bar_frame.setStyleSheet("""
-            QFrame#slmStatusFrame {
-                background-color: #141c26;
-                border: 1px solid #233142;
-                border-radius: 6px;
-            }
-        """)
-        status_layout = QHBoxLayout(self.status_bar_frame)
-        status_layout.setContentsMargins(10, 6, 10, 6)
-        status_layout.setSpacing(8)
-
-        self.status_icon = QLabel("●")
-        self.status_icon.setStyleSheet("color: #4da6ff; font-size: 14px;")
-        self.status_label = QLabel("Ready. Type an instruction and click Run AI.")
-        self.status_label.setStyleSheet("color: #b0c7de; font-size: 11px; font-weight: normal;")
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setRange(0, 0)
-        self.progress_bar.setFixedHeight(8)
-        self.progress_bar.setStyleSheet("""
-            QProgressBar {
-                background-color: #0d131a;
-                border: 1px solid #233142;
-                border-radius: 4px;
-            }
-            QProgressBar::chunk {
-                background-color: #0084ff;
-                border-radius: 3px;
-            }
-        """)
-        self.progress_bar.hide()
-
-        status_layout.addWidget(self.status_icon)
-        status_layout.addWidget(self.status_label, 1)
-        status_layout.addWidget(self.progress_bar)
-
-        root_layout.addWidget(self.status_bar_frame)
-
-        
-        
-        
-        result_group_frame = QFrame()
-        result_group_frame.setObjectName("slmResultFrame")
-        result_group_frame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-        result_group_layout = QVBoxLayout(result_group_frame)
-        result_group_layout.setContentsMargins(0, 0, 0, 0)
-        result_group_layout.setSpacing(6)
-
-        
-        result_title = QLabel("Proposed AI Plan & Suggestions:")
-        result_title.setStyleSheet("font-size: 12px; font-weight: bold; color: #e1e9f2;")
-        result_group_layout.addWidget(result_title)
-
-        
-        self.plan_preview = QLabel("No plan generated yet. Run AI to see proposed changes.")
-        self.plan_preview.setStyleSheet("""
-            QLabel {
-                background-color: #141c26;
-                color: #c9daf0;
-                border: 1px solid #233142;
-                border-radius: 6px;
-                padding: 10px;
-                font-size: 11px;
-                font-weight: normal;
-            }
-        """)
-        self.plan_preview.setWordWrap(True)
-        self.plan_preview.setTextFormat(Qt.RichText)
-        result_group_layout.addWidget(self.plan_preview)
-
-        
-        result_group_layout.addSpacing(4)
-
-        
-        json_title = QLabel("Structured Editing Command (SLM Output – Read Only):")
-        json_title.setStyleSheet("font-size: 11px; font-weight: normal; color: #7f93a6;")
-        result_group_layout.addWidget(json_title)
-
-        self.json_preview = QPlainTextEdit()
-        self.json_preview.setReadOnly(True)
-        self.json_preview.setFixedHeight(72)
-        self.json_preview.setStyleSheet("""
-            QPlainTextEdit {
-                background-color: #0b1016;
-                color: #55ff99;
-                font-family: Consolas, Monaco, monospace;
-                font-size: 11px;
-                border: 1px solid #1f2b3a;
-                border-radius: 6px;
-                padding: 6px 8px;
-            }
-        """)
-        self.json_preview.setPlainText('{\n  "actions": []\n}')
-        result_group_layout.addWidget(self.json_preview)
-
-        root_layout.addWidget(result_group_frame)
-
-        
-        
-        
-        btn_action_layout = QHBoxLayout()
-        btn_action_layout.setContentsMargins(0, 0, 0, 0)
-        btn_action_layout.setSpacing(8)
-
-        self.btn_apply = QPushButton("✓ Apply Changes")
-        self.btn_apply.setFixedHeight(34)
-        self.btn_apply.setEnabled(False)
-        self.btn_apply.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1a8745, stop:1 #22aa58);
-                color: #ffffff;
-                font-weight: bold;
-                font-size: 12px;
-                border: none;
-                border-radius: 6px;
-                padding: 4px 12px;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1f9c50, stop:1 #28c064);
-            }
-            QPushButton:pressed {
-                background: #157339;
-            }
-            QPushButton:disabled {
-                background: #1c2721;
-                color: #4a6353;
-                border: 1px solid #23332a;
-            }
-        """)
-        self.btn_apply.clicked.connect(self.on_apply_changes)
-
-        self.btn_reject = QPushButton("✕ Reject")
-        self.btn_reject.setFixedHeight(34)
-        self.btn_reject.setEnabled(False)
-        self.btn_reject.setStyleSheet("""
-            QPushButton {
-                background-color: #351f23;
-                color: #ff8888;
-                font-weight: 500;
-                font-size: 12px;
-                border: 1px solid #5a2e33;
-                border-radius: 6px;
-                padding: 4px 12px;
-            }
-            QPushButton:hover {
-                background-color: #44262b;
-                color: #ffa0a0;
-                border-color: #733b41;
-            }
-            QPushButton:pressed {
-                background-color: #2c191c;
-            }
-            QPushButton:disabled {
-                background: #201719;
-                color: #553e41;
-                border-color: #2d1f22;
-            }
-        """)
-        self.btn_reject.clicked.connect(self.on_reject_plan)
-
-        self.btn_undo = QPushButton("↺ Undo")
-        self.btn_undo.setFixedHeight(34)
-        self.btn_undo.setStyleSheet("""
-            QPushButton {
-                background-color: #212936;
-                color: #9bb5d1;
-                font-weight: 500;
-                font-size: 12px;
-                border: 1px solid #314054;
-                border-radius: 6px;
-                padding: 4px 12px;
-            }
-            QPushButton:hover {
-                background-color: #2a3545;
-                color: #c5dcf7;
-                border-color: #3e526d;
-            }
-            QPushButton:pressed {
-                background-color: #1b222d;
-            }
-            QPushButton:disabled {
-                background: #191f28;
-                color: #4e5e70;
-                border-color: #242c38;
-            }
-        """)
-        self.btn_undo.clicked.connect(self.on_undo)
-
-        btn_action_layout.addWidget(self.btn_apply, 2)
-        btn_action_layout.addWidget(self.btn_reject, 1)
-        btn_action_layout.addWidget(self.btn_undo, 1)
-
-        root_layout.addLayout(btn_action_layout)
-
-        
-        root_layout.addStretch(1)
-
-    def _set_prompt(self, text: str):
-        from qt_api import QTextCursor
-        self.prompt_input.setPlainText(text)
-        self.prompt_input.setFocus()
-        cursor = self.prompt_input.textCursor()
-        cursor.movePosition(QTextCursor.End)
-        self.prompt_input.setTextCursor(cursor)
-
-    def on_run_ai(self):
+    def on_send(self):
         prompt = self.prompt_input.toPlainText().strip()
         if not prompt:
-            self._update_status("Please enter an instruction first.", state="error")
-            self.prompt_input.setEnabled(True)
-            self.prompt_input.setReadOnly(False)
             return
 
-        self._update_status("Interpreting instruction and analyzing media...", state="busy")
-        self.btn_run_ai.setEnabled(False)
-        self.btn_apply.setEnabled(False)
-        self.btn_reject.setEnabled(False)
+        self.prompt_input.clear()
+        self.prompt_input.setEnabled(False)
+        self._add_user_bubble(prompt)
+        
+        self.history_store.add_prompt(prompt)
+
+        self.status_label.setText("Thinking...")
         self.progress_bar.show()
 
         try:
-            
-            self.worker = SLMAnalysisWorker(self.parser, self.controller, prompt)
-            self.worker.statusSignal.connect(lambda s: self._update_status(s, state="busy"))
-            self.worker.planReadySignal.connect(self._on_plan_ready)
+            self.worker = SLMAnalysisWorker(self.chat_controller, prompt)
+            self.worker.statusSignal.connect(lambda s: self.status_label.setText(s))
+            self.worker.responseReadySignal.connect(self._on_response_ready)
             self.worker.failedSignal.connect(self._on_analysis_failed)
             self.worker.start()
         except Exception as ex:
             log.error(f"Failed to start SLM AnalysisWorker: {ex}", exc_info=1)
-            self.btn_run_ai.setEnabled(True)
             self.prompt_input.setEnabled(True)
-            self.prompt_input.setReadOnly(False)
+            self.prompt_input.setFocus()
             self.progress_bar.hide()
-            self._update_status(f"Error starting analysis: {ex}", state="error")
+            self.status_label.setText("Error")
 
     @pyqtSlot(object)
-    def _on_plan_ready(self, plan: AIPlan):
-        self.current_plan = plan
-        self.btn_run_ai.setEnabled(True)
+    def _on_response_ready(self, response: Dict[str, Any]):
         self.prompt_input.setEnabled(True)
-        self.prompt_input.setReadOnly(False)
+        self.prompt_input.setFocus()
         self.progress_bar.hide()
+        self.status_label.setText("Ready")
 
-        
-        self.json_preview.setPlainText(plan.command.to_json(indent=2))
-
-        
-        self.plan_preview.setText(plan.to_preview_text())
-
-        if not plan.is_empty and len(plan.items) > 0:
-            self.btn_apply.setEnabled(True)
-            self.btn_reject.setEnabled(True)
-            self._update_status("AI Plan generated. Review proposed changes and click Apply.", state="success")
-        else:
-            self.btn_apply.setEnabled(False)
-            self.btn_reject.setEnabled(False)
-            self._update_status("AI analyzed prompt: No matching timeline operations required.", state="info")
+        text = response.get("text", "")
+        plan = response.get("plan")
+        self._add_ai_bubble(text, plan)
 
     @pyqtSlot(str)
     def _on_analysis_failed(self, error_msg: str):
-        self.btn_run_ai.setEnabled(True)
         self.prompt_input.setEnabled(True)
-        self.prompt_input.setReadOnly(False)
+        self.prompt_input.setFocus()
         self.progress_bar.hide()
-        self._update_status(f"Error: {error_msg}", state="error")
+        self.status_label.setText("Error")
+        self._add_ai_bubble(f"An error occurred: {error_msg}")
 
-    def on_apply_changes(self):
-        if not self.current_plan:
+    def on_apply_plan(self, plan: AIPlan):
+        if not plan:
             return
-
-        self._update_status("Applying changes to timeline...", state="busy")
-        result = self.controller.apply_plan(self.current_plan)
-
-        self.prompt_input.setEnabled(True)
-        self.prompt_input.setReadOnly(False)
-
-        if result.get("success"):
-            self.btn_apply.setEnabled(False)
-            self.btn_reject.setEnabled(False)
-            msg = result.get("message", "Changes applied successfully.")
-            self._update_status(f"✓ {msg}", state="success")
-            self.plan_preview.setText(
-                f"<span style='color:#55ff99;'><b>✓ Changes Applied to Timeline:</b></span><br/>"
-                f"{self.current_plan.to_preview_text()}<br/>"
-                f"<i>(You can manually edit clips or click [Undo] to revert)</i>"
-            )
-        else:
-            self._update_status(f"Failed to apply changes: {result.get('message')}", state="error")
+            
+        self.status_label.setText("Applying changes...")
+        self.progress_bar.show()
+        
+        self._add_user_bubble("Apply changes.")
+        
+        try:
+            self.worker = SLMAnalysisWorker(self.chat_controller, "yes")
+            self.worker.statusSignal.connect(lambda s: self.status_label.setText(s))
+            self.worker.responseReadySignal.connect(self._on_response_ready)
+            self.worker.failedSignal.connect(self._on_analysis_failed)
+            self.worker.start()
+        except Exception as ex:
+            log.error(f"Failed to apply: {ex}", exc_info=1)
+            self.progress_bar.hide()
+            self.status_label.setText("Error")
 
     def on_reject_plan(self):
-        self.current_plan = None
-        self.btn_apply.setEnabled(False)
-        self.btn_reject.setEnabled(False)
-        self.prompt_input.setEnabled(True)
-        self.prompt_input.setReadOnly(False)
-        self.plan_preview.setText("Proposed plan rejected. Timeline was not modified.")
-        self.json_preview.setPlainText('{\n  "actions": []\n}')
-        self._update_status("Plan rejected. Ready for a new instruction.", state="info")
-
-    def on_undo(self):
-        success = self.controller.undo_last_ai_operation()
-        if success:
-            self._update_status("↺ Reverted last AI timeline operation.", state="info")
-            self.plan_preview.setText("Last operation was undone. Timeline restored.")
-        else:
-            self._update_status("Nothing to undo.", state="info")
-
-    def _update_status(self, text: str, state: str = "info"):
-        self.status_label.setText(text)
-        if state == "busy":
-            self.status_icon.setText("⏳")
-            self.status_icon.setStyleSheet("color: #ffcc00; font-size: 13px;")
-        elif state == "success":
-            self.status_icon.setText("●")
-            self.status_icon.setStyleSheet("color: #2ecc71; font-size: 14px;")
-        elif state == "error":
-            self.status_icon.setText("✕")
-            self.status_icon.setStyleSheet("color: #e74c3c; font-size: 13px;")
-        else:
-            self.status_icon.setText("●")
-            self.status_icon.setStyleSheet("color: #4da6ff; font-size: 14px;")
+        self._add_user_bubble("Cancel changes.")
+        
+        try:
+            self.worker = SLMAnalysisWorker(self.chat_controller, "no")
+            self.worker.statusSignal.connect(lambda s: self.status_label.setText(s))
+            self.worker.responseReadySignal.connect(self._on_response_ready)
+            self.worker.failedSignal.connect(self._on_analysis_failed)
+            self.worker.start()
+        except Exception as ex:
+            log.error(f"Failed to cancel: {ex}", exc_info=1)
