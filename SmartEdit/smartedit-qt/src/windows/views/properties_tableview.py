@@ -552,7 +552,7 @@ class PropertiesTableView(QTableView):
             get_app().updates.ignore_history = True
 
             
-            if not self._is_playing():
+            if not self.win.videoPreview._is_playing():
                 smartedit.Settings.Instance().ENABLE_PLAYBACK_CACHING = False
 
             
@@ -751,6 +751,11 @@ class PropertiesTableView(QTableView):
                     self.clip_properties_model.value_updated(self.selected_item, value=fontinfo.family())
                     if not self.mouse_pressed:
                         self.finalize_transaction()
+
+            elif not cur_property[1].get("readonly") and not cur_property[1].get("choices"):
+                value_index = model_index.sibling(row, 1)
+                if value_index.flags() & Qt.ItemIsEditable:
+                    self.edit(value_index)
 
 
     def caption_text_updated(self, new_caption_text, caption_model_row):

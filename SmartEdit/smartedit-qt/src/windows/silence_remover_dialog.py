@@ -114,12 +114,13 @@ class SilenceRemoverDialog(QDialog):
     Dialog for detecting silent sections and calculating cut points using Librosa.
     """
 
-    def __init__(self, parent=None, initial_media_path: str = ""):
+    def __init__(self, parent=None, initial_media_path: str = "", clip_ids: list = None):
         super().__init__(parent)
         self.setWindowTitle("SmartEdit AI - Silence Detection & Removal")
         self.resize(850, 720)
         self.analyzer = AudioAnalyzer()
         self.current_result = None
+        self.clip_ids = clip_ids or []
 
         self._setup_ui(initial_media_path)
 
@@ -285,11 +286,13 @@ class SilenceRemoverDialog(QDialog):
         table_label.setStyleSheet("font-weight: bold; color: #eceff1;")
         layout.addWidget(table_label)
 
-        self.table = QTableWidget(0, 6)
+        self.table = QTableWidget(0, 7)
         self.table.setHorizontalHeaderLabels([
-            "#", "Segment Type", "Start Time", "End Time", "Duration", "Action / Status"
+            "Apply", "#", "Segment Type", "Start Time", "End Time", "Duration", "Action / Status"
         ])
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(6, QHeaderView.Stretch)
+        self.table.itemClicked.connect(self._on_table_item_clicked)
         self.table.setStyleSheet("""
             QTableWidget {
                 background-color: #121212;
@@ -310,11 +313,27 @@ class SilenceRemoverDialog(QDialog):
         
         btn_box = QHBoxLayout()
 
-        copy_btn = QPushButton("📋 Copy Cut Points (JSON)")
+        apply_btn = QPushButton("✅ Apply Selected")
+        apply_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #e53e3e;
+                color: white;
+                font-weight: bold;
+                padding: 6px 12px;
+                border-radius: 4px;
+            }
+            QPushButton:hover {
+                background-color: #c53030;
+            }
+        """)
+        apply_btn.clicked.connect(self._on_apply_selected)
+        btn_box.addWidget(apply_btn)
+
+        copy_btn = QPushButton("📋 Copy JSON")
         copy_btn.clicked.connect(self._on_copy_json)
         btn_box.addWidget(copy_btn)
 
-        save_btn = QPushButton("💾 Export Cut List...")
+        save_btn = QPushButton("💾 Export...")
         save_btn.clicked.connect(self._on_export)
         btn_box.addWidget(save_btn)
 
@@ -406,12 +425,71 @@ class SilenceRemoverDialog(QDialog):
             for item in (item_num, item_type, item_start, item_end, item_dur, item_status):
                 item.setForeground(color)
 
-            self.table.setItem(row, 0, item_num)
-            self.table.setItem(row, 1, item_type)
-            self.table.setItem(row, 2, item_start)
-            self.table.setItem(row, 3, item_end)
-            self.table.setItem(row, 4, item_dur)
-            self.table.setItem(row, 5, item_status)
+            item_apply = QTableWidgetItem("")
+            if not is_keep:
+                item_apply.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                item_apply.setCheckState(Qt.Checked)
+            else:
+                item_apply.setFlags(Qt.NoItemFlags)
+
+            self.table.setItem(row, 0, item_apply)
+            self.table.setItem(row, 1, item_num)
+            self.table.setItem(row, 2, item_type)
+            self.table.setItem(row, 3, item_start)
+            self.table.setItem(row, 4, item_end)
+            self.table.setItem(row, 5, item_dur)
+            self.table.setItem(row, 6, item_status)
+            
+            # Store data for later
+            item_num.setData(Qt.UserRole, seg)
+
+    def _on_table_item_clicked(self, item):
+        row = item.row()
+        item_num = self.table.item(row, 1)
+        if item_num:
+            seg = item_num.data(Qt.UserRole)
+            if seg and "start" in seg:
+                try:
+                    from classes.app import get_app
+                    window = get_app().window
+                    if window and hasattr(window, "preview_thread"):
+                        window.preview_thread.player.Seek(int(seg["start"] * 1000))
+                except Exception as ex:
+                    log.warning(f"Could not seek preview: {ex}")
+
+    def _on_apply_selected(self):
+        if not self.current_result:
+            return
+            
+        if not self.clip_ids:
+            QMessageBox.information(self, "No Clip Selected", "Please open this tool by selecting a clip on the timeline to apply cuts directly.")
+            return
+            
+        silence_regions = []
+        for row in range(self.table.rowCount()):
+            item_apply = self.table.item(row, 0)
+            if item_apply and item_apply.checkState() == Qt.Checked:
+                item_num = self.table.item(row, 1)
+                if item_num:
+                    seg = item_num.data(Qt.UserRole)
+                    if seg and seg.get("type") != "KEEP":
+                        silence_regions.append(seg)
+                        
+        if not silence_regions:
+            QMessageBox.information(self, "No Silences", "No silence regions selected to apply.")
+            return
+            
+        try:
+            from classes.app import get_app
+            window = get_app().window
+            if window and hasattr(window, "apply_silence_removal"):
+                window.apply_silence_removal(self.clip_ids, silence_regions)
+                self.accept()
+            else:
+                QMessageBox.critical(self, "Error", "Timeline engine does not support silence removal.")
+        except Exception as ex:
+            log.error(f"Failed to apply silence removal: {ex}", exc_info=1)
+            QMessageBox.critical(self, "Error", f"Failed to apply cuts: {ex}")
 
     def _on_copy_json(self):
         if not self.current_result:

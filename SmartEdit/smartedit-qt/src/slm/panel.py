@@ -11,7 +11,7 @@ from qt_api import (
     Qt, QDockWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QPlainTextEdit, QFrame, QScrollArea,
     QProgressBar, QThread, pyqtSignal, pyqtSlot, QSizePolicy, QEvent,
-    QTimer
+    QTimer, QPainter, QColor, QRect
 )
 
 from slm.prompt_parser import PromptParser
@@ -54,7 +54,28 @@ class PromptInputTextEdit(QPlainTextEdit):
             self.viewport().setFocusPolicy(Qt.StrongFocus)
             self.viewport().setCursor(Qt.IBeamCursor)
         self.setTextInteractionFlags(Qt.TextEditorInteraction)
-        self.setTabChangesFocus(True)
+        self.setTabChangesFocus(False)  # Let us intercept Tab
+        self._ghost_text = ""
+
+    def set_ghost_text(self, text: str):
+        self._ghost_text = text
+        self.viewport().update()
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        
+        if self._ghost_text and self.hasFocus():
+            painter = QPainter(self.viewport())
+            painter.setPen(QColor("#7f8c8d"))
+            font = self.font()
+            painter.setFont(font)
+            
+            rect = self.cursorRect()
+            # The text baseline in cursorRect can be approximated.
+            # We will draw starting exactly at the cursor position.
+            draw_rect = QRect(rect.left(), rect.top(), self.viewport().width() - rect.left(), rect.height())
+            
+            painter.drawText(draw_rect, Qt.AlignLeft | Qt.AlignVCenter, self._ghost_text)
 
     def mousePressEvent(self, event):
         self.setFocus(Qt.MouseFocusReason)
@@ -71,11 +92,32 @@ class PromptInputTextEdit(QPlainTextEdit):
         return super().viewportEvent(event)
 
     def keyPressEvent(self, event):
+        if self._ghost_text:
+            if event.key() == Qt.Key_Tab:
+                # Accept suggestion
+                self.insertPlainText(self._ghost_text)
+                self.set_ghost_text("")
+                event.accept()
+                return
+            elif event.key() == Qt.Key_Escape:
+                self.set_ghost_text("")
+                event.accept()
+                return
+            elif event.key() in (Qt.Key_Return, Qt.Key_Enter):
+                self.set_ghost_text("")
+                # let it fall through to execution
+                pass
+            
         if event.key() in (Qt.Key_Return, Qt.Key_Enter) and not (event.modifiers() & Qt.ShiftModifier):
             self.returnPressed.emit()
             event.accept()
             return
+            
         super().keyPressEvent(event)
+
+    def focusOutEvent(self, event):
+        self.set_ghost_text("")
+        super().focusOutEvent(event)
 
 
 class ChatBubble(QWidget):
@@ -270,9 +312,91 @@ class SLMAssistantPanel(QDockWidget):
             }
         """)
         self.prompt_input.returnPressed.connect(self.on_send)
+        self.prompt_input.textChanged.connect(self._on_text_changed)
         input_layout.addWidget(self.prompt_input)
 
         root_layout.addWidget(input_frame)
+
+    def _on_text_changed(self):
+        text = self.prompt_input.toPlainText().strip()
+        if not text:
+            self.prompt_input.set_ghost_text("")
+            return
+            
+        suggestions = self._get_contextual_suggestions(text)
+        
+        if suggestions:
+            # We take the first best suggestion
+            best_suggestion = suggestions[0]
+            # Verify the typed text matches the prefix exactly in a case-insensitive manner
+            if best_suggestion.lower().startswith(text.lower()):
+                suffix = best_suggestion[len(text):]
+                self.prompt_input.set_ghost_text(suffix)
+            else:
+                self.prompt_input.set_ghost_text("")
+        else:
+            self.prompt_input.set_ghost_text("")
+
+    def _get_contextual_suggestions(self, prefix: str) -> list:
+        suggestions = []
+        
+        # Check context
+        from classes.app import get_app
+        app = get_app()
+        window = getattr(app, "window", None)
+        selected_clips = window.selected_clips if window and hasattr(window, "selected_clips") else []
+        has_selection = len(selected_clips) > 0
+        
+        all_options = []
+        
+        # Clip Management
+        all_options.extend([
+            "Delete last 5 clips",
+            "Delete last 3 clips",
+            "Delete last 1 clip",
+            "Delete first 5 clips",
+            "Delete first 3 clips",
+            "Delete first 1 clip",
+            "Select clips 2 to 5"
+        ])
+        
+        if has_selection:
+            all_options.extend([
+                "Delete selected clips",
+                "Move selected clip to beginning",
+                "Move selected clip to end",
+                "Split selected clip at playhead",
+                "Remove shaky parts from selected clips"
+            ])
+            
+        # Analysis
+        all_options.extend([
+            "Find shaky parts",
+            "Highlight shaky portions",
+            "Show shaky percentage",
+            "Find silent portions",
+            "Remove silent portions",
+            "Generate rough cut",
+            "Arrange clips",
+            "Suggest clips for removal"
+        ])
+        
+        # Filtering logic based on prefix or parts of words
+        prefix_words = prefix.lower().split()
+        
+        for option in all_options:
+            option_lower = option.lower()
+            # Match if all typed words are in the option
+            match = True
+            for w in prefix_words:
+                if w not in option_lower:
+                    match = False
+                    break
+            
+            if match:
+                suggestions.append(option)
+                
+        return suggestions
 
     def _scroll_to_bottom(self):
         QTimer.singleShot(10, self._do_scroll)

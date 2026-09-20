@@ -161,75 +161,22 @@ class EditingController:
         
         
         if command.has_action(ActionType.REMOVE_SILENCE):
-            audio_analyzer = None
-            try:
-                from smartedit.audio_analysis import AudioAnalyzer
-                audio_analyzer = AudioAnalyzer()
-            except (ImportError, AttributeError):
-                logger.warning("AudioAnalyzer not available — skipping silence removal plan step.")
-                audio_analyzer = None
+            if not timeline_clips:
                 plan_items.append(PlanItem(
                     action=ActionType.REMOVE_SILENCE,
-                    description="Silence removal is not available in this build.",
+                    description="No clips selected. Please select a clip on the timeline first.",
                     icon="ℹ️"
                 ))
-
-            if audio_analyzer is not None:
-                total_silences = 0
-                total_time_saved = 0.0
-                silence_ops = []
-
-                for clip in timeline_clips:
-                    path = clip.data.get("reader", {}).get("path") or ""
-                    if not path and clip.data.get("file_id"):
-                        f = File.get(id=clip.data.get("file_id"))
-                        if f:
-                            path = f.absolute_path()
-
-                    if path and os.path.isfile(path):
-                        has_audio = clip.data.get("reader", {}).get("has_audio")
-                        if has_audio is False:
-                            continue
-
-                        try:
-                            audio_path = audio_analyzer.extract_audio_if_needed(path)
-                            cut_data = audio_analyzer.generate_cut_points(
-                                audio_path,
-                                top_db=command.parameters.get("silence", {}).get("top_db", 20),
-                                min_silence_duration_sec=command.parameters.get("silence", {}).get("min_silence_duration_sec", 0.5)
-                            )
-                            cut_points = cut_data.get("cut_points", [])
-                            saved_sec = cut_data.get("time_saved_sec", 0.0)
-
-                            if cut_points:
-                                total_silences += len(cut_points)
-                                total_time_saved += saved_sec
-                                silence_ops.append({
-                                    "clip_id": clip.id,
-                                    "cut_points": cut_points,
-                                    "time_saved_sec": saved_sec,
-                                    "clip_data": clip.data
-                                })
-                        except Exception as ex:
-                            logger.warning(f"Audio analysis failed for clip {clip.id}: {ex}")
-
-                if total_silences > 0:
-                    plan_items.append(PlanItem(
-                        action=ActionType.REMOVE_SILENCE,
-                        description=f"Remove <b>{total_silences} silent section(s)</b> (saving approximately {total_time_saved:.1f}s)",
-                        icon="✓",
-                        details={"silence_ops": silence_ops}
-                    ))
-                    operations.append({
-                        "type": ActionType.REMOVE_SILENCE,
-                        "silence_ops": silence_ops
-                    })
-                else:
-                    plan_items.append(PlanItem(
-                        action=ActionType.REMOVE_SILENCE,
-                        description="Analyzed audio levels: <b>No major silent intervals found</b>.",
-                        icon="ℹ️"
-                    ))
+            else:
+                plan_items.append(PlanItem(
+                    action=ActionType.REMOVE_SILENCE,
+                    description=f"Open the interactive Silence Remover tool for {len(timeline_clips)} selected clip(s) to review and apply cuts.",
+                    icon="✓",
+                ))
+                operations.append({
+                    "type": ActionType.REMOVE_SILENCE,
+                    "clip_ids": [c.id for c in timeline_clips]
+                })
 
         
         
@@ -630,18 +577,20 @@ class EditingController:
 
                 
                 elif op_type == ActionType.REMOVE_SILENCE:
-                    for s_op in op.get("silence_ops", []):
-                        clip = Clip.get(id=s_op["clip_id"])
-                        if clip:
-                            
-                            cut_points = s_op.get("cut_points", [])
-                            if cut_points:
-                                
-                                first_cut = cut_points[0]
-                                if first_cut < 2.0:
-                                    clip.data["start"] = float(clip.data.get("start", 0.0)) + first_cut
-                                    clip.save()
-                    applied_details.append("Processed silence cuts on timeline clips")
+                    clip_ids = op.get("clip_ids", [])
+                    if clip_ids:
+                        from windows.silence_remover_dialog import SilenceRemoverDialog
+                        from classes.models import Clip, File
+                        clip = Clip.get(id=clip_ids[0])
+                        path = clip.data.get("reader", {}).get("path") or ""
+                        if not path and clip.data.get("file_id"):
+                            f = File.get(id=clip.data.get("file_id"))
+                            if f:
+                                path = f.absolute_path()
+                        
+                        dlg = SilenceRemoverDialog(window, initial_media_path=path, clip_ids=clip_ids)
+                        dlg.exec_()
+                    applied_details.append("Opened interactive Silence Remover tool for user review")
 
                 elif op_type == ActionType.CUT_SCENES:
                     scene_ops = op.get("scene_ops", [])

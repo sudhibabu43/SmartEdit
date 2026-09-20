@@ -28,11 +28,12 @@
  """
 
 import functools
-import json
+import sys
 import os
+import json
+import uuid
 import re
 import shutil
-import uuid
 import webbrowser
 from time import sleep, time
 from datetime import datetime
@@ -2673,6 +2674,93 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
             trans.data["position"] -= total_gap
             trans.save()
 
+    def apply_silence_removal(self, clip_ids, silence_regions):
+        """Applies silence cuts to the specified timeline clips and ripple deletes the gaps."""
+        log.info(f"Applying silence removal to {len(clip_ids)} clips. {len(silence_regions)} regions to process.")
+        
+        get_app().window.IgnoreUpdates.emit(True, True)
+        # Create a unique transaction ID for undo/redo
+        get_app().updates.transaction_id = str(uuid.uuid4())
+        
+        try:
+            # Sort regions descending so we process cuts from right to left
+            # This ensures earlier positions don't shift while we work!
+            sorted_regions = sorted(silence_regions, key=lambda r: r["start"], reverse=True)
+            
+            for clip_id in clip_ids:
+                clip = Clip.get(id=clip_id)
+                if not clip:
+                    continue
+                    
+                layer = clip.data["layer"]
+                c_start = float(clip.data.get("start", 0.0))
+                c_end = float(clip.data.get("end", 0.0))
+                
+                # Because we are slicing, the original clip object gets its 'end' shortened,
+                # and a new clip is created for the right side.
+                # However, processing backwards means we slice the clip, and the NEXT (earlier) silence 
+                # will fall into the SAME original clip object because the original clip keeps the left side!
+                # This works perfectly.
+                
+                for region in sorted_regions:
+                    sil_start = region["start"]
+                    sil_end = region["end"]
+                    duration = region["duration"]
+                    
+                    # Ensure the silence region actually falls within the current clip's boundaries
+                    if sil_end <= c_start or sil_start >= c_end:
+                        continue
+                        
+                    # Clamp silence to clip boundaries
+                    actual_sil_start = max(sil_start, c_start)
+                    actual_sil_end = min(sil_end, c_end)
+                    actual_dur = actual_sil_end - actual_sil_start
+                    
+                    if actual_dur <= 0.01:
+                        continue
+                        
+                    c_pos = float(clip.data.get("position", 0.0))
+                    
+                    # Calculate timeline position where silence starts and ends
+                    tl_silence_start = c_pos + (actual_sil_start - float(clip.data.get("start", 0.0)))
+                    
+                    # 1. Modify the current clip to end exactly where silence starts
+                    clip.data["end"] = actual_sil_start
+                    clip.save()
+                    
+                    # 2. If there is remaining media AFTER the silence, create a new duplicated clip
+                    if actual_sil_end < c_end:
+                        new_clip = Clip()
+                        new_clip_data = clip.data.copy()
+                        new_clip_data["id"] = str(uuid.uuid4())
+                        new_clip_data["start"] = actual_sil_end
+                        new_clip_data["end"] = c_end
+                        
+                        # The new clip's logical timeline position would be tl_silence_start + actual_dur
+                        # But wait, we are going to ripple delete! 
+                        # So let's place it at the *same* position where the silence started.
+                        # Then the gap between them is 0, and the ripple_delete_gap shifts everything else.
+                        # Actually, let's place it at tl_silence_start + actual_dur, and then let 
+                        # ripple_delete_gap(tl_silence_start, layer, actual_dur) shift it left!
+                        new_clip_data["position"] = tl_silence_start + actual_dur
+                        
+                        new_clip.data = new_clip_data
+                        new_clip.save()
+                        
+                    # 3. Ripple delete to shift all clips (including the new_clip) to the left
+                    self.ripple_delete_gap(tl_silence_start, layer, actual_dur)
+                    
+                    # Update c_end for the next iteration (which will process an earlier silence)
+                    # The clip we are working on (left side) now ends at actual_sil_start.
+                    c_end = actual_sil_start
+        except Exception as ex:
+            log.error(f"Error applying silence removal: {ex}", exc_info=True)
+        finally:
+            get_app().window.IgnoreUpdates.emit(False, True)
+            get_app().updates.transaction_id = None
+            get_app().window.refreshFrameSignal.emit()
+            self.UpdatePreviewTimer.start()
+
     def actionRippleSelect(self):
         """Selects ALL clips or transitions to the right of the current selected item"""
         for clip_id in self.selected_clips:
@@ -2690,12 +2778,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
 
     def actionProperties_trigger(self):
         log.debug('actionProperties_trigger')
-
-        
-        if (not self.dockProperties.isVisible()
-                or self.dockProperties.isFloating()
-                or self.dockWidgetArea(self.dockProperties) == Qt.NoDockWidgetArea):
-            self._anchor_and_show_properties_dock()
+        self._anchor_and_show_properties_dock()
 
     def actionRemoveEffect_trigger(self):
         log.debug('actionRemoveEffect_trigger')
