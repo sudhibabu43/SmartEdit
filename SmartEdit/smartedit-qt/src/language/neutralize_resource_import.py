@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Make a generated Qt resource module use SmartEdit's binding-neutral Qt API."""
 
 import argparse

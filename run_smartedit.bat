@@ -8,7 +8,7 @@ echo ============================================
 echo.
 
 rem ----- Set up tools -----
-set "PYTHON_EXE=C:\Python313\python.exe"
+set "PYTHON_EXE=C:\msys64\ucrt64\bin\python.exe"
 set "UCRT_BIN=C:\msys64\ucrt64\bin"
 
 rem ----- Verify Python exists -----

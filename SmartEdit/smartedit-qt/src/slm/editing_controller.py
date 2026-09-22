@@ -14,7 +14,10 @@ from typing import List, Dict, Any, Optional
 from slm.command_schema import ActionType, SLMCommand
 from slm.video_analyzer import VideoAnalyzer, classify_shake
 from slm.shaky_detector import ShakyFootageService
+from slm.blur_detector import BlurFootageService
 from slm.scene_detector import SceneDetectionEngine
+from slm.shot_detector import ShotTypeService
+from slm.duplicate_detector import DuplicateDetectorService
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +60,9 @@ class EditingController:
     def __init__(self, video_analyzer: Optional[VideoAnalyzer] = None):
         self.video_analyzer = video_analyzer or VideoAnalyzer()
         self.shaky_service = ShakyFootageService(self.video_analyzer)
+        self.blur_service = BlurFootageService(self.video_analyzer)
+        self.shot_service = ShotTypeService()
+        self.duplicate_service = DuplicateDetectorService()
         self.scene_engine = SceneDetectionEngine()
         self.last_transaction_id: Optional[str] = None
         self.pending_plan: Optional[AIPlan] = None
@@ -110,28 +116,52 @@ class EditingController:
             shaky_regions_found = self.shaky_service.analyze_timeline_shaky_regions(threshold=thresh_pct, clips=timeline_clips)
 
             if shaky_regions_found:
-                affected_clips_count = len(set(r.get("clip_id") for r in shaky_regions_found if r.get("clip_id")))
-                names = list(dict.fromkeys(r.get("clip_name", "Clip") for r in shaky_regions_found))
-                names_str = ", ".join(f'"{n}"' for n in names[:3])
-                if len(names) > 3:
-                    names_str += f" and {len(names) - 3} more"
+                # Format the description to match the exact requirement
+                desc_lines = ["Shaky footage detected"]
+                
+                # Group by clip
+                clips_map = {}
+                for r in shaky_regions_found:
+                    cname = r.get("clip_name", "Clip")
+                    if cname not in clips_map:
+                        clips_map[cname] = []
+                    clips_map[cname].append(r)
+                
+                if len(clips_map) == 1:
+                    cname = list(clips_map.keys())[0]
+                    desc_lines[0] = f"Shaky footage detected in {cname}."
+                else:
+                    desc_lines[0] = "Shaky footage detected"
+                
+                for cname, regions in clips_map.items():
+                    if len(clips_map) > 1:
+                        desc_lines.append(f"<br/>Clip: {cname}")
+                    for idx, r in enumerate(regions):
+                        start = r.get("timeline_start", 0.0)
+                        end = r.get("timeline_end", 0.0)
+                        dur = r.get("timeline_duration", 0.0)
+                        pct = int(round(r.get("shake_percentage", 0.0)))
+                        
+                        region_title = "Shaky region" if len(regions) == 1 and len(clips_map) == 1 else f"Region {idx + 1}"
+                        # Adding anchor link for seeking
+                        desc_lines.append(f"<br/>{region_title}: <a href=\"jump:{start:.2f}\" style=\"color:#4d7bff; text-decoration:none;\">{start:.2f} → {end:.2f}</a>")
+                        desc_lines.append(f"Duration: {dur:.2f} sec")
+                        desc_lines.append(f"Shake: {pct}%")
 
                 plan_items.append(PlanItem(
                     action=ActionType.DETECT_SHAKY,
-                    description=f"Detected <b>{len(shaky_regions_found)} shaky region(s)</b> across {affected_clips_count} clip(s) ({names_str})",
-                    icon="✓",
+                    description="<br/>".join(desc_lines),
+                    icon="📍",
                     details={"regions": shaky_regions_found, "clips": shaky_regions_found}
                 ))
 
+                if app and hasattr(app, "window") and hasattr(app.window, "timeline"):
+                    app.window.timeline._shaky_preview_regions = shaky_regions_found
+                    if hasattr(app.window.timeline, "update"):
+                        app.window.timeline.update()
+
                 if command.has_action(ActionType.DELETE_SHAKY):
                     close_gaps = command.parameters.get("delete_shaky", {}).get("close_gaps", False)
-                    gap_note = "closing gaps" if close_gaps else "preserving timeline coordinates (e.g. 0–5s and 8–20s)"
-                    plan_items.append(PlanItem(
-                        action=ActionType.DELETE_SHAKY,
-                        description=f"Split clips at detected boundaries and remove <b>{len(shaky_regions_found)}</b> shaky segment(s) from timeline ({gap_note}); source video files untouched",
-                        icon="✂",
-                        details={"regions": shaky_regions_found, "clip_ids": [r.get("clip_id") for r in shaky_regions_found], "close_gaps": close_gaps}
-                    ))
                     operations.append({
                         "type": ActionType.DELETE_SHAKY,
                         "regions": shaky_regions_found,
@@ -140,11 +170,8 @@ class EditingController:
                         "close_gaps": close_gaps
                     })
                 elif command.has_action(ActionType.LABEL_SHAKY) or command.has_action(ActionType.DETECT_SHAKY):
-                    plan_items.append(PlanItem(
-                        action=ActionType.LABEL_SHAKY,
-                        description=f"Highlight <b>{len(shaky_regions_found)}</b> shaky segment(s) on the timeline",
-                        icon="📍"
-                    ))
+                    # We don't need a separate plan item for just labeling/highlighting since it's already in the preview
+                    # but we keep the operation so that it can be applied (to add permanent markers if needed)
                     operations.append({
                         "type": ActionType.LABEL_SHAKY,
                         "regions": shaky_regions_found,
@@ -157,7 +184,273 @@ class EditingController:
                     icon="ℹ️"
                 ))
 
+        # ───────────────────────────────────────────
+        # BLURRED FOOTAGE DETECTION
+        blurred_regions_found = []
+        if command.has_action(ActionType.DETECT_BLURRED) or command.has_action(ActionType.DELETE_BLURRED):
+            thresh_pct = self.blur_service.get_threshold(command.parameters.get("blurred", {}).get("threshold") or command.parameters.get("delete_blurred", {}).get("threshold"))
+            
+            blurred_regions_found = self.blur_service.analyze_timeline_blurred_regions(threshold=thresh_pct, clips=timeline_clips)
+
+            if blurred_regions_found:
+                desc_lines = ["Blurred footage detected"]
+                
+                clips_map = {}
+                for r in blurred_regions_found:
+                    cname = r.get("clip_name", "Clip")
+                    if cname not in clips_map:
+                        clips_map[cname] = []
+                    clips_map[cname].append(r)
+                
+                if len(clips_map) == 1:
+                    cname = list(clips_map.keys())[0]
+                    desc_lines[0] = f"Blurred footage detected in {cname}."
+                else:
+                    desc_lines[0] = "Blurred footage detected"
+                
+                for cname, regions in clips_map.items():
+                    if len(clips_map) > 1:
+                        desc_lines.append(f"<br/>Clip: {cname}")
+                    for idx, r in enumerate(regions):
+                        start = r.get("timeline_start", 0.0)
+                        end = r.get("timeline_end", 0.0)
+                        dur = r.get("timeline_duration", 0.0)
+                        pct = int(round(r.get("blur_percentage", 0.0)))
+                        
+                        region_title = "Region 1" if len(regions) == 1 and len(clips_map) == 1 else f"Region {idx + 1}"
+                        desc_lines.append(f"<br/>{region_title}: <a href=\"jump:{start:.2f}\" style=\"color:#4d7bff; text-decoration:none;\">{start:.2f} → {end:.2f}</a>")
+                        desc_lines.append(f"Duration: {dur:.2f} sec")
+                        desc_lines.append(f"Blur score: {pct}%")
+
+                plan_items.append(PlanItem(
+                    action=ActionType.DETECT_BLURRED,
+                    description="<br/>".join(desc_lines),
+                    icon="👁",
+                    details={"regions": blurred_regions_found, "clips": blurred_regions_found}
+                ))
+
+                if app and hasattr(app, "window") and hasattr(app.window, "timeline"):
+                    app.window.timeline._blur_preview_regions = blurred_regions_found
+                    if hasattr(app.window.timeline, "update"):
+                        app.window.timeline.update()
+
+                if command.has_action(ActionType.DELETE_BLURRED):
+                    close_gaps = command.parameters.get("delete_blurred", {}).get("close_gaps", False)
+                    operations.append({
+                        "type": ActionType.DELETE_BLURRED,
+                        "regions": blurred_regions_found,
+                        "clips": blurred_regions_found,
+                        "clip_ids": [r.get("clip_id") for r in blurred_regions_found],
+                        "close_gaps": close_gaps
+                    })
+                elif command.has_action(ActionType.DETECT_BLURRED):
+                    operations.append({
+                        "type": ActionType.DETECT_BLURRED,
+                        "regions": blurred_regions_found,
+                        "clips": blurred_regions_found
+                    })
+            else:
+                plan_items.append(PlanItem(
+                    action=ActionType.DETECT_BLURRED,
+                    description="Analyzed clips for image blur: <b>No blurred footage detected.</b>",
+                    icon="ℹ️"
+                ))
+
+        # ───────────────────────────────────────────
+        # A-ROLL DETECTION
+        # ───────────────────────────────────────────
+        if command.has_action(ActionType.DETECT_AROLL):
+            aroll_regions = self.shot_service.detect_timeline_aroll(timeline_clips)
+            if aroll_regions:
+                desc_lines = ["A-Roll detected"]
+                for r in aroll_regions:
+                    cname = r.get("clip_name", "Clip")
+                    start = r.get("timeline_start", 0.0)
+                    end = r.get("timeline_end", 0.0)
+                    reason = r.get("reason", "")
+                    conf = r.get("confidence", 0.0)
+                    
+                    desc_lines.append(f"<br/>Clip: {cname}")
+                    desc_lines.append(f"<a href=\"jump:{start:.2f}\" style=\"color:#2ecc71; text-decoration:none;\">{start:.2f} - {end:.2f}</a>")
+                    if reason:
+                        desc_lines.append(f"Reason: {reason} ({conf}%)")
+
+                plan_items.append(PlanItem(
+                    action=ActionType.DETECT_AROLL,
+                    description="<br/>".join(desc_lines),
+                    icon="🎬",
+                    details={"regions": aroll_regions}
+                ))
+
+                if app and hasattr(app, "window") and hasattr(app.window, "timeline"):
+                    app.window.timeline._aroll_preview_regions = aroll_regions
+                    if hasattr(app.window.timeline, "update"):
+                        app.window.timeline.update()
+                        
+                operations.append({
+                    "type": ActionType.DETECT_AROLL,
+                    "regions": aroll_regions
+                })
+            else:
+                plan_items.append(PlanItem(
+                    action=ActionType.DETECT_AROLL,
+                    description="No A-Roll / primary speaking footage detected.",
+                    icon="ℹ️"
+                ))
+                
+        # ───────────────────────────────────────────
+        # B-ROLL DETECTION
+        # ───────────────────────────────────────────
+        if command.has_action(ActionType.DETECT_BROLL):
+            broll_regions = self.shot_service.detect_timeline_broll(timeline_clips)
+            if broll_regions:
+                desc_lines = ["B-Roll detected"]
+                for r in broll_regions:
+                    cname = r.get("clip_name", "Clip")
+                    start = r.get("timeline_start", 0.0)
+                    end = r.get("timeline_end", 0.0)
+                    reason = r.get("reason", "")
+                    conf = r.get("confidence", 0.0)
+                    
+                    desc_lines.append(f"<br/>Clip: {cname}")
+                    desc_lines.append(f"<a href=\"jump:{start:.2f}\" style=\"color:#00bcd4; text-decoration:none;\">{start:.2f} - {end:.2f}</a>")
+                    if reason:
+                        desc_lines.append(f"Reason: {reason} ({conf}%)")
+
+                plan_items.append(PlanItem(
+                    action=ActionType.DETECT_BROLL,
+                    description="<br/>".join(desc_lines),
+                    icon="🎞",
+                    details={"regions": broll_regions}
+                ))
+
+                if app and hasattr(app, "window") and hasattr(app.window, "timeline"):
+                    app.window.timeline._broll_preview_regions = broll_regions
+                    if hasattr(app.window.timeline, "update"):
+                        app.window.timeline.update()
+                        
+                operations.append({
+                    "type": ActionType.DETECT_BROLL,
+                    "regions": broll_regions
+                })
+            else:
+                plan_items.append(PlanItem(
+                    action=ActionType.DETECT_BROLL,
+                    description="No B-Roll / supporting footage detected.",
+                    icon="ℹ️"
+                ))
+                
+        # ───────────────────────────────────────────
+        # PAN SHOT DETECTION
+        # ───────────────────────────────────────────
+        if command.has_action(ActionType.DETECT_PAN):
+            pan_regions = self.shot_service.detect_timeline_pan_shots(timeline_clips)
+            if pan_regions:
+                desc_lines = ["Pan shots detected"]
+                for r in pan_regions:
+                    cname = r.get("clip_name", "Clip")
+                    start = r.get("timeline_start", 0.0)
+                    end = r.get("timeline_end", 0.0)
+                    direction = r.get("direction", "")
+                    conf = r.get("confidence", 0.0)
+                    
+                    desc_lines.append(f"<br/>Clip: {cname}")
+                    desc_lines.append(f"<a href=\"jump:{start:.2f}\" style=\"color:#e91e63; text-decoration:none;\">{start:.2f} → {end:.2f}</a>")
+                    desc_lines.append(f"Direction: {direction}")
+                    desc_lines.append(f"Confidence: {conf}%")
+
+                plan_items.append(PlanItem(
+                    action=ActionType.DETECT_PAN,
+                    description="<br/>".join(desc_lines),
+                    icon="↔️",
+                    details={"regions": pan_regions}
+                ))
+
+                if app and hasattr(app, "window") and hasattr(app.window, "timeline"):
+                    app.window.timeline._pan_preview_regions = pan_regions
+                    if hasattr(app.window.timeline, "update"):
+                        app.window.timeline.update()
+                        
+                operations.append({
+                    "type": ActionType.DETECT_PAN,
+                    "regions": pan_regions
+                })
+            else:
+                plan_items.append(PlanItem(
+                    action=ActionType.DETECT_PAN,
+                    description="No pan shots detected.",
+                    icon="ℹ️"
+                ))
+
         
+        # ───────────────────────────────────────────
+        # DUPLICATE CLIP DETECTION
+        # ───────────────────────────────────────────
+        if command.has_action(ActionType.DETECT_DUPLICATE) or command.has_action(ActionType.DELETE_DUPLICATE):
+            target_clips = timeline_clips
+            if command.has_action(ActionType.DELETE_DUPLICATE) and not timeline_clips:
+                # If they didn't specify selected clips but want to delete duplicates, analyze all clips
+                try:
+                    all_clips = Clip.filter()
+                    all_clips.sort(key=lambda c: (c.data.get("position", 0.0), c.data.get("layer", 0)))
+                    target_clips = all_clips
+                except Exception:
+                    pass
+
+            duplicate_groups = self.duplicate_service.find_duplicate_groups(target_clips)
+
+            if duplicate_groups:
+                desc_lines = ["Duplicate clips detected"]
+                total_duplicates_to_remove = 0
+                clips_to_remove = []
+
+                for group in duplicate_groups:
+                    group_id = group["group_id"]
+                    primary_title = group["primary_title"]
+                    sim_pct = group["similarity_percent"]
+                    dup_list = group["duplicate_clips"]
+                    
+                    desc_lines.append(f"<br/><b>Duplicate Group {group_id}</b>")
+                    desc_lines.append(f"Clip 1 (Primary): {primary_title}")
+                    
+                    for idx, dup in enumerate(dup_list):
+                        dup_title = dup["title"]
+                        dup_sim = dup["similarity"]
+                        desc_lines.append(f"Clip {idx + 2} (Duplicate): {dup_title} ({dup_sim}% match)")
+                        clips_to_remove.append(dup["clip"].id)
+                        total_duplicates_to_remove += 1
+
+                plan_items.append(PlanItem(
+                    action=ActionType.DETECT_DUPLICATE,
+                    description="<br/>".join(desc_lines),
+                    icon="👯",
+                    details={"groups": duplicate_groups}
+                ))
+
+                if command.has_action(ActionType.DELETE_DUPLICATE):
+                    plan_items.append(PlanItem(
+                        action=ActionType.DELETE_DUPLICATE,
+                        description=f"Remove <b>{total_duplicates_to_remove} duplicate clip(s)</b> from the timeline",
+                        icon="🗑️"
+                    ))
+                    operations.append({
+                        "type": ActionType.DELETE_DUPLICATE,
+                        "clip_ids": clips_to_remove
+                    })
+                else:
+                    # Just select them so user can see them
+                    if app and hasattr(app, "window") and hasattr(app.window, "timeline"):
+                        operations.append({
+                            "type": ActionType.SELECT_CLIPS,
+                            "clip_ids": clips_to_remove
+                        })
+            else:
+                plan_items.append(PlanItem(
+                    action=ActionType.DETECT_DUPLICATE,
+                    description="Analyzed clips for visual duplicates: <b>No duplicate clips found.</b>",
+                    icon="ℹ️"
+                ))
+
         
         
         if command.has_action(ActionType.REMOVE_SILENCE):
@@ -457,7 +750,19 @@ class EditingController:
                                 clip.delete()
                         applied_details.append(f"Removed {len(op.get('clip_ids', []))} shaky clip(s)")
 
-                
+                elif op_type == ActionType.DELETE_BLURRED:
+                    blurred_items = op.get("regions") or op.get("clips", [])
+                    if blurred_items:
+                        close_gaps = op.get("close_gaps", False)
+                        res = self.blur_service.trim_blurred_footage(blurred_items, close_gaps=close_gaps)
+                        applied_details.append(f"Split and removed {res.get('removed_count', len(blurred_items))} blurred segment(s); preserved sharp portions on timeline without modifying source files")
+                    else:
+                        for cid in op.get("clip_ids", []):
+                            clip = Clip.get(id=cid)
+                            if clip:
+                                clip.delete()
+                        applied_details.append(f"Removed {len(op.get('clip_ids', []))} blurred clip(s)")
+
                 elif op_type == ActionType.DELETE_CLIPS:
                     clip_ids = op.get("clip_ids", [])
                     count = 0
@@ -468,6 +773,16 @@ class EditingController:
                             count += 1
                     applied_details.append(f"Deleted {count} clip(s)")
                     
+                elif op_type == ActionType.DELETE_DUPLICATE:
+                    clip_ids = op.get("clip_ids", [])
+                    count = 0
+                    for cid in clip_ids:
+                        clip = Clip.get(id=cid)
+                        if clip:
+                            clip.delete()
+                            count += 1
+                    applied_details.append(f"Deleted {count} duplicate clip(s) to remove redundancy")
+
                 elif op_type == ActionType.SELECT_CLIPS:
                     clip_ids = op.get("clip_ids", [])
                     if window and hasattr(window, "timeline"):

@@ -1,32 +1,3 @@
-﻿"""
- @file
- @brief This file creates the QApplication, and displays the main window
- @author Noah Figg <eggmunkee@hotmail.com>
- @author Jonathan Thomas <jonathan@smartedit.org>
- @author olivier Girard <eolinwen@gmail.com>
-
- @section 
-
- Copyright (c) 2008-2018 SmartEdit Studios, LLC
- (http://www.smarteditstudios.com). This file is part of
- SmartEdit Video Editor (http://www.smartedit.org), an open-source project
- dedicated to delivering high quality video editing and animation solutions
- to the world.
-
- SmartEdit Video Editor is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public  as published by
- the Free Software Foundation, either version 3 of the , or
- (at your option) any later version.
-
- SmartEdit Video Editor is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public  for more details.
-
- You should have received a copy of the GNU General Public 
- along with SmartEdit Library.  If not, see <http://www.gnu.org/s/>.
- """
-
 import atexit
 import sys
 import os
@@ -165,7 +136,7 @@ class SmartEditApp(QApplication):
             log.info("-" * 48)
 
             log.info("smartedit-qt version: %s" % info.VERSION)
-            log.info("libsmartedit version: %s" % smartedit.SMARTEDIT_VERSION_FULL)
+            log.info("libsmartedit version: %s" % smartedit.OPENSHOT_VERSION_FULL)
             log.info("platform: %s" % platform.platform())
             log.info("processor: %s" % platform.processor())
             log.info("machine: %s" % platform.machine())
@@ -186,7 +157,7 @@ class SmartEditApp(QApplication):
     def check_libsmartedit_version(self, info, smartedit):
         """Detect minimum libsmartedit version"""
         _ = self._tr
-        ver = smartedit.SMARTEDIT_VERSION_FULL
+        ver = smartedit.OPENSHOT_VERSION_FULL
         min_ver = info.MINIMUM_LIBSMARTEDIT_VERSION
         if ver >= min_ver:
             return True

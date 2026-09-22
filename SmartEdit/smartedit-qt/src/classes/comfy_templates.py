@@ -1,4 +1,4 @@
-﻿"""
+"""
  @file
  @brief ComfyUI workflow template discovery and classification helpers.
 """

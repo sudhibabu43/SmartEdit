@@ -240,7 +240,7 @@ class About(QDialog):
         """Return a compact markdown block with version, system, and performance info."""
         lines = ["**SmartEdit Version Info**"]
 
-        version_line = f"Version: {info.VERSION} | libsmartedit: {smartedit.SMARTEDIT_VERSION_FULL}"
+        version_line = f"Version: {info.VERSION} | libsmartedit: {smartedit.OPENSHOT_VERSION_FULL}"
         lines.append(version_line)
 
         build_name, release_date = self.get_build_details()
@@ -499,7 +499,7 @@ class About(QDialog):
 
             
             smartedit_qt_version = _("Version: %s") % info.VERSION
-            libsmartedit_version = "%s" % smartedit.SMARTEDIT_VERSION_FULL
+            libsmartedit_version = "%s" % smartedit.OPENSHOT_VERSION_FULL
             version_text = f"{smartedit_qt_version} | {libsmartedit_version}"
             if frozen_version_label:
                 version_text += f"<br/>{frozen_version_label}"

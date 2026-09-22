@@ -1,4 +1,4 @@
-﻿#!/usr/bin/python3
+#!/usr/bin/python3
 """
  @file
  @brief This file updates the SmartEdit.POT (language translation template) by scanning all source files.

@@ -4,92 +4,12 @@
 # Do not make changes to this file unless you know what you are doing - modify
 # the SWIG interface file instead.
 
-import os
-if os.name == "nt" and hasattr(os, "add_dll_directory"):
-    _this_dir = os.path.dirname(os.path.abspath(__file__))
-    _ucrt = r"C:\msys64\ucrt64\bin"
-    for _p in (_this_dir, _ucrt):
-        if os.path.isdir(_p):
-            try:
-                os.add_dll_directory(_p)
-            except Exception:
-                pass
-
 import typing
 # Import the low-level C/C++ module
-try:
-    if getattr(globals().get("__spec__"), "parent", None) or __package__ or "." in __name__:
-        from . import _smartedit
-    else:
-        import _smartedit
-except ImportError:
-    try:
-        if getattr(globals().get("__spec__"), "parent", None) or __package__ or "." in __name__:
-            from . import _openshot as _smartedit
-        else:
-            import _openshot as _smartedit
-        import sys as _sys
-        _sys.modules["_smartedit"] = _smartedit
-    except ImportError:
-        raise
-
-# ---------------------------------------------------------------------------
-# SmartEdit ↔ OpenShot compatibility shim for pre-compiled binaries
-# ---------------------------------------------------------------------------
-# The _smartedit.pyd DLL / libsmartedit.dll were compiled BEFORE the project
-# rename, so they still export symbols with the original OPENSHOT / OpenShot
-# prefixes.  This shim creates bidirectional aliases on the C extension so
-# that the renamed SWIG wrapper code (SMARTEDIT_* / SmartEdit* identifiers)
-# and any legacy code (OPENSHOT_* / OpenShot* identifiers) both work.
-def _apply_smartedit_compat_aliases(mod):
-    import re
-    existing = set(dir(mod))
-    new_aliases = 0
-    for name in list(existing):
-        try:
-            value = getattr(mod, name)
-        except Exception:
-            continue
-        # Transform OPENSHOT_* <-> SMARTEDIT_*
-        if "OPENSHOT" in name:
-            new_name = name.replace("OPENSHOT", "SMARTEDIT")
-            if new_name not in existing and new_name not in dir(mod):
-                try:
-                    setattr(mod, new_name, value)
-                    new_aliases += 1
-                except Exception:
-                    pass
-        elif "SMARTEDIT" in name:
-            new_name = name.replace("SMARTEDIT", "OPENSHOT")
-            if new_name not in existing and new_name not in dir(mod):
-                try:
-                    setattr(mod, new_name, value)
-                    new_aliases += 1
-                except Exception:
-                    pass
-        # Transform OpenShot* <-> SmartEdit*
-        if "OpenShot" in name:
-            new_name = name.replace("OpenShot", "SmartEdit")
-            if new_name not in existing and new_name not in dir(mod):
-                try:
-                    setattr(mod, new_name, value)
-                    new_aliases += 1
-                except Exception:
-                    pass
-        elif "SmartEdit" in name:
-            new_name = name.replace("SmartEdit", "OpenShot")
-            if new_name not in existing and new_name not in dir(mod):
-                try:
-                    setattr(mod, new_name, value)
-                    new_aliases += 1
-                except Exception:
-                    pass
-    return new_aliases
-
-try:
-    _n_alias = _apply_smartedit_compat_aliases(_smartedit)
-except Exception:
-    _n_alias = 0
+if getattr(globals().get("__spec__"), "parent", None) or __package__ or "." in __name__:
+    from . import _smartedit
+else:
+    import _smartedit
 
 import builtins as __builtin__
 
@@ -208,7 +128,7 @@ _smartedit.SwigPyIterator_swigregister(SwigPyIterator)
 SHARED_PTR_DISOWN = _smartedit.SHARED_PTR_DISOWN
 
 class ClipList(object):
-    r"""Proxy of C++ std::list< smartedit::Clip * > class."""
+    r"""Proxy of C++ std::list< openshot::Clip * > class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -224,12 +144,12 @@ class ClipList(object):
         return _smartedit.ClipList___bool__(self, *args)
 
     def __len__(self, *args):
-        r"""__len__(ClipList self) -> std::list< smartedit::Clip * >::size_type"""
+        r"""__len__(ClipList self) -> std::list< openshot::Clip * >::size_type"""
         return _smartedit.ClipList___len__(self, *args)
 
     def __delitem__(self, *args):
         r"""
-        __delitem__(ClipList self, std::list< smartedit::Clip * >::difference_type i)
+        __delitem__(ClipList self, std::list< openshot::Clip * >::difference_type i)
         __delitem__(ClipList self, SWIGPY_SLICEOBJECT * slice)
         """
         return _smartedit.ClipList___delitem__(self, *args)
@@ -237,7 +157,7 @@ class ClipList(object):
     def __getitem__(self, *args):
         r"""
         __getitem__(ClipList self, SWIGPY_SLICEOBJECT * slice) -> ClipList
-        __getitem__(ClipList self, std::list< smartedit::Clip * >::difference_type i) -> Clip
+        __getitem__(ClipList self, std::list< openshot::Clip * >::difference_type i) -> Clip
         """
         return _smartedit.ClipList___getitem__(self, *args)
 
@@ -245,7 +165,7 @@ class ClipList(object):
         r"""
         __setitem__(ClipList self, SWIGPY_SLICEOBJECT * slice, ClipList v)
         __setitem__(ClipList self, SWIGPY_SLICEOBJECT * slice)
-        __setitem__(ClipList self, std::list< smartedit::Clip * >::difference_type i, Clip x)
+        __setitem__(ClipList self, std::list< openshot::Clip * >::difference_type i, Clip x)
         """
         return _smartedit.ClipList___setitem__(self, *args)
 
@@ -262,7 +182,7 @@ class ClipList(object):
         return _smartedit.ClipList_empty(self, *args)
 
     def size(self, *args):
-        r"""size(ClipList self) -> std::list< smartedit::Clip * >::size_type"""
+        r"""size(ClipList self) -> std::list< openshot::Clip * >::size_type"""
         return _smartedit.ClipList_size(self, *args)
 
     def swap(self, *args):
@@ -270,19 +190,19 @@ class ClipList(object):
         return _smartedit.ClipList_swap(self, *args)
 
     def begin(self, *args):
-        r"""begin(ClipList self) -> std::list< smartedit::Clip * >::iterator"""
+        r"""begin(ClipList self) -> std::list< openshot::Clip * >::iterator"""
         return _smartedit.ClipList_begin(self, *args)
 
     def end(self, *args):
-        r"""end(ClipList self) -> std::list< smartedit::Clip * >::iterator"""
+        r"""end(ClipList self) -> std::list< openshot::Clip * >::iterator"""
         return _smartedit.ClipList_end(self, *args)
 
     def rbegin(self, *args):
-        r"""rbegin(ClipList self) -> std::list< smartedit::Clip * >::reverse_iterator"""
+        r"""rbegin(ClipList self) -> std::list< openshot::Clip * >::reverse_iterator"""
         return _smartedit.ClipList_rbegin(self, *args)
 
     def rend(self, *args):
-        r"""rend(ClipList self) -> std::list< smartedit::Clip * >::reverse_iterator"""
+        r"""rend(ClipList self) -> std::list< openshot::Clip * >::reverse_iterator"""
         return _smartedit.ClipList_rend(self, *args)
 
     def clear(self, *args):
@@ -290,7 +210,7 @@ class ClipList(object):
         return _smartedit.ClipList_clear(self, *args)
 
     def get_allocator(self, *args):
-        r"""get_allocator(ClipList self) -> std::list< smartedit::Clip * >::allocator_type"""
+        r"""get_allocator(ClipList self) -> std::list< openshot::Clip * >::allocator_type"""
         return _smartedit.ClipList_get_allocator(self, *args)
 
     def pop_back(self, *args):
@@ -299,8 +219,8 @@ class ClipList(object):
 
     def erase(self, *args):
         r"""
-        erase(ClipList self, std::list< smartedit::Clip * >::iterator pos) -> std::list< smartedit::Clip * >::iterator
-        erase(ClipList self, std::list< smartedit::Clip * >::iterator first, std::list< smartedit::Clip * >::iterator last) -> std::list< smartedit::Clip * >::iterator
+        erase(ClipList self, std::list< openshot::Clip * >::iterator pos) -> std::list< openshot::Clip * >::iterator
+        erase(ClipList self, std::list< openshot::Clip * >::iterator first, std::list< openshot::Clip * >::iterator last) -> std::list< openshot::Clip * >::iterator
         """
         return _smartedit.ClipList_erase(self, *args)
 
@@ -308,8 +228,8 @@ class ClipList(object):
         r"""
         __init__(ClipList self) -> ClipList
         __init__(ClipList self, ClipList other) -> ClipList
-        __init__(ClipList self, std::list< smartedit::Clip * >::size_type size) -> ClipList
-        __init__(ClipList self, std::list< smartedit::Clip * >::size_type size, Clip value) -> ClipList
+        __init__(ClipList self, std::list< openshot::Clip * >::size_type size) -> ClipList
+        __init__(ClipList self, std::list< openshot::Clip * >::size_type size, Clip value) -> ClipList
         """
         _smartedit.ClipList_swiginit(self, _smartedit.new_ClipList(*args))
 
@@ -326,20 +246,20 @@ class ClipList(object):
         return _smartedit.ClipList_back(self, *args)
 
     def assign(self, *args):
-        r"""assign(ClipList self, std::list< smartedit::Clip * >::size_type n, Clip x)"""
+        r"""assign(ClipList self, std::list< openshot::Clip * >::size_type n, Clip x)"""
         return _smartedit.ClipList_assign(self, *args)
 
     def resize(self, *args):
         r"""
-        resize(ClipList self, std::list< smartedit::Clip * >::size_type new_size)
-        resize(ClipList self, std::list< smartedit::Clip * >::size_type new_size, Clip x)
+        resize(ClipList self, std::list< openshot::Clip * >::size_type new_size)
+        resize(ClipList self, std::list< openshot::Clip * >::size_type new_size, Clip x)
         """
         return _smartedit.ClipList_resize(self, *args)
 
     def insert(self, *args):
         r"""
-        insert(ClipList self, std::list< smartedit::Clip * >::iterator pos, Clip x) -> std::list< smartedit::Clip * >::iterator
-        insert(ClipList self, std::list< smartedit::Clip * >::iterator pos, std::list< smartedit::Clip * >::size_type n, Clip x)
+        insert(ClipList self, std::list< openshot::Clip * >::iterator pos, Clip x) -> std::list< openshot::Clip * >::iterator
+        insert(ClipList self, std::list< openshot::Clip * >::iterator pos, std::list< openshot::Clip * >::size_type n, Clip x)
         """
         return _smartedit.ClipList_insert(self, *args)
 
@@ -375,7 +295,7 @@ class ClipList(object):
 # Register ClipList in _smartedit:
 _smartedit.ClipList_swigregister(ClipList)
 class EffectBaseList(object):
-    r"""Proxy of C++ std::list< smartedit::EffectBase * > class."""
+    r"""Proxy of C++ std::list< openshot::EffectBase * > class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -391,12 +311,12 @@ class EffectBaseList(object):
         return _smartedit.EffectBaseList___bool__(self, *args)
 
     def __len__(self, *args):
-        r"""__len__(EffectBaseList self) -> std::list< smartedit::EffectBase * >::size_type"""
+        r"""__len__(EffectBaseList self) -> std::list< openshot::EffectBase * >::size_type"""
         return _smartedit.EffectBaseList___len__(self, *args)
 
     def __delitem__(self, *args):
         r"""
-        __delitem__(EffectBaseList self, std::list< smartedit::EffectBase * >::difference_type i)
+        __delitem__(EffectBaseList self, std::list< openshot::EffectBase * >::difference_type i)
         __delitem__(EffectBaseList self, SWIGPY_SLICEOBJECT * slice)
         """
         return _smartedit.EffectBaseList___delitem__(self, *args)
@@ -404,7 +324,7 @@ class EffectBaseList(object):
     def __getitem__(self, *args):
         r"""
         __getitem__(EffectBaseList self, SWIGPY_SLICEOBJECT * slice) -> EffectBaseList
-        __getitem__(EffectBaseList self, std::list< smartedit::EffectBase * >::difference_type i) -> EffectBase
+        __getitem__(EffectBaseList self, std::list< openshot::EffectBase * >::difference_type i) -> EffectBase
         """
         return _smartedit.EffectBaseList___getitem__(self, *args)
 
@@ -412,7 +332,7 @@ class EffectBaseList(object):
         r"""
         __setitem__(EffectBaseList self, SWIGPY_SLICEOBJECT * slice, EffectBaseList v)
         __setitem__(EffectBaseList self, SWIGPY_SLICEOBJECT * slice)
-        __setitem__(EffectBaseList self, std::list< smartedit::EffectBase * >::difference_type i, EffectBase x)
+        __setitem__(EffectBaseList self, std::list< openshot::EffectBase * >::difference_type i, EffectBase x)
         """
         return _smartedit.EffectBaseList___setitem__(self, *args)
 
@@ -429,7 +349,7 @@ class EffectBaseList(object):
         return _smartedit.EffectBaseList_empty(self, *args)
 
     def size(self, *args):
-        r"""size(EffectBaseList self) -> std::list< smartedit::EffectBase * >::size_type"""
+        r"""size(EffectBaseList self) -> std::list< openshot::EffectBase * >::size_type"""
         return _smartedit.EffectBaseList_size(self, *args)
 
     def swap(self, *args):
@@ -437,19 +357,19 @@ class EffectBaseList(object):
         return _smartedit.EffectBaseList_swap(self, *args)
 
     def begin(self, *args):
-        r"""begin(EffectBaseList self) -> std::list< smartedit::EffectBase * >::iterator"""
+        r"""begin(EffectBaseList self) -> std::list< openshot::EffectBase * >::iterator"""
         return _smartedit.EffectBaseList_begin(self, *args)
 
     def end(self, *args):
-        r"""end(EffectBaseList self) -> std::list< smartedit::EffectBase * >::iterator"""
+        r"""end(EffectBaseList self) -> std::list< openshot::EffectBase * >::iterator"""
         return _smartedit.EffectBaseList_end(self, *args)
 
     def rbegin(self, *args):
-        r"""rbegin(EffectBaseList self) -> std::list< smartedit::EffectBase * >::reverse_iterator"""
+        r"""rbegin(EffectBaseList self) -> std::list< openshot::EffectBase * >::reverse_iterator"""
         return _smartedit.EffectBaseList_rbegin(self, *args)
 
     def rend(self, *args):
-        r"""rend(EffectBaseList self) -> std::list< smartedit::EffectBase * >::reverse_iterator"""
+        r"""rend(EffectBaseList self) -> std::list< openshot::EffectBase * >::reverse_iterator"""
         return _smartedit.EffectBaseList_rend(self, *args)
 
     def clear(self, *args):
@@ -457,7 +377,7 @@ class EffectBaseList(object):
         return _smartedit.EffectBaseList_clear(self, *args)
 
     def get_allocator(self, *args):
-        r"""get_allocator(EffectBaseList self) -> std::list< smartedit::EffectBase * >::allocator_type"""
+        r"""get_allocator(EffectBaseList self) -> std::list< openshot::EffectBase * >::allocator_type"""
         return _smartedit.EffectBaseList_get_allocator(self, *args)
 
     def pop_back(self, *args):
@@ -466,8 +386,8 @@ class EffectBaseList(object):
 
     def erase(self, *args):
         r"""
-        erase(EffectBaseList self, std::list< smartedit::EffectBase * >::iterator pos) -> std::list< smartedit::EffectBase * >::iterator
-        erase(EffectBaseList self, std::list< smartedit::EffectBase * >::iterator first, std::list< smartedit::EffectBase * >::iterator last) -> std::list< smartedit::EffectBase * >::iterator
+        erase(EffectBaseList self, std::list< openshot::EffectBase * >::iterator pos) -> std::list< openshot::EffectBase * >::iterator
+        erase(EffectBaseList self, std::list< openshot::EffectBase * >::iterator first, std::list< openshot::EffectBase * >::iterator last) -> std::list< openshot::EffectBase * >::iterator
         """
         return _smartedit.EffectBaseList_erase(self, *args)
 
@@ -475,8 +395,8 @@ class EffectBaseList(object):
         r"""
         __init__(EffectBaseList self) -> EffectBaseList
         __init__(EffectBaseList self, EffectBaseList other) -> EffectBaseList
-        __init__(EffectBaseList self, std::list< smartedit::EffectBase * >::size_type size) -> EffectBaseList
-        __init__(EffectBaseList self, std::list< smartedit::EffectBase * >::size_type size, EffectBase value) -> EffectBaseList
+        __init__(EffectBaseList self, std::list< openshot::EffectBase * >::size_type size) -> EffectBaseList
+        __init__(EffectBaseList self, std::list< openshot::EffectBase * >::size_type size, EffectBase value) -> EffectBaseList
         """
         _smartedit.EffectBaseList_swiginit(self, _smartedit.new_EffectBaseList(*args))
 
@@ -493,20 +413,20 @@ class EffectBaseList(object):
         return _smartedit.EffectBaseList_back(self, *args)
 
     def assign(self, *args):
-        r"""assign(EffectBaseList self, std::list< smartedit::EffectBase * >::size_type n, EffectBase x)"""
+        r"""assign(EffectBaseList self, std::list< openshot::EffectBase * >::size_type n, EffectBase x)"""
         return _smartedit.EffectBaseList_assign(self, *args)
 
     def resize(self, *args):
         r"""
-        resize(EffectBaseList self, std::list< smartedit::EffectBase * >::size_type new_size)
-        resize(EffectBaseList self, std::list< smartedit::EffectBase * >::size_type new_size, EffectBase x)
+        resize(EffectBaseList self, std::list< openshot::EffectBase * >::size_type new_size)
+        resize(EffectBaseList self, std::list< openshot::EffectBase * >::size_type new_size, EffectBase x)
         """
         return _smartedit.EffectBaseList_resize(self, *args)
 
     def insert(self, *args):
         r"""
-        insert(EffectBaseList self, std::list< smartedit::EffectBase * >::iterator pos, EffectBase x) -> std::list< smartedit::EffectBase * >::iterator
-        insert(EffectBaseList self, std::list< smartedit::EffectBase * >::iterator pos, std::list< smartedit::EffectBase * >::size_type n, EffectBase x)
+        insert(EffectBaseList self, std::list< openshot::EffectBase * >::iterator pos, EffectBase x) -> std::list< openshot::EffectBase * >::iterator
+        insert(EffectBaseList self, std::list< openshot::EffectBase * >::iterator pos, std::list< openshot::EffectBase * >::size_type n, EffectBase x)
         """
         return _smartedit.EffectBaseList_insert(self, *args)
 
@@ -542,7 +462,7 @@ class EffectBaseList(object):
 # Register EffectBaseList in _smartedit:
 _smartedit.EffectBaseList_swigregister(EffectBaseList)
 class CoordinateVector(object):
-    r"""Proxy of C++ std::vector< smartedit::Coordinate > class."""
+    r"""Proxy of C++ std::vector< openshot::Coordinate > class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -558,12 +478,12 @@ class CoordinateVector(object):
         return _smartedit.CoordinateVector___bool__(self, *args)
 
     def __len__(self, *args):
-        r"""__len__(CoordinateVector self) -> std::vector< smartedit::Coordinate >::size_type"""
+        r"""__len__(CoordinateVector self) -> std::vector< openshot::Coordinate >::size_type"""
         return _smartedit.CoordinateVector___len__(self, *args)
 
     def __delitem__(self, *args):
         r"""
-        __delitem__(CoordinateVector self, std::vector< smartedit::Coordinate >::difference_type i)
+        __delitem__(CoordinateVector self, std::vector< openshot::Coordinate >::difference_type i)
         __delitem__(CoordinateVector self, SWIGPY_SLICEOBJECT * slice)
         """
         return _smartedit.CoordinateVector___delitem__(self, *args)
@@ -571,7 +491,7 @@ class CoordinateVector(object):
     def __getitem__(self, *args):
         r"""
         __getitem__(CoordinateVector self, SWIGPY_SLICEOBJECT * slice) -> CoordinateVector
-        __getitem__(CoordinateVector self, std::vector< smartedit::Coordinate >::difference_type i) -> Coordinate
+        __getitem__(CoordinateVector self, std::vector< openshot::Coordinate >::difference_type i) -> Coordinate
         """
         return _smartedit.CoordinateVector___getitem__(self, *args)
 
@@ -579,7 +499,7 @@ class CoordinateVector(object):
         r"""
         __setitem__(CoordinateVector self, SWIGPY_SLICEOBJECT * slice, CoordinateVector v)
         __setitem__(CoordinateVector self, SWIGPY_SLICEOBJECT * slice)
-        __setitem__(CoordinateVector self, std::vector< smartedit::Coordinate >::difference_type i, Coordinate x)
+        __setitem__(CoordinateVector self, std::vector< openshot::Coordinate >::difference_type i, Coordinate x)
         """
         return _smartedit.CoordinateVector___setitem__(self, *args)
 
@@ -596,7 +516,7 @@ class CoordinateVector(object):
         return _smartedit.CoordinateVector_empty(self, *args)
 
     def size(self, *args):
-        r"""size(CoordinateVector self) -> std::vector< smartedit::Coordinate >::size_type"""
+        r"""size(CoordinateVector self) -> std::vector< openshot::Coordinate >::size_type"""
         return _smartedit.CoordinateVector_size(self, *args)
 
     def swap(self, *args):
@@ -604,19 +524,19 @@ class CoordinateVector(object):
         return _smartedit.CoordinateVector_swap(self, *args)
 
     def begin(self, *args):
-        r"""begin(CoordinateVector self) -> std::vector< smartedit::Coordinate >::iterator"""
+        r"""begin(CoordinateVector self) -> std::vector< openshot::Coordinate >::iterator"""
         return _smartedit.CoordinateVector_begin(self, *args)
 
     def end(self, *args):
-        r"""end(CoordinateVector self) -> std::vector< smartedit::Coordinate >::iterator"""
+        r"""end(CoordinateVector self) -> std::vector< openshot::Coordinate >::iterator"""
         return _smartedit.CoordinateVector_end(self, *args)
 
     def rbegin(self, *args):
-        r"""rbegin(CoordinateVector self) -> std::vector< smartedit::Coordinate >::reverse_iterator"""
+        r"""rbegin(CoordinateVector self) -> std::vector< openshot::Coordinate >::reverse_iterator"""
         return _smartedit.CoordinateVector_rbegin(self, *args)
 
     def rend(self, *args):
-        r"""rend(CoordinateVector self) -> std::vector< smartedit::Coordinate >::reverse_iterator"""
+        r"""rend(CoordinateVector self) -> std::vector< openshot::Coordinate >::reverse_iterator"""
         return _smartedit.CoordinateVector_rend(self, *args)
 
     def clear(self, *args):
@@ -624,7 +544,7 @@ class CoordinateVector(object):
         return _smartedit.CoordinateVector_clear(self, *args)
 
     def get_allocator(self, *args):
-        r"""get_allocator(CoordinateVector self) -> std::vector< smartedit::Coordinate >::allocator_type"""
+        r"""get_allocator(CoordinateVector self) -> std::vector< openshot::Coordinate >::allocator_type"""
         return _smartedit.CoordinateVector_get_allocator(self, *args)
 
     def pop_back(self, *args):
@@ -633,8 +553,8 @@ class CoordinateVector(object):
 
     def erase(self, *args):
         r"""
-        erase(CoordinateVector self, std::vector< smartedit::Coordinate >::iterator pos) -> std::vector< smartedit::Coordinate >::iterator
-        erase(CoordinateVector self, std::vector< smartedit::Coordinate >::iterator first, std::vector< smartedit::Coordinate >::iterator last) -> std::vector< smartedit::Coordinate >::iterator
+        erase(CoordinateVector self, std::vector< openshot::Coordinate >::iterator pos) -> std::vector< openshot::Coordinate >::iterator
+        erase(CoordinateVector self, std::vector< openshot::Coordinate >::iterator first, std::vector< openshot::Coordinate >::iterator last) -> std::vector< openshot::Coordinate >::iterator
         """
         return _smartedit.CoordinateVector_erase(self, *args)
 
@@ -642,8 +562,8 @@ class CoordinateVector(object):
         r"""
         __init__(CoordinateVector self) -> CoordinateVector
         __init__(CoordinateVector self, CoordinateVector other) -> CoordinateVector
-        __init__(CoordinateVector self, std::vector< smartedit::Coordinate >::size_type size) -> CoordinateVector
-        __init__(CoordinateVector self, std::vector< smartedit::Coordinate >::size_type size, Coordinate value) -> CoordinateVector
+        __init__(CoordinateVector self, std::vector< openshot::Coordinate >::size_type size) -> CoordinateVector
+        __init__(CoordinateVector self, std::vector< openshot::Coordinate >::size_type size, Coordinate value) -> CoordinateVector
         """
         _smartedit.CoordinateVector_swiginit(self, _smartedit.new_CoordinateVector(*args))
 
@@ -660,36 +580,36 @@ class CoordinateVector(object):
         return _smartedit.CoordinateVector_back(self, *args)
 
     def assign(self, *args):
-        r"""assign(CoordinateVector self, std::vector< smartedit::Coordinate >::size_type n, Coordinate x)"""
+        r"""assign(CoordinateVector self, std::vector< openshot::Coordinate >::size_type n, Coordinate x)"""
         return _smartedit.CoordinateVector_assign(self, *args)
 
     def resize(self, *args):
         r"""
-        resize(CoordinateVector self, std::vector< smartedit::Coordinate >::size_type new_size)
-        resize(CoordinateVector self, std::vector< smartedit::Coordinate >::size_type new_size, Coordinate x)
+        resize(CoordinateVector self, std::vector< openshot::Coordinate >::size_type new_size)
+        resize(CoordinateVector self, std::vector< openshot::Coordinate >::size_type new_size, Coordinate x)
         """
         return _smartedit.CoordinateVector_resize(self, *args)
 
     def insert(self, *args):
         r"""
-        insert(CoordinateVector self, std::vector< smartedit::Coordinate >::iterator pos, Coordinate x) -> std::vector< smartedit::Coordinate >::iterator
-        insert(CoordinateVector self, std::vector< smartedit::Coordinate >::iterator pos, std::vector< smartedit::Coordinate >::size_type n, Coordinate x)
+        insert(CoordinateVector self, std::vector< openshot::Coordinate >::iterator pos, Coordinate x) -> std::vector< openshot::Coordinate >::iterator
+        insert(CoordinateVector self, std::vector< openshot::Coordinate >::iterator pos, std::vector< openshot::Coordinate >::size_type n, Coordinate x)
         """
         return _smartedit.CoordinateVector_insert(self, *args)
 
     def reserve(self, *args):
-        r"""reserve(CoordinateVector self, std::vector< smartedit::Coordinate >::size_type n)"""
+        r"""reserve(CoordinateVector self, std::vector< openshot::Coordinate >::size_type n)"""
         return _smartedit.CoordinateVector_reserve(self, *args)
 
     def capacity(self, *args):
-        r"""capacity(CoordinateVector self) -> std::vector< smartedit::Coordinate >::size_type"""
+        r"""capacity(CoordinateVector self) -> std::vector< openshot::Coordinate >::size_type"""
         return _smartedit.CoordinateVector_capacity(self, *args)
     __swig_destroy__ = _smartedit.delete_CoordinateVector
 
 # Register CoordinateVector in _smartedit:
 _smartedit.CoordinateVector_swigregister(CoordinateVector)
 class PointsVector(object):
-    r"""Proxy of C++ std::vector< smartedit::Point > class."""
+    r"""Proxy of C++ std::vector< openshot::Point > class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -705,12 +625,12 @@ class PointsVector(object):
         return _smartedit.PointsVector___bool__(self, *args)
 
     def __len__(self, *args):
-        r"""__len__(PointsVector self) -> std::vector< smartedit::Point >::size_type"""
+        r"""__len__(PointsVector self) -> std::vector< openshot::Point >::size_type"""
         return _smartedit.PointsVector___len__(self, *args)
 
     def __delitem__(self, *args):
         r"""
-        __delitem__(PointsVector self, std::vector< smartedit::Point >::difference_type i)
+        __delitem__(PointsVector self, std::vector< openshot::Point >::difference_type i)
         __delitem__(PointsVector self, SWIGPY_SLICEOBJECT * slice)
         """
         return _smartedit.PointsVector___delitem__(self, *args)
@@ -718,7 +638,7 @@ class PointsVector(object):
     def __getitem__(self, *args):
         r"""
         __getitem__(PointsVector self, SWIGPY_SLICEOBJECT * slice) -> PointsVector
-        __getitem__(PointsVector self, std::vector< smartedit::Point >::difference_type i) -> Point
+        __getitem__(PointsVector self, std::vector< openshot::Point >::difference_type i) -> Point
         """
         return _smartedit.PointsVector___getitem__(self, *args)
 
@@ -726,7 +646,7 @@ class PointsVector(object):
         r"""
         __setitem__(PointsVector self, SWIGPY_SLICEOBJECT * slice, PointsVector v)
         __setitem__(PointsVector self, SWIGPY_SLICEOBJECT * slice)
-        __setitem__(PointsVector self, std::vector< smartedit::Point >::difference_type i, Point x)
+        __setitem__(PointsVector self, std::vector< openshot::Point >::difference_type i, Point x)
         """
         return _smartedit.PointsVector___setitem__(self, *args)
 
@@ -743,7 +663,7 @@ class PointsVector(object):
         return _smartedit.PointsVector_empty(self, *args)
 
     def size(self, *args):
-        r"""size(PointsVector self) -> std::vector< smartedit::Point >::size_type"""
+        r"""size(PointsVector self) -> std::vector< openshot::Point >::size_type"""
         return _smartedit.PointsVector_size(self, *args)
 
     def swap(self, *args):
@@ -751,19 +671,19 @@ class PointsVector(object):
         return _smartedit.PointsVector_swap(self, *args)
 
     def begin(self, *args):
-        r"""begin(PointsVector self) -> std::vector< smartedit::Point >::iterator"""
+        r"""begin(PointsVector self) -> std::vector< openshot::Point >::iterator"""
         return _smartedit.PointsVector_begin(self, *args)
 
     def end(self, *args):
-        r"""end(PointsVector self) -> std::vector< smartedit::Point >::iterator"""
+        r"""end(PointsVector self) -> std::vector< openshot::Point >::iterator"""
         return _smartedit.PointsVector_end(self, *args)
 
     def rbegin(self, *args):
-        r"""rbegin(PointsVector self) -> std::vector< smartedit::Point >::reverse_iterator"""
+        r"""rbegin(PointsVector self) -> std::vector< openshot::Point >::reverse_iterator"""
         return _smartedit.PointsVector_rbegin(self, *args)
 
     def rend(self, *args):
-        r"""rend(PointsVector self) -> std::vector< smartedit::Point >::reverse_iterator"""
+        r"""rend(PointsVector self) -> std::vector< openshot::Point >::reverse_iterator"""
         return _smartedit.PointsVector_rend(self, *args)
 
     def clear(self, *args):
@@ -771,7 +691,7 @@ class PointsVector(object):
         return _smartedit.PointsVector_clear(self, *args)
 
     def get_allocator(self, *args):
-        r"""get_allocator(PointsVector self) -> std::vector< smartedit::Point >::allocator_type"""
+        r"""get_allocator(PointsVector self) -> std::vector< openshot::Point >::allocator_type"""
         return _smartedit.PointsVector_get_allocator(self, *args)
 
     def pop_back(self, *args):
@@ -780,8 +700,8 @@ class PointsVector(object):
 
     def erase(self, *args):
         r"""
-        erase(PointsVector self, std::vector< smartedit::Point >::iterator pos) -> std::vector< smartedit::Point >::iterator
-        erase(PointsVector self, std::vector< smartedit::Point >::iterator first, std::vector< smartedit::Point >::iterator last) -> std::vector< smartedit::Point >::iterator
+        erase(PointsVector self, std::vector< openshot::Point >::iterator pos) -> std::vector< openshot::Point >::iterator
+        erase(PointsVector self, std::vector< openshot::Point >::iterator first, std::vector< openshot::Point >::iterator last) -> std::vector< openshot::Point >::iterator
         """
         return _smartedit.PointsVector_erase(self, *args)
 
@@ -789,8 +709,8 @@ class PointsVector(object):
         r"""
         __init__(PointsVector self) -> PointsVector
         __init__(PointsVector self, PointsVector other) -> PointsVector
-        __init__(PointsVector self, std::vector< smartedit::Point >::size_type size) -> PointsVector
-        __init__(PointsVector self, std::vector< smartedit::Point >::size_type size, Point value) -> PointsVector
+        __init__(PointsVector self, std::vector< openshot::Point >::size_type size) -> PointsVector
+        __init__(PointsVector self, std::vector< openshot::Point >::size_type size, Point value) -> PointsVector
         """
         _smartedit.PointsVector_swiginit(self, _smartedit.new_PointsVector(*args))
 
@@ -807,36 +727,36 @@ class PointsVector(object):
         return _smartedit.PointsVector_back(self, *args)
 
     def assign(self, *args):
-        r"""assign(PointsVector self, std::vector< smartedit::Point >::size_type n, Point x)"""
+        r"""assign(PointsVector self, std::vector< openshot::Point >::size_type n, Point x)"""
         return _smartedit.PointsVector_assign(self, *args)
 
     def resize(self, *args):
         r"""
-        resize(PointsVector self, std::vector< smartedit::Point >::size_type new_size)
-        resize(PointsVector self, std::vector< smartedit::Point >::size_type new_size, Point x)
+        resize(PointsVector self, std::vector< openshot::Point >::size_type new_size)
+        resize(PointsVector self, std::vector< openshot::Point >::size_type new_size, Point x)
         """
         return _smartedit.PointsVector_resize(self, *args)
 
     def insert(self, *args):
         r"""
-        insert(PointsVector self, std::vector< smartedit::Point >::iterator pos, Point x) -> std::vector< smartedit::Point >::iterator
-        insert(PointsVector self, std::vector< smartedit::Point >::iterator pos, std::vector< smartedit::Point >::size_type n, Point x)
+        insert(PointsVector self, std::vector< openshot::Point >::iterator pos, Point x) -> std::vector< openshot::Point >::iterator
+        insert(PointsVector self, std::vector< openshot::Point >::iterator pos, std::vector< openshot::Point >::size_type n, Point x)
         """
         return _smartedit.PointsVector_insert(self, *args)
 
     def reserve(self, *args):
-        r"""reserve(PointsVector self, std::vector< smartedit::Point >::size_type n)"""
+        r"""reserve(PointsVector self, std::vector< openshot::Point >::size_type n)"""
         return _smartedit.PointsVector_reserve(self, *args)
 
     def capacity(self, *args):
-        r"""capacity(PointsVector self) -> std::vector< smartedit::Point >::size_type"""
+        r"""capacity(PointsVector self) -> std::vector< openshot::Point >::size_type"""
         return _smartedit.PointsVector_capacity(self, *args)
     __swig_destroy__ = _smartedit.delete_PointsVector
 
 # Register PointsVector in _smartedit:
 _smartedit.PointsVector_swigregister(PointsVector)
 class FieldVector(object):
-    r"""Proxy of C++ std::vector< smartedit::Field > class."""
+    r"""Proxy of C++ std::vector< openshot::Field > class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -852,12 +772,12 @@ class FieldVector(object):
         return _smartedit.FieldVector___bool__(self, *args)
 
     def __len__(self, *args):
-        r"""__len__(FieldVector self) -> std::vector< smartedit::Field >::size_type"""
+        r"""__len__(FieldVector self) -> std::vector< openshot::Field >::size_type"""
         return _smartedit.FieldVector___len__(self, *args)
 
     def __delitem__(self, *args):
         r"""
-        __delitem__(FieldVector self, std::vector< smartedit::Field >::difference_type i)
+        __delitem__(FieldVector self, std::vector< openshot::Field >::difference_type i)
         __delitem__(FieldVector self, SWIGPY_SLICEOBJECT * slice)
         """
         return _smartedit.FieldVector___delitem__(self, *args)
@@ -865,7 +785,7 @@ class FieldVector(object):
     def __getitem__(self, *args):
         r"""
         __getitem__(FieldVector self, SWIGPY_SLICEOBJECT * slice) -> FieldVector
-        __getitem__(FieldVector self, std::vector< smartedit::Field >::difference_type i) -> Field
+        __getitem__(FieldVector self, std::vector< openshot::Field >::difference_type i) -> Field
         """
         return _smartedit.FieldVector___getitem__(self, *args)
 
@@ -873,7 +793,7 @@ class FieldVector(object):
         r"""
         __setitem__(FieldVector self, SWIGPY_SLICEOBJECT * slice, FieldVector v)
         __setitem__(FieldVector self, SWIGPY_SLICEOBJECT * slice)
-        __setitem__(FieldVector self, std::vector< smartedit::Field >::difference_type i, Field x)
+        __setitem__(FieldVector self, std::vector< openshot::Field >::difference_type i, Field x)
         """
         return _smartedit.FieldVector___setitem__(self, *args)
 
@@ -890,7 +810,7 @@ class FieldVector(object):
         return _smartedit.FieldVector_empty(self, *args)
 
     def size(self, *args):
-        r"""size(FieldVector self) -> std::vector< smartedit::Field >::size_type"""
+        r"""size(FieldVector self) -> std::vector< openshot::Field >::size_type"""
         return _smartedit.FieldVector_size(self, *args)
 
     def swap(self, *args):
@@ -898,19 +818,19 @@ class FieldVector(object):
         return _smartedit.FieldVector_swap(self, *args)
 
     def begin(self, *args):
-        r"""begin(FieldVector self) -> std::vector< smartedit::Field >::iterator"""
+        r"""begin(FieldVector self) -> std::vector< openshot::Field >::iterator"""
         return _smartedit.FieldVector_begin(self, *args)
 
     def end(self, *args):
-        r"""end(FieldVector self) -> std::vector< smartedit::Field >::iterator"""
+        r"""end(FieldVector self) -> std::vector< openshot::Field >::iterator"""
         return _smartedit.FieldVector_end(self, *args)
 
     def rbegin(self, *args):
-        r"""rbegin(FieldVector self) -> std::vector< smartedit::Field >::reverse_iterator"""
+        r"""rbegin(FieldVector self) -> std::vector< openshot::Field >::reverse_iterator"""
         return _smartedit.FieldVector_rbegin(self, *args)
 
     def rend(self, *args):
-        r"""rend(FieldVector self) -> std::vector< smartedit::Field >::reverse_iterator"""
+        r"""rend(FieldVector self) -> std::vector< openshot::Field >::reverse_iterator"""
         return _smartedit.FieldVector_rend(self, *args)
 
     def clear(self, *args):
@@ -918,7 +838,7 @@ class FieldVector(object):
         return _smartedit.FieldVector_clear(self, *args)
 
     def get_allocator(self, *args):
-        r"""get_allocator(FieldVector self) -> std::vector< smartedit::Field >::allocator_type"""
+        r"""get_allocator(FieldVector self) -> std::vector< openshot::Field >::allocator_type"""
         return _smartedit.FieldVector_get_allocator(self, *args)
 
     def pop_back(self, *args):
@@ -927,8 +847,8 @@ class FieldVector(object):
 
     def erase(self, *args):
         r"""
-        erase(FieldVector self, std::vector< smartedit::Field >::iterator pos) -> std::vector< smartedit::Field >::iterator
-        erase(FieldVector self, std::vector< smartedit::Field >::iterator first, std::vector< smartedit::Field >::iterator last) -> std::vector< smartedit::Field >::iterator
+        erase(FieldVector self, std::vector< openshot::Field >::iterator pos) -> std::vector< openshot::Field >::iterator
+        erase(FieldVector self, std::vector< openshot::Field >::iterator first, std::vector< openshot::Field >::iterator last) -> std::vector< openshot::Field >::iterator
         """
         return _smartedit.FieldVector_erase(self, *args)
 
@@ -936,8 +856,8 @@ class FieldVector(object):
         r"""
         __init__(FieldVector self) -> FieldVector
         __init__(FieldVector self, FieldVector other) -> FieldVector
-        __init__(FieldVector self, std::vector< smartedit::Field >::size_type size) -> FieldVector
-        __init__(FieldVector self, std::vector< smartedit::Field >::size_type size, Field value) -> FieldVector
+        __init__(FieldVector self, std::vector< openshot::Field >::size_type size) -> FieldVector
+        __init__(FieldVector self, std::vector< openshot::Field >::size_type size, Field value) -> FieldVector
         """
         _smartedit.FieldVector_swiginit(self, _smartedit.new_FieldVector(*args))
 
@@ -954,36 +874,36 @@ class FieldVector(object):
         return _smartedit.FieldVector_back(self, *args)
 
     def assign(self, *args):
-        r"""assign(FieldVector self, std::vector< smartedit::Field >::size_type n, Field x)"""
+        r"""assign(FieldVector self, std::vector< openshot::Field >::size_type n, Field x)"""
         return _smartedit.FieldVector_assign(self, *args)
 
     def resize(self, *args):
         r"""
-        resize(FieldVector self, std::vector< smartedit::Field >::size_type new_size)
-        resize(FieldVector self, std::vector< smartedit::Field >::size_type new_size, Field x)
+        resize(FieldVector self, std::vector< openshot::Field >::size_type new_size)
+        resize(FieldVector self, std::vector< openshot::Field >::size_type new_size, Field x)
         """
         return _smartedit.FieldVector_resize(self, *args)
 
     def insert(self, *args):
         r"""
-        insert(FieldVector self, std::vector< smartedit::Field >::iterator pos, Field x) -> std::vector< smartedit::Field >::iterator
-        insert(FieldVector self, std::vector< smartedit::Field >::iterator pos, std::vector< smartedit::Field >::size_type n, Field x)
+        insert(FieldVector self, std::vector< openshot::Field >::iterator pos, Field x) -> std::vector< openshot::Field >::iterator
+        insert(FieldVector self, std::vector< openshot::Field >::iterator pos, std::vector< openshot::Field >::size_type n, Field x)
         """
         return _smartedit.FieldVector_insert(self, *args)
 
     def reserve(self, *args):
-        r"""reserve(FieldVector self, std::vector< smartedit::Field >::size_type n)"""
+        r"""reserve(FieldVector self, std::vector< openshot::Field >::size_type n)"""
         return _smartedit.FieldVector_reserve(self, *args)
 
     def capacity(self, *args):
-        r"""capacity(FieldVector self) -> std::vector< smartedit::Field >::size_type"""
+        r"""capacity(FieldVector self) -> std::vector< openshot::Field >::size_type"""
         return _smartedit.FieldVector_capacity(self, *args)
     __swig_destroy__ = _smartedit.delete_FieldVector
 
 # Register FieldVector in _smartedit:
 _smartedit.FieldVector_swigregister(FieldVector)
 class MappedFrameVector(object):
-    r"""Proxy of C++ std::vector< smartedit::MappedFrame > class."""
+    r"""Proxy of C++ std::vector< openshot::MappedFrame > class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -999,12 +919,12 @@ class MappedFrameVector(object):
         return _smartedit.MappedFrameVector___bool__(self, *args)
 
     def __len__(self, *args):
-        r"""__len__(MappedFrameVector self) -> std::vector< smartedit::MappedFrame >::size_type"""
+        r"""__len__(MappedFrameVector self) -> std::vector< openshot::MappedFrame >::size_type"""
         return _smartedit.MappedFrameVector___len__(self, *args)
 
     def __delitem__(self, *args):
         r"""
-        __delitem__(MappedFrameVector self, std::vector< smartedit::MappedFrame >::difference_type i)
+        __delitem__(MappedFrameVector self, std::vector< openshot::MappedFrame >::difference_type i)
         __delitem__(MappedFrameVector self, SWIGPY_SLICEOBJECT * slice)
         """
         return _smartedit.MappedFrameVector___delitem__(self, *args)
@@ -1012,7 +932,7 @@ class MappedFrameVector(object):
     def __getitem__(self, *args):
         r"""
         __getitem__(MappedFrameVector self, SWIGPY_SLICEOBJECT * slice) -> MappedFrameVector
-        __getitem__(MappedFrameVector self, std::vector< smartedit::MappedFrame >::difference_type i) -> MappedFrame
+        __getitem__(MappedFrameVector self, std::vector< openshot::MappedFrame >::difference_type i) -> MappedFrame
         """
         return _smartedit.MappedFrameVector___getitem__(self, *args)
 
@@ -1020,7 +940,7 @@ class MappedFrameVector(object):
         r"""
         __setitem__(MappedFrameVector self, SWIGPY_SLICEOBJECT * slice, MappedFrameVector v)
         __setitem__(MappedFrameVector self, SWIGPY_SLICEOBJECT * slice)
-        __setitem__(MappedFrameVector self, std::vector< smartedit::MappedFrame >::difference_type i, MappedFrame x)
+        __setitem__(MappedFrameVector self, std::vector< openshot::MappedFrame >::difference_type i, MappedFrame x)
         """
         return _smartedit.MappedFrameVector___setitem__(self, *args)
 
@@ -1037,7 +957,7 @@ class MappedFrameVector(object):
         return _smartedit.MappedFrameVector_empty(self, *args)
 
     def size(self, *args):
-        r"""size(MappedFrameVector self) -> std::vector< smartedit::MappedFrame >::size_type"""
+        r"""size(MappedFrameVector self) -> std::vector< openshot::MappedFrame >::size_type"""
         return _smartedit.MappedFrameVector_size(self, *args)
 
     def swap(self, *args):
@@ -1045,19 +965,19 @@ class MappedFrameVector(object):
         return _smartedit.MappedFrameVector_swap(self, *args)
 
     def begin(self, *args):
-        r"""begin(MappedFrameVector self) -> std::vector< smartedit::MappedFrame >::iterator"""
+        r"""begin(MappedFrameVector self) -> std::vector< openshot::MappedFrame >::iterator"""
         return _smartedit.MappedFrameVector_begin(self, *args)
 
     def end(self, *args):
-        r"""end(MappedFrameVector self) -> std::vector< smartedit::MappedFrame >::iterator"""
+        r"""end(MappedFrameVector self) -> std::vector< openshot::MappedFrame >::iterator"""
         return _smartedit.MappedFrameVector_end(self, *args)
 
     def rbegin(self, *args):
-        r"""rbegin(MappedFrameVector self) -> std::vector< smartedit::MappedFrame >::reverse_iterator"""
+        r"""rbegin(MappedFrameVector self) -> std::vector< openshot::MappedFrame >::reverse_iterator"""
         return _smartedit.MappedFrameVector_rbegin(self, *args)
 
     def rend(self, *args):
-        r"""rend(MappedFrameVector self) -> std::vector< smartedit::MappedFrame >::reverse_iterator"""
+        r"""rend(MappedFrameVector self) -> std::vector< openshot::MappedFrame >::reverse_iterator"""
         return _smartedit.MappedFrameVector_rend(self, *args)
 
     def clear(self, *args):
@@ -1065,7 +985,7 @@ class MappedFrameVector(object):
         return _smartedit.MappedFrameVector_clear(self, *args)
 
     def get_allocator(self, *args):
-        r"""get_allocator(MappedFrameVector self) -> std::vector< smartedit::MappedFrame >::allocator_type"""
+        r"""get_allocator(MappedFrameVector self) -> std::vector< openshot::MappedFrame >::allocator_type"""
         return _smartedit.MappedFrameVector_get_allocator(self, *args)
 
     def pop_back(self, *args):
@@ -1074,8 +994,8 @@ class MappedFrameVector(object):
 
     def erase(self, *args):
         r"""
-        erase(MappedFrameVector self, std::vector< smartedit::MappedFrame >::iterator pos) -> std::vector< smartedit::MappedFrame >::iterator
-        erase(MappedFrameVector self, std::vector< smartedit::MappedFrame >::iterator first, std::vector< smartedit::MappedFrame >::iterator last) -> std::vector< smartedit::MappedFrame >::iterator
+        erase(MappedFrameVector self, std::vector< openshot::MappedFrame >::iterator pos) -> std::vector< openshot::MappedFrame >::iterator
+        erase(MappedFrameVector self, std::vector< openshot::MappedFrame >::iterator first, std::vector< openshot::MappedFrame >::iterator last) -> std::vector< openshot::MappedFrame >::iterator
         """
         return _smartedit.MappedFrameVector_erase(self, *args)
 
@@ -1083,8 +1003,8 @@ class MappedFrameVector(object):
         r"""
         __init__(MappedFrameVector self) -> MappedFrameVector
         __init__(MappedFrameVector self, MappedFrameVector other) -> MappedFrameVector
-        __init__(MappedFrameVector self, std::vector< smartedit::MappedFrame >::size_type size) -> MappedFrameVector
-        __init__(MappedFrameVector self, std::vector< smartedit::MappedFrame >::size_type size, MappedFrame value) -> MappedFrameVector
+        __init__(MappedFrameVector self, std::vector< openshot::MappedFrame >::size_type size) -> MappedFrameVector
+        __init__(MappedFrameVector self, std::vector< openshot::MappedFrame >::size_type size, MappedFrame value) -> MappedFrameVector
         """
         _smartedit.MappedFrameVector_swiginit(self, _smartedit.new_MappedFrameVector(*args))
 
@@ -1101,29 +1021,29 @@ class MappedFrameVector(object):
         return _smartedit.MappedFrameVector_back(self, *args)
 
     def assign(self, *args):
-        r"""assign(MappedFrameVector self, std::vector< smartedit::MappedFrame >::size_type n, MappedFrame x)"""
+        r"""assign(MappedFrameVector self, std::vector< openshot::MappedFrame >::size_type n, MappedFrame x)"""
         return _smartedit.MappedFrameVector_assign(self, *args)
 
     def resize(self, *args):
         r"""
-        resize(MappedFrameVector self, std::vector< smartedit::MappedFrame >::size_type new_size)
-        resize(MappedFrameVector self, std::vector< smartedit::MappedFrame >::size_type new_size, MappedFrame x)
+        resize(MappedFrameVector self, std::vector< openshot::MappedFrame >::size_type new_size)
+        resize(MappedFrameVector self, std::vector< openshot::MappedFrame >::size_type new_size, MappedFrame x)
         """
         return _smartedit.MappedFrameVector_resize(self, *args)
 
     def insert(self, *args):
         r"""
-        insert(MappedFrameVector self, std::vector< smartedit::MappedFrame >::iterator pos, MappedFrame x) -> std::vector< smartedit::MappedFrame >::iterator
-        insert(MappedFrameVector self, std::vector< smartedit::MappedFrame >::iterator pos, std::vector< smartedit::MappedFrame >::size_type n, MappedFrame x)
+        insert(MappedFrameVector self, std::vector< openshot::MappedFrame >::iterator pos, MappedFrame x) -> std::vector< openshot::MappedFrame >::iterator
+        insert(MappedFrameVector self, std::vector< openshot::MappedFrame >::iterator pos, std::vector< openshot::MappedFrame >::size_type n, MappedFrame x)
         """
         return _smartedit.MappedFrameVector_insert(self, *args)
 
     def reserve(self, *args):
-        r"""reserve(MappedFrameVector self, std::vector< smartedit::MappedFrame >::size_type n)"""
+        r"""reserve(MappedFrameVector self, std::vector< openshot::MappedFrame >::size_type n)"""
         return _smartedit.MappedFrameVector_reserve(self, *args)
 
     def capacity(self, *args):
-        r"""capacity(MappedFrameVector self) -> std::vector< smartedit::MappedFrame >::size_type"""
+        r"""capacity(MappedFrameVector self) -> std::vector< openshot::MappedFrame >::size_type"""
         return _smartedit.MappedFrameVector_capacity(self, *args)
     __swig_destroy__ = _smartedit.delete_MappedFrameVector
 
@@ -1276,7 +1196,7 @@ class MetadataMap(object):
 # Register MetadataMap in _smartedit:
 _smartedit.MetadataMap_swigregister(MetadataMap)
 class AudioDeviceInfoVector(object):
-    r"""Proxy of C++ std::vector< smartedit::AudioDeviceInfo > class."""
+    r"""Proxy of C++ std::vector< openshot::AudioDeviceInfo > class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -1292,12 +1212,12 @@ class AudioDeviceInfoVector(object):
         return _smartedit.AudioDeviceInfoVector___bool__(self, *args)
 
     def __len__(self, *args):
-        r"""__len__(AudioDeviceInfoVector self) -> std::vector< smartedit::AudioDeviceInfo >::size_type"""
+        r"""__len__(AudioDeviceInfoVector self) -> std::vector< openshot::AudioDeviceInfo >::size_type"""
         return _smartedit.AudioDeviceInfoVector___len__(self, *args)
 
     def __delitem__(self, *args):
         r"""
-        __delitem__(AudioDeviceInfoVector self, std::vector< smartedit::AudioDeviceInfo >::difference_type i)
+        __delitem__(AudioDeviceInfoVector self, std::vector< openshot::AudioDeviceInfo >::difference_type i)
         __delitem__(AudioDeviceInfoVector self, SWIGPY_SLICEOBJECT * slice)
         """
         return _smartedit.AudioDeviceInfoVector___delitem__(self, *args)
@@ -1305,7 +1225,7 @@ class AudioDeviceInfoVector(object):
     def __getitem__(self, *args):
         r"""
         __getitem__(AudioDeviceInfoVector self, SWIGPY_SLICEOBJECT * slice) -> AudioDeviceInfoVector
-        __getitem__(AudioDeviceInfoVector self, std::vector< smartedit::AudioDeviceInfo >::difference_type i) -> AudioDeviceInfo
+        __getitem__(AudioDeviceInfoVector self, std::vector< openshot::AudioDeviceInfo >::difference_type i) -> AudioDeviceInfo
         """
         return _smartedit.AudioDeviceInfoVector___getitem__(self, *args)
 
@@ -1313,7 +1233,7 @@ class AudioDeviceInfoVector(object):
         r"""
         __setitem__(AudioDeviceInfoVector self, SWIGPY_SLICEOBJECT * slice, AudioDeviceInfoVector v)
         __setitem__(AudioDeviceInfoVector self, SWIGPY_SLICEOBJECT * slice)
-        __setitem__(AudioDeviceInfoVector self, std::vector< smartedit::AudioDeviceInfo >::difference_type i, AudioDeviceInfo x)
+        __setitem__(AudioDeviceInfoVector self, std::vector< openshot::AudioDeviceInfo >::difference_type i, AudioDeviceInfo x)
         """
         return _smartedit.AudioDeviceInfoVector___setitem__(self, *args)
 
@@ -1330,7 +1250,7 @@ class AudioDeviceInfoVector(object):
         return _smartedit.AudioDeviceInfoVector_empty(self, *args)
 
     def size(self, *args):
-        r"""size(AudioDeviceInfoVector self) -> std::vector< smartedit::AudioDeviceInfo >::size_type"""
+        r"""size(AudioDeviceInfoVector self) -> std::vector< openshot::AudioDeviceInfo >::size_type"""
         return _smartedit.AudioDeviceInfoVector_size(self, *args)
 
     def swap(self, *args):
@@ -1338,19 +1258,19 @@ class AudioDeviceInfoVector(object):
         return _smartedit.AudioDeviceInfoVector_swap(self, *args)
 
     def begin(self, *args):
-        r"""begin(AudioDeviceInfoVector self) -> std::vector< smartedit::AudioDeviceInfo >::iterator"""
+        r"""begin(AudioDeviceInfoVector self) -> std::vector< openshot::AudioDeviceInfo >::iterator"""
         return _smartedit.AudioDeviceInfoVector_begin(self, *args)
 
     def end(self, *args):
-        r"""end(AudioDeviceInfoVector self) -> std::vector< smartedit::AudioDeviceInfo >::iterator"""
+        r"""end(AudioDeviceInfoVector self) -> std::vector< openshot::AudioDeviceInfo >::iterator"""
         return _smartedit.AudioDeviceInfoVector_end(self, *args)
 
     def rbegin(self, *args):
-        r"""rbegin(AudioDeviceInfoVector self) -> std::vector< smartedit::AudioDeviceInfo >::reverse_iterator"""
+        r"""rbegin(AudioDeviceInfoVector self) -> std::vector< openshot::AudioDeviceInfo >::reverse_iterator"""
         return _smartedit.AudioDeviceInfoVector_rbegin(self, *args)
 
     def rend(self, *args):
-        r"""rend(AudioDeviceInfoVector self) -> std::vector< smartedit::AudioDeviceInfo >::reverse_iterator"""
+        r"""rend(AudioDeviceInfoVector self) -> std::vector< openshot::AudioDeviceInfo >::reverse_iterator"""
         return _smartedit.AudioDeviceInfoVector_rend(self, *args)
 
     def clear(self, *args):
@@ -1358,7 +1278,7 @@ class AudioDeviceInfoVector(object):
         return _smartedit.AudioDeviceInfoVector_clear(self, *args)
 
     def get_allocator(self, *args):
-        r"""get_allocator(AudioDeviceInfoVector self) -> std::vector< smartedit::AudioDeviceInfo >::allocator_type"""
+        r"""get_allocator(AudioDeviceInfoVector self) -> std::vector< openshot::AudioDeviceInfo >::allocator_type"""
         return _smartedit.AudioDeviceInfoVector_get_allocator(self, *args)
 
     def pop_back(self, *args):
@@ -1367,8 +1287,8 @@ class AudioDeviceInfoVector(object):
 
     def erase(self, *args):
         r"""
-        erase(AudioDeviceInfoVector self, std::vector< smartedit::AudioDeviceInfo >::iterator pos) -> std::vector< smartedit::AudioDeviceInfo >::iterator
-        erase(AudioDeviceInfoVector self, std::vector< smartedit::AudioDeviceInfo >::iterator first, std::vector< smartedit::AudioDeviceInfo >::iterator last) -> std::vector< smartedit::AudioDeviceInfo >::iterator
+        erase(AudioDeviceInfoVector self, std::vector< openshot::AudioDeviceInfo >::iterator pos) -> std::vector< openshot::AudioDeviceInfo >::iterator
+        erase(AudioDeviceInfoVector self, std::vector< openshot::AudioDeviceInfo >::iterator first, std::vector< openshot::AudioDeviceInfo >::iterator last) -> std::vector< openshot::AudioDeviceInfo >::iterator
         """
         return _smartedit.AudioDeviceInfoVector_erase(self, *args)
 
@@ -1376,8 +1296,8 @@ class AudioDeviceInfoVector(object):
         r"""
         __init__(AudioDeviceInfoVector self) -> AudioDeviceInfoVector
         __init__(AudioDeviceInfoVector self, AudioDeviceInfoVector other) -> AudioDeviceInfoVector
-        __init__(AudioDeviceInfoVector self, std::vector< smartedit::AudioDeviceInfo >::size_type size) -> AudioDeviceInfoVector
-        __init__(AudioDeviceInfoVector self, std::vector< smartedit::AudioDeviceInfo >::size_type size, AudioDeviceInfo value) -> AudioDeviceInfoVector
+        __init__(AudioDeviceInfoVector self, std::vector< openshot::AudioDeviceInfo >::size_type size) -> AudioDeviceInfoVector
+        __init__(AudioDeviceInfoVector self, std::vector< openshot::AudioDeviceInfo >::size_type size, AudioDeviceInfo value) -> AudioDeviceInfoVector
         """
         _smartedit.AudioDeviceInfoVector_swiginit(self, _smartedit.new_AudioDeviceInfoVector(*args))
 
@@ -1394,47 +1314,47 @@ class AudioDeviceInfoVector(object):
         return _smartedit.AudioDeviceInfoVector_back(self, *args)
 
     def assign(self, *args):
-        r"""assign(AudioDeviceInfoVector self, std::vector< smartedit::AudioDeviceInfo >::size_type n, AudioDeviceInfo x)"""
+        r"""assign(AudioDeviceInfoVector self, std::vector< openshot::AudioDeviceInfo >::size_type n, AudioDeviceInfo x)"""
         return _smartedit.AudioDeviceInfoVector_assign(self, *args)
 
     def resize(self, *args):
         r"""
-        resize(AudioDeviceInfoVector self, std::vector< smartedit::AudioDeviceInfo >::size_type new_size)
-        resize(AudioDeviceInfoVector self, std::vector< smartedit::AudioDeviceInfo >::size_type new_size, AudioDeviceInfo x)
+        resize(AudioDeviceInfoVector self, std::vector< openshot::AudioDeviceInfo >::size_type new_size)
+        resize(AudioDeviceInfoVector self, std::vector< openshot::AudioDeviceInfo >::size_type new_size, AudioDeviceInfo x)
         """
         return _smartedit.AudioDeviceInfoVector_resize(self, *args)
 
     def insert(self, *args):
         r"""
-        insert(AudioDeviceInfoVector self, std::vector< smartedit::AudioDeviceInfo >::iterator pos, AudioDeviceInfo x) -> std::vector< smartedit::AudioDeviceInfo >::iterator
-        insert(AudioDeviceInfoVector self, std::vector< smartedit::AudioDeviceInfo >::iterator pos, std::vector< smartedit::AudioDeviceInfo >::size_type n, AudioDeviceInfo x)
+        insert(AudioDeviceInfoVector self, std::vector< openshot::AudioDeviceInfo >::iterator pos, AudioDeviceInfo x) -> std::vector< openshot::AudioDeviceInfo >::iterator
+        insert(AudioDeviceInfoVector self, std::vector< openshot::AudioDeviceInfo >::iterator pos, std::vector< openshot::AudioDeviceInfo >::size_type n, AudioDeviceInfo x)
         """
         return _smartedit.AudioDeviceInfoVector_insert(self, *args)
 
     def reserve(self, *args):
-        r"""reserve(AudioDeviceInfoVector self, std::vector< smartedit::AudioDeviceInfo >::size_type n)"""
+        r"""reserve(AudioDeviceInfoVector self, std::vector< openshot::AudioDeviceInfo >::size_type n)"""
         return _smartedit.AudioDeviceInfoVector_reserve(self, *args)
 
     def capacity(self, *args):
-        r"""capacity(AudioDeviceInfoVector self) -> std::vector< smartedit::AudioDeviceInfo >::size_type"""
+        r"""capacity(AudioDeviceInfoVector self) -> std::vector< openshot::AudioDeviceInfo >::size_type"""
         return _smartedit.AudioDeviceInfoVector_capacity(self, *args)
     __swig_destroy__ = _smartedit.delete_AudioDeviceInfoVector
 
 # Register AudioDeviceInfoVector in _smartedit:
 _smartedit.AudioDeviceInfoVector_swigregister(AudioDeviceInfoVector)
-SMARTEDIT_VERSION_ALL = _smartedit.SMARTEDIT_VERSION_ALL
+OPENSHOT_VERSION_ALL = _smartedit.OPENSHOT_VERSION_ALL
 
-SMARTEDIT_VERSION_FULL = _smartedit.SMARTEDIT_VERSION_FULL
+OPENSHOT_VERSION_FULL = _smartedit.OPENSHOT_VERSION_FULL
 
-SMARTEDIT_VERSION_MAJOR_MINOR = _smartedit.SMARTEDIT_VERSION_MAJOR_MINOR
+OPENSHOT_VERSION_MAJOR_MINOR = _smartedit.OPENSHOT_VERSION_MAJOR_MINOR
 
-SMARTEDIT_VERSION_MAJOR = _smartedit.SMARTEDIT_VERSION_MAJOR
+OPENSHOT_VERSION_MAJOR = _smartedit.OPENSHOT_VERSION_MAJOR
 
-SMARTEDIT_VERSION_MINOR = _smartedit.SMARTEDIT_VERSION_MINOR
+OPENSHOT_VERSION_MINOR = _smartedit.OPENSHOT_VERSION_MINOR
 
-SMARTEDIT_VERSION_BUILD = _smartedit.SMARTEDIT_VERSION_BUILD
+OPENSHOT_VERSION_BUILD = _smartedit.OPENSHOT_VERSION_BUILD
 
-SMARTEDIT_VERSION_SO = _smartedit.SMARTEDIT_VERSION_SO
+OPENSHOT_VERSION_SO = _smartedit.OPENSHOT_VERSION_SO
 
 QT_VERSION_STR = _smartedit.QT_VERSION_STR
 
@@ -1456,45 +1376,42 @@ FFMPEG_USE_SWRESAMPLE = _smartedit.FFMPEG_USE_SWRESAMPLE
 
 APPIMAGE_BUILD = _smartedit.APPIMAGE_BUILD
 
-class SmartEditVersion(object):
-    r"""Proxy of C++ smartedit::SmartEditVersion class."""
+class OpenShotVersion(object):
+    r"""Proxy of C++ openshot::OpenShotVersion class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
-    Major = _smartedit.SmartEditVersion_Major
+    __repr__ = _swig_repr
+    Major = _smartedit.OpenShotVersion_Major
     
-    Minor = _smartedit.SmartEditVersion_Minor
+    Minor = _smartedit.OpenShotVersion_Minor
     
-    Build = _smartedit.SmartEditVersion_Build
+    Build = _smartedit.OpenShotVersion_Build
     
-    So = _smartedit.SmartEditVersion_So
+    So = _smartedit.OpenShotVersion_So
     
 
     @staticmethod
     def ToString(*args):
         r"""ToString() -> std::string"""
-        return _smartedit.SmartEditVersion_ToString(*args)
+        return _smartedit.OpenShotVersion_ToString(*args)
 
     def __str__(self, *args):
-        r"""__str__(SmartEditVersion self) -> std::string const"""
-        return _smartedit.SmartEditVersion___str__(self, *args)
-
-    def __repr__(self, *args):
-        r"""__repr__(SmartEditVersion self) -> std::string const"""
-        return _smartedit.SmartEditVersion___repr__(self, *args)
+        r"""__str__(OpenShotVersion self) -> char const *"""
+        return _smartedit.OpenShotVersion___str__(self, *args)
 
     def __init__(self, *args):
-        r"""__init__(SmartEditVersion self) -> SmartEditVersion"""
-        _smartedit.SmartEditVersion_swiginit(self, _smartedit.new_SmartEditVersion(*args))
-    __swig_destroy__ = _smartedit.delete_SmartEditVersion
+        r"""__init__(OpenShotVersion self) -> OpenShotVersion"""
+        _smartedit.OpenShotVersion_swiginit(self, _smartedit.new_OpenShotVersion(*args))
+    __swig_destroy__ = _smartedit.delete_OpenShotVersion
 
-# Register SmartEditVersion in _smartedit:
-_smartedit.SmartEditVersion_swigregister(SmartEditVersion)
+# Register OpenShotVersion in _smartedit:
+_smartedit.OpenShotVersion_swigregister(OpenShotVersion)
 
 def GetVersion(*args):
-    r"""GetVersion() -> SmartEditVersion"""
+    r"""GetVersion() -> OpenShotVersion"""
     return _smartedit.GetVersion(*args)
 class ReaderInfo(object):
-    r"""Proxy of C++ smartedit::ReaderInfo class."""
+    r"""Proxy of C++ openshot::ReaderInfo class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -1506,23 +1423,23 @@ class ReaderInfo(object):
     height = property(_smartedit.ReaderInfo_height_get, _smartedit.ReaderInfo_height_set, doc=r"""height : int""")
     width = property(_smartedit.ReaderInfo_width_get, _smartedit.ReaderInfo_width_set, doc=r"""width : int""")
     pixel_format = property(_smartedit.ReaderInfo_pixel_format_get, _smartedit.ReaderInfo_pixel_format_set, doc=r"""pixel_format : int""")
-    fps = property(_smartedit.ReaderInfo_fps_get, _smartedit.ReaderInfo_fps_set, doc=r"""fps : smartedit::Fraction""")
+    fps = property(_smartedit.ReaderInfo_fps_get, _smartedit.ReaderInfo_fps_set, doc=r"""fps : openshot::Fraction""")
     video_bit_rate = property(_smartedit.ReaderInfo_video_bit_rate_get, _smartedit.ReaderInfo_video_bit_rate_set, doc=r"""video_bit_rate : int""")
-    pixel_ratio = property(_smartedit.ReaderInfo_pixel_ratio_get, _smartedit.ReaderInfo_pixel_ratio_set, doc=r"""pixel_ratio : smartedit::Fraction""")
-    display_ratio = property(_smartedit.ReaderInfo_display_ratio_get, _smartedit.ReaderInfo_display_ratio_set, doc=r"""display_ratio : smartedit::Fraction""")
+    pixel_ratio = property(_smartedit.ReaderInfo_pixel_ratio_get, _smartedit.ReaderInfo_pixel_ratio_set, doc=r"""pixel_ratio : openshot::Fraction""")
+    display_ratio = property(_smartedit.ReaderInfo_display_ratio_get, _smartedit.ReaderInfo_display_ratio_set, doc=r"""display_ratio : openshot::Fraction""")
     vcodec = property(_smartedit.ReaderInfo_vcodec_get, _smartedit.ReaderInfo_vcodec_set, doc=r"""vcodec : std::string""")
     video_length = property(_smartedit.ReaderInfo_video_length_get, _smartedit.ReaderInfo_video_length_set, doc=r"""video_length : int64_t""")
     video_stream_index = property(_smartedit.ReaderInfo_video_stream_index_get, _smartedit.ReaderInfo_video_stream_index_set, doc=r"""video_stream_index : int""")
-    video_timebase = property(_smartedit.ReaderInfo_video_timebase_get, _smartedit.ReaderInfo_video_timebase_set, doc=r"""video_timebase : smartedit::Fraction""")
+    video_timebase = property(_smartedit.ReaderInfo_video_timebase_get, _smartedit.ReaderInfo_video_timebase_set, doc=r"""video_timebase : openshot::Fraction""")
     interlaced_frame = property(_smartedit.ReaderInfo_interlaced_frame_get, _smartedit.ReaderInfo_interlaced_frame_set, doc=r"""interlaced_frame : bool""")
     top_field_first = property(_smartedit.ReaderInfo_top_field_first_get, _smartedit.ReaderInfo_top_field_first_set, doc=r"""top_field_first : bool""")
     acodec = property(_smartedit.ReaderInfo_acodec_get, _smartedit.ReaderInfo_acodec_set, doc=r"""acodec : std::string""")
     audio_bit_rate = property(_smartedit.ReaderInfo_audio_bit_rate_get, _smartedit.ReaderInfo_audio_bit_rate_set, doc=r"""audio_bit_rate : int""")
     sample_rate = property(_smartedit.ReaderInfo_sample_rate_get, _smartedit.ReaderInfo_sample_rate_set, doc=r"""sample_rate : int""")
     channels = property(_smartedit.ReaderInfo_channels_get, _smartedit.ReaderInfo_channels_set, doc=r"""channels : int""")
-    channel_layout = property(_smartedit.ReaderInfo_channel_layout_get, _smartedit.ReaderInfo_channel_layout_set, doc=r"""channel_layout : smartedit::ChannelLayout""")
+    channel_layout = property(_smartedit.ReaderInfo_channel_layout_get, _smartedit.ReaderInfo_channel_layout_set, doc=r"""channel_layout : openshot::ChannelLayout""")
     audio_stream_index = property(_smartedit.ReaderInfo_audio_stream_index_get, _smartedit.ReaderInfo_audio_stream_index_set, doc=r"""audio_stream_index : int""")
-    audio_timebase = property(_smartedit.ReaderInfo_audio_timebase_get, _smartedit.ReaderInfo_audio_timebase_set, doc=r"""audio_timebase : smartedit::Fraction""")
+    audio_timebase = property(_smartedit.ReaderInfo_audio_timebase_get, _smartedit.ReaderInfo_audio_timebase_set, doc=r"""audio_timebase : openshot::Fraction""")
     metadata = property(_smartedit.ReaderInfo_metadata_get, _smartedit.ReaderInfo_metadata_set, doc=r"""metadata : std::map<(std::string,std::string,std::less<(std::string)>,std::allocator<(std::pair<(q(const).std::string,std::string)>)>)>""")
 
     def __init__(self, *args):
@@ -1536,14 +1453,14 @@ cvar = _smartedit.cvar
 Version = cvar.Version
 
 class ReaderBase(object):
-    r"""Proxy of C++ smartedit::ReaderBase class."""
+    r"""Proxy of C++ openshot::ReaderBase class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
 
     def __init__(self, *args, **kwargs):
         raise AttributeError("No constructor defined - class is abstract")
     __repr__ = _swig_repr
-    info = property(_smartedit.ReaderBase_info_get, _smartedit.ReaderBase_info_set, doc=r"""info : smartedit::ReaderInfo""")
+    info = property(_smartedit.ReaderBase_info_get, _smartedit.ReaderBase_info_set, doc=r"""info : openshot::ReaderInfo""")
 
     def ParentClip(self, *args):
         r"""
@@ -1588,7 +1505,7 @@ class ReaderBase(object):
         return _smartedit.ReaderBase_GetCache(self, *args)
 
     def GetFrame(self, *args):
-        r"""GetFrame(ReaderBase self, int64_t number) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetFrame(ReaderBase self, int64_t number) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.ReaderBase_GetFrame(self, *args)
 
     def IsOpen(self, *args):
@@ -1627,7 +1544,7 @@ class ReaderBase(object):
 # Register ReaderBase in _smartedit:
 _smartedit.ReaderBase_swigregister(ReaderBase)
 class WriterInfo(object):
-    r"""Proxy of C++ smartedit::WriterInfo class."""
+    r"""Proxy of C++ openshot::WriterInfo class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -1639,23 +1556,23 @@ class WriterInfo(object):
     height = property(_smartedit.WriterInfo_height_get, _smartedit.WriterInfo_height_set, doc=r"""height : int""")
     width = property(_smartedit.WriterInfo_width_get, _smartedit.WriterInfo_width_set, doc=r"""width : int""")
     pixel_format = property(_smartedit.WriterInfo_pixel_format_get, _smartedit.WriterInfo_pixel_format_set, doc=r"""pixel_format : int""")
-    fps = property(_smartedit.WriterInfo_fps_get, _smartedit.WriterInfo_fps_set, doc=r"""fps : smartedit::Fraction""")
+    fps = property(_smartedit.WriterInfo_fps_get, _smartedit.WriterInfo_fps_set, doc=r"""fps : openshot::Fraction""")
     video_bit_rate = property(_smartedit.WriterInfo_video_bit_rate_get, _smartedit.WriterInfo_video_bit_rate_set, doc=r"""video_bit_rate : int""")
-    pixel_ratio = property(_smartedit.WriterInfo_pixel_ratio_get, _smartedit.WriterInfo_pixel_ratio_set, doc=r"""pixel_ratio : smartedit::Fraction""")
-    display_ratio = property(_smartedit.WriterInfo_display_ratio_get, _smartedit.WriterInfo_display_ratio_set, doc=r"""display_ratio : smartedit::Fraction""")
+    pixel_ratio = property(_smartedit.WriterInfo_pixel_ratio_get, _smartedit.WriterInfo_pixel_ratio_set, doc=r"""pixel_ratio : openshot::Fraction""")
+    display_ratio = property(_smartedit.WriterInfo_display_ratio_get, _smartedit.WriterInfo_display_ratio_set, doc=r"""display_ratio : openshot::Fraction""")
     vcodec = property(_smartedit.WriterInfo_vcodec_get, _smartedit.WriterInfo_vcodec_set, doc=r"""vcodec : std::string""")
     video_length = property(_smartedit.WriterInfo_video_length_get, _smartedit.WriterInfo_video_length_set, doc=r"""video_length : int64_t""")
     video_stream_index = property(_smartedit.WriterInfo_video_stream_index_get, _smartedit.WriterInfo_video_stream_index_set, doc=r"""video_stream_index : int""")
-    video_timebase = property(_smartedit.WriterInfo_video_timebase_get, _smartedit.WriterInfo_video_timebase_set, doc=r"""video_timebase : smartedit::Fraction""")
+    video_timebase = property(_smartedit.WriterInfo_video_timebase_get, _smartedit.WriterInfo_video_timebase_set, doc=r"""video_timebase : openshot::Fraction""")
     interlaced_frame = property(_smartedit.WriterInfo_interlaced_frame_get, _smartedit.WriterInfo_interlaced_frame_set, doc=r"""interlaced_frame : bool""")
     top_field_first = property(_smartedit.WriterInfo_top_field_first_get, _smartedit.WriterInfo_top_field_first_set, doc=r"""top_field_first : bool""")
     acodec = property(_smartedit.WriterInfo_acodec_get, _smartedit.WriterInfo_acodec_set, doc=r"""acodec : std::string""")
     audio_bit_rate = property(_smartedit.WriterInfo_audio_bit_rate_get, _smartedit.WriterInfo_audio_bit_rate_set, doc=r"""audio_bit_rate : int""")
     sample_rate = property(_smartedit.WriterInfo_sample_rate_get, _smartedit.WriterInfo_sample_rate_set, doc=r"""sample_rate : int""")
     channels = property(_smartedit.WriterInfo_channels_get, _smartedit.WriterInfo_channels_set, doc=r"""channels : int""")
-    channel_layout = property(_smartedit.WriterInfo_channel_layout_get, _smartedit.WriterInfo_channel_layout_set, doc=r"""channel_layout : smartedit::ChannelLayout""")
+    channel_layout = property(_smartedit.WriterInfo_channel_layout_get, _smartedit.WriterInfo_channel_layout_set, doc=r"""channel_layout : openshot::ChannelLayout""")
     audio_stream_index = property(_smartedit.WriterInfo_audio_stream_index_get, _smartedit.WriterInfo_audio_stream_index_set, doc=r"""audio_stream_index : int""")
-    audio_timebase = property(_smartedit.WriterInfo_audio_timebase_get, _smartedit.WriterInfo_audio_timebase_set, doc=r"""audio_timebase : smartedit::Fraction""")
+    audio_timebase = property(_smartedit.WriterInfo_audio_timebase_get, _smartedit.WriterInfo_audio_timebase_set, doc=r"""audio_timebase : openshot::Fraction""")
     metadata = property(_smartedit.WriterInfo_metadata_get, _smartedit.WriterInfo_metadata_set, doc=r"""metadata : std::map<(std::string,std::string,std::less<(std::string)>,std::allocator<(std::pair<(q(const).std::string,std::string)>)>)>""")
 
     def __init__(self, *args):
@@ -1666,14 +1583,14 @@ class WriterInfo(object):
 # Register WriterInfo in _smartedit:
 _smartedit.WriterInfo_swigregister(WriterInfo)
 class WriterBase(object):
-    r"""Proxy of C++ smartedit::WriterBase class."""
+    r"""Proxy of C++ openshot::WriterBase class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
 
     def __init__(self, *args, **kwargs):
         raise AttributeError("No constructor defined - class is abstract")
     __repr__ = _swig_repr
-    info = property(_smartedit.WriterBase_info_get, _smartedit.WriterBase_info_set, doc=r"""info : smartedit::WriterInfo""")
+    info = property(_smartedit.WriterBase_info_get, _smartedit.WriterBase_info_set, doc=r"""info : openshot::WriterInfo""")
 
     def CopyReaderInfo(self, *args):
         r"""CopyReaderInfo(WriterBase self, ReaderBase reader)"""
@@ -1685,7 +1602,7 @@ class WriterBase(object):
 
     def WriteFrame(self, *args):
         r"""
-        WriteFrame(WriterBase self, std::shared_ptr< smartedit::Frame > frame)
+        WriteFrame(WriterBase self, std::shared_ptr< openshot::Frame > frame)
         WriteFrame(WriterBase self, ReaderBase reader, int64_t start, int64_t length)
         """
         return _smartedit.WriterBase_WriteFrame(self, *args)
@@ -1718,7 +1635,7 @@ class WriterBase(object):
 # Register WriterBase in _smartedit:
 _smartedit.WriterBase_swigregister(WriterBase)
 class AudioDeviceInfo(object):
-    r"""Proxy of C++ smartedit::AudioDeviceInfo class."""
+    r"""Proxy of C++ openshot::AudioDeviceInfo class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -1741,7 +1658,7 @@ class AudioDeviceInfo(object):
 # Register AudioDeviceInfo in _smartedit:
 _smartedit.AudioDeviceInfo_swigregister(AudioDeviceInfo)
 class AudioDevices(object):
-    r"""Proxy of C++ smartedit::AudioDevices class."""
+    r"""Proxy of C++ openshot::AudioDevices class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -1751,18 +1668,18 @@ class AudioDevices(object):
         _smartedit.AudioDevices_swiginit(self, _smartedit.new_AudioDevices(*args))
 
     def getNames(self, *args):
-        r"""getNames(AudioDevices self) -> smartedit::AudioDeviceList"""
+        r"""getNames(AudioDevices self) -> openshot::AudioDeviceList"""
         return _smartedit.AudioDevices_getNames(self, *args)
 
     def getInputNames(self, *args):
-        r"""getInputNames(AudioDevices self) -> smartedit::AudioDeviceList"""
+        r"""getInputNames(AudioDevices self) -> openshot::AudioDeviceList"""
         return _smartedit.AudioDevices_getInputNames(self, *args)
     __swig_destroy__ = _smartedit.delete_AudioDevices
 
 # Register AudioDevices in _smartedit:
 _smartedit.AudioDevices_swigregister(AudioDevices)
 class AudioRecorderSettings(object):
-    r"""Proxy of C++ smartedit::AudioRecorderSettings class."""
+    r"""Proxy of C++ openshot::AudioRecorderSettings class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -1772,7 +1689,7 @@ class AudioRecorderSettings(object):
     codec = property(_smartedit.AudioRecorderSettings_codec_get, _smartedit.AudioRecorderSettings_codec_set, doc=r"""codec : std::string""")
     sample_rate = property(_smartedit.AudioRecorderSettings_sample_rate_get, _smartedit.AudioRecorderSettings_sample_rate_set, doc=r"""sample_rate : int""")
     channels = property(_smartedit.AudioRecorderSettings_channels_get, _smartedit.AudioRecorderSettings_channels_set, doc=r"""channels : int""")
-    channel_layout = property(_smartedit.AudioRecorderSettings_channel_layout_get, _smartedit.AudioRecorderSettings_channel_layout_set, doc=r"""channel_layout : smartedit::ChannelLayout""")
+    channel_layout = property(_smartedit.AudioRecorderSettings_channel_layout_get, _smartedit.AudioRecorderSettings_channel_layout_set, doc=r"""channel_layout : openshot::ChannelLayout""")
     bit_rate = property(_smartedit.AudioRecorderSettings_bit_rate_get, _smartedit.AudioRecorderSettings_bit_rate_set, doc=r"""bit_rate : int""")
     buffer_size = property(_smartedit.AudioRecorderSettings_buffer_size_get, _smartedit.AudioRecorderSettings_buffer_size_set, doc=r"""buffer_size : int""")
     waveform_samples_per_second = property(_smartedit.AudioRecorderSettings_waveform_samples_per_second_get, _smartedit.AudioRecorderSettings_waveform_samples_per_second_set, doc=r"""waveform_samples_per_second : int""")
@@ -1787,7 +1704,7 @@ class AudioRecorderSettings(object):
 # Register AudioRecorderSettings in _smartedit:
 _smartedit.AudioRecorderSettings_swigregister(AudioRecorderSettings)
 class AudioLevelData(object):
-    r"""Proxy of C++ smartedit::AudioLevelData class."""
+    r"""Proxy of C++ openshot::AudioLevelData class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -1808,7 +1725,7 @@ class AudioLevelData(object):
 # Register AudioLevelData in _smartedit:
 _smartedit.AudioLevelData_swigregister(AudioLevelData)
 class AudioWaveformChunk(object):
-    r"""Proxy of C++ smartedit::AudioWaveformChunk class."""
+    r"""Proxy of C++ openshot::AudioWaveformChunk class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -1830,7 +1747,7 @@ class AudioWaveformChunk(object):
 # Register AudioWaveformChunk in _smartedit:
 _smartedit.AudioWaveformChunk_swigregister(AudioWaveformChunk)
 class AudioRecorderStats(object):
-    r"""Proxy of C++ smartedit::AudioRecorderStats class."""
+    r"""Proxy of C++ openshot::AudioRecorderStats class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -1851,7 +1768,7 @@ class AudioRecorderStats(object):
 # Register AudioRecorderStats in _smartedit:
 _smartedit.AudioRecorderStats_swigregister(AudioRecorderStats)
 class AudioRecorderBlock(object):
-    r"""Proxy of C++ smartedit::AudioRecorderBlock class."""
+    r"""Proxy of C++ openshot::AudioRecorderBlock class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -1871,7 +1788,7 @@ class AudioRecorderBlock(object):
 # Register AudioRecorderBlock in _smartedit:
 _smartedit.AudioRecorderBlock_swigregister(AudioRecorderBlock)
 class AudioRecorderLevelMeter(object):
-    r"""Proxy of C++ smartedit::AudioRecorderLevelMeter class."""
+    r"""Proxy of C++ openshot::AudioRecorderLevelMeter class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -1888,7 +1805,7 @@ class AudioRecorderLevelMeter(object):
 # Register AudioRecorderLevelMeter in _smartedit:
 _smartedit.AudioRecorderLevelMeter_swigregister(AudioRecorderLevelMeter)
 class AudioRecorderWaveformAccumulator(object):
-    r"""Proxy of C++ smartedit::AudioRecorderWaveformAccumulator class."""
+    r"""Proxy of C++ openshot::AudioRecorderWaveformAccumulator class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -1898,7 +1815,7 @@ class AudioRecorderWaveformAccumulator(object):
         _smartedit.AudioRecorderWaveformAccumulator_swiginit(self, _smartedit.new_AudioRecorderWaveformAccumulator(*args))
 
     def ProcessBlock(self, *args):
-        r"""ProcessBlock(AudioRecorderWaveformAccumulator self, AudioRecorderBlock block) -> std::vector< smartedit::AudioWaveformChunk,std::allocator< smartedit::AudioWaveformChunk > >"""
+        r"""ProcessBlock(AudioRecorderWaveformAccumulator self, AudioRecorderBlock block) -> std::vector< openshot::AudioWaveformChunk,std::allocator< openshot::AudioWaveformChunk > >"""
         return _smartedit.AudioRecorderWaveformAccumulator_ProcessBlock(self, *args)
 
     def Snapshot(self, *args):
@@ -1913,14 +1830,14 @@ class AudioRecorderWaveformAccumulator(object):
 # Register AudioRecorderWaveformAccumulator in _smartedit:
 _smartedit.AudioRecorderWaveformAccumulator_swigregister(AudioRecorderWaveformAccumulator)
 class AudioRecordingFrameFactory(object):
-    r"""Proxy of C++ smartedit::AudioRecordingFrameFactory class."""
+    r"""Proxy of C++ openshot::AudioRecordingFrameFactory class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
 
     @staticmethod
     def CreateFrame(*args):
-        r"""CreateFrame(AudioRecorderBlock block, smartedit::ChannelLayout channel_layout, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >"""
+        r"""CreateFrame(AudioRecorderBlock block, openshot::ChannelLayout channel_layout, int64_t frame_number) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.AudioRecordingFrameFactory_CreateFrame(*args)
 
     def __init__(self, *args):
@@ -1931,7 +1848,7 @@ class AudioRecordingFrameFactory(object):
 # Register AudioRecordingFrameFactory in _smartedit:
 _smartedit.AudioRecordingFrameFactory_swigregister(AudioRecordingFrameFactory)
 class AudioRecorder(object):
-    r"""Proxy of C++ smartedit::AudioRecorder class."""
+    r"""Proxy of C++ openshot::AudioRecorder class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -1996,7 +1913,7 @@ class AudioRecorder(object):
 # Register AudioRecorder in _smartedit:
 _smartedit.AudioRecorder_swigregister(AudioRecorder)
 class AudioWaveformData(object):
-    r"""Proxy of C++ smartedit::AudioWaveformData class."""
+    r"""Proxy of C++ openshot::AudioWaveformData class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -2031,7 +1948,7 @@ class AudioWaveformData(object):
 # Register AudioWaveformData in _smartedit:
 _smartedit.AudioWaveformData_swigregister(AudioWaveformData)
 class AudioWaveformer(object):
-    r"""Proxy of C++ smartedit::AudioWaveformer class."""
+    r"""Proxy of C++ openshot::AudioWaveformer class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -2064,15 +1981,15 @@ CAMERA_CAPTURE_WINDOWS_DSHOW = _smartedit.CAMERA_CAPTURE_WINDOWS_DSHOW
 CAMERA_CAPTURE_MAC_AVFOUNDATION = _smartedit.CAMERA_CAPTURE_MAC_AVFOUNDATION
 
 class CameraCaptureSettings(object):
-    r"""Proxy of C++ smartedit::CameraCaptureSettings class."""
+    r"""Proxy of C++ openshot::CameraCaptureSettings class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    backend = property(_smartedit.CameraCaptureSettings_backend_get, _smartedit.CameraCaptureSettings_backend_set, doc=r"""backend : smartedit::CameraCaptureBackend""")
+    backend = property(_smartedit.CameraCaptureSettings_backend_get, _smartedit.CameraCaptureSettings_backend_set, doc=r"""backend : openshot::CameraCaptureBackend""")
     device = property(_smartedit.CameraCaptureSettings_device_get, _smartedit.CameraCaptureSettings_device_set, doc=r"""device : std::string""")
     width = property(_smartedit.CameraCaptureSettings_width_get, _smartedit.CameraCaptureSettings_width_set, doc=r"""width : int""")
     height = property(_smartedit.CameraCaptureSettings_height_get, _smartedit.CameraCaptureSettings_height_set, doc=r"""height : int""")
-    fps = property(_smartedit.CameraCaptureSettings_fps_get, _smartedit.CameraCaptureSettings_fps_set, doc=r"""fps : smartedit::Fraction""")
+    fps = property(_smartedit.CameraCaptureSettings_fps_get, _smartedit.CameraCaptureSettings_fps_set, doc=r"""fps : openshot::Fraction""")
     options = property(_smartedit.CameraCaptureSettings_options_get, _smartedit.CameraCaptureSettings_options_set, doc=r"""options : std::map<(std::string,std::string,std::less<(std::string)>,std::allocator<(std::pair<(q(const).std::string,std::string)>)>)>""")
 
     def __init__(self, *args):
@@ -2083,7 +2000,7 @@ class CameraCaptureSettings(object):
 # Register CameraCaptureSettings in _smartedit:
 _smartedit.CameraCaptureSettings_swigregister(CameraCaptureSettings)
 class CameraCaptureReader(ReaderBase):
-    r"""Proxy of C++ smartedit::CameraCaptureReader class."""
+    r"""Proxy of C++ openshot::CameraCaptureReader class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -2102,7 +2019,7 @@ class CameraCaptureReader(ReaderBase):
         return _smartedit.CameraCaptureReader_GetCache(self, *args)
 
     def GetFrame(self, *args):
-        r"""GetFrame(CameraCaptureReader self, int64_t number) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetFrame(CameraCaptureReader self, int64_t number) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.CameraCaptureReader_GetFrame(self, *args)
 
     def IsOpen(self, *args):
@@ -2143,23 +2060,23 @@ class CameraCaptureReader(ReaderBase):
 
     @staticmethod
     def IsBackendSupported(*args):
-        r"""IsBackendSupported(smartedit::CameraCaptureBackend backend) -> bool"""
+        r"""IsBackendSupported(openshot::CameraCaptureBackend backend) -> bool"""
         return _smartedit.CameraCaptureReader_IsBackendSupported(*args)
 
     @staticmethod
     def DefaultBackend(*args):
-        r"""DefaultBackend() -> smartedit::CameraCaptureBackend"""
+        r"""DefaultBackend() -> openshot::CameraCaptureBackend"""
         return _smartedit.CameraCaptureReader_DefaultBackend(*args)
 
     @staticmethod
     def GetDeviceNames(*args):
-        r"""GetDeviceNames(smartedit::CameraCaptureBackend backend=CAMERA_CAPTURE_AUTO) -> smartedit::AudioDeviceList"""
+        r"""GetDeviceNames(openshot::CameraCaptureBackend backend=CAMERA_CAPTURE_AUTO) -> openshot::AudioDeviceList"""
         return _smartedit.CameraCaptureReader_GetDeviceNames(*args)
 
 # Register CameraCaptureReader in _smartedit:
 _smartedit.CameraCaptureReader_swigregister(CameraCaptureReader)
 class CacheBase(object):
-    r"""Proxy of C++ smartedit::CacheBase class."""
+    r"""Proxy of C++ openshot::CacheBase class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
 
@@ -2168,7 +2085,7 @@ class CacheBase(object):
     __repr__ = _swig_repr
 
     def Add(self, *args):
-        r"""Add(CacheBase self, std::shared_ptr< smartedit::Frame > frame)"""
+        r"""Add(CacheBase self, std::shared_ptr< openshot::Frame > frame)"""
         return _smartedit.CacheBase_Add(self, *args)
 
     def Clear(self, *args):
@@ -2184,11 +2101,11 @@ class CacheBase(object):
         return _smartedit.CacheBase_Count(self, *args)
 
     def GetFrame(self, *args):
-        r"""GetFrame(CacheBase self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetFrame(CacheBase self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.CacheBase_GetFrame(self, *args)
 
     def GetFrames(self, *args):
-        r"""GetFrames(CacheBase self) -> std::vector< std::shared_ptr< smartedit::Frame >,std::allocator< std::shared_ptr< smartedit::Frame > > >"""
+        r"""GetFrames(CacheBase self) -> std::vector< std::shared_ptr< openshot::Frame >,std::allocator< std::shared_ptr< openshot::Frame > > >"""
         return _smartedit.CacheBase_GetFrames(self, *args)
 
     def GetBytes(self, *args):
@@ -2196,7 +2113,7 @@ class CacheBase(object):
         return _smartedit.CacheBase_GetBytes(self, *args)
 
     def GetSmallestFrame(self, *args):
-        r"""GetSmallestFrame(CacheBase self) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetSmallestFrame(CacheBase self) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.CacheBase_GetSmallestFrame(self, *args)
 
     def Remove(self, *args):
@@ -2242,7 +2159,7 @@ class CacheBase(object):
 # Register CacheBase in _smartedit:
 _smartedit.CacheBase_swigregister(CacheBase)
 class CacheDisk(CacheBase):
-    r"""Proxy of C++ smartedit::CacheDisk class."""
+    r"""Proxy of C++ openshot::CacheDisk class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -2256,7 +2173,7 @@ class CacheDisk(CacheBase):
     __swig_destroy__ = _smartedit.delete_CacheDisk
 
     def Add(self, *args):
-        r"""Add(CacheDisk self, std::shared_ptr< smartedit::Frame > frame)"""
+        r"""Add(CacheDisk self, std::shared_ptr< openshot::Frame > frame)"""
         return _smartedit.CacheDisk_Add(self, *args)
 
     def Clear(self, *args):
@@ -2272,11 +2189,11 @@ class CacheDisk(CacheBase):
         return _smartedit.CacheDisk_Count(self, *args)
 
     def GetFrame(self, *args):
-        r"""GetFrame(CacheDisk self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetFrame(CacheDisk self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.CacheDisk_GetFrame(self, *args)
 
     def GetFrames(self, *args):
-        r"""GetFrames(CacheDisk self) -> std::vector< std::shared_ptr< smartedit::Frame >,std::allocator< std::shared_ptr< smartedit::Frame > > >"""
+        r"""GetFrames(CacheDisk self) -> std::vector< std::shared_ptr< openshot::Frame >,std::allocator< std::shared_ptr< openshot::Frame > > >"""
         return _smartedit.CacheDisk_GetFrames(self, *args)
 
     def GetBytes(self, *args):
@@ -2284,7 +2201,7 @@ class CacheDisk(CacheBase):
         return _smartedit.CacheDisk_GetBytes(self, *args)
 
     def GetSmallestFrame(self, *args):
-        r"""GetSmallestFrame(CacheDisk self) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetSmallestFrame(CacheDisk self) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.CacheDisk_GetSmallestFrame(self, *args)
 
     def Touch(self, *args):
@@ -2317,7 +2234,7 @@ class CacheDisk(CacheBase):
 # Register CacheDisk in _smartedit:
 _smartedit.CacheDisk_swigregister(CacheDisk)
 class CacheMemory(CacheBase):
-    r"""Proxy of C++ smartedit::CacheMemory class."""
+    r"""Proxy of C++ openshot::CacheMemory class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -2331,7 +2248,7 @@ class CacheMemory(CacheBase):
     __swig_destroy__ = _smartedit.delete_CacheMemory
 
     def Add(self, *args):
-        r"""Add(CacheMemory self, std::shared_ptr< smartedit::Frame > frame)"""
+        r"""Add(CacheMemory self, std::shared_ptr< openshot::Frame > frame)"""
         return _smartedit.CacheMemory_Add(self, *args)
 
     def Clear(self, *args):
@@ -2347,11 +2264,11 @@ class CacheMemory(CacheBase):
         return _smartedit.CacheMemory_Count(self, *args)
 
     def GetFrame(self, *args):
-        r"""GetFrame(CacheMemory self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetFrame(CacheMemory self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.CacheMemory_GetFrame(self, *args)
 
     def GetFrames(self, *args):
-        r"""GetFrames(CacheMemory self) -> std::vector< std::shared_ptr< smartedit::Frame >,std::allocator< std::shared_ptr< smartedit::Frame > > >"""
+        r"""GetFrames(CacheMemory self) -> std::vector< std::shared_ptr< openshot::Frame >,std::allocator< std::shared_ptr< openshot::Frame > > >"""
         return _smartedit.CacheMemory_GetFrames(self, *args)
 
     def GetBytes(self, *args):
@@ -2359,7 +2276,7 @@ class CacheMemory(CacheBase):
         return _smartedit.CacheMemory_GetBytes(self, *args)
 
     def GetSmallestFrame(self, *args):
-        r"""GetSmallestFrame(CacheMemory self) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetSmallestFrame(CacheMemory self) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.CacheMemory_GetSmallestFrame(self, *args)
 
     def Touch(self, *args):
@@ -2446,7 +2363,7 @@ LAYOUT_OCTAGONAL = _smartedit.LAYOUT_OCTAGONAL
 LAYOUT_STEREO_DOWNMIX = _smartedit.LAYOUT_STEREO_DOWNMIX
 
 class ChunkLocation(object):
-    r"""Proxy of C++ smartedit::ChunkLocation class."""
+    r"""Proxy of C++ openshot::ChunkLocation class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -2467,13 +2384,13 @@ PREVIEW = _smartedit.PREVIEW
 FINAL = _smartedit.FINAL
 
 class ChunkReader(ReaderBase):
-    r"""Proxy of C++ smartedit::ChunkReader class."""
+    r"""Proxy of C++ openshot::ChunkReader class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
 
     def __init__(self, *args):
-        r"""__init__(ChunkReader self, std::string path, smartedit::ChunkVersion chunk_version) -> ChunkReader"""
+        r"""__init__(ChunkReader self, std::string path, openshot::ChunkVersion chunk_version) -> ChunkReader"""
         _smartedit.ChunkReader_swiginit(self, _smartedit.new_ChunkReader(*args))
 
     def Close(self, *args):
@@ -2493,7 +2410,7 @@ class ChunkReader(ReaderBase):
         return _smartedit.ChunkReader_GetCache(self, *args)
 
     def GetFrame(self, *args):
-        r"""GetFrame(ChunkReader self, int64_t requested_frame) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetFrame(ChunkReader self, int64_t requested_frame) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.ChunkReader_GetFrame(self, *args)
 
     def IsOpen(self, *args):
@@ -2528,7 +2445,7 @@ class ChunkReader(ReaderBase):
 # Register ChunkReader in _smartedit:
 _smartedit.ChunkReader_swigregister(ChunkReader)
 class ChunkWriter(WriterBase):
-    r"""Proxy of C++ smartedit::ChunkWriter class."""
+    r"""Proxy of C++ openshot::ChunkWriter class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -2559,7 +2476,7 @@ class ChunkWriter(WriterBase):
 
     def WriteFrame(self, *args):
         r"""
-        WriteFrame(ChunkWriter self, std::shared_ptr< smartedit::Frame > frame)
+        WriteFrame(ChunkWriter self, std::shared_ptr< openshot::Frame > frame)
         WriteFrame(ChunkWriter self, int64_t start, int64_t length)
         WriteFrame(ChunkWriter self, ReaderBase reader, int64_t start, int64_t length)
         """
@@ -2569,7 +2486,7 @@ class ChunkWriter(WriterBase):
 # Register ChunkWriter in _smartedit:
 _smartedit.ChunkWriter_swigregister(ChunkWriter)
 class ClipBase(object):
-    r"""Proxy of C++ smartedit::ClipBase class."""
+    r"""Proxy of C++ openshot::ClipBase class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
 
@@ -2595,8 +2512,8 @@ class ClipBase(object):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(ClipBase self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(ClipBase self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(ClipBase self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(ClipBase self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.ClipBase_GetFrame(self, *args)
 
@@ -2670,7 +2587,7 @@ class ClipBase(object):
 # Register ClipBase in _smartedit:
 _smartedit.ClipBase_swigregister(ClipBase)
 class CompareClipEffects(object):
-    r"""Proxy of C++ smartedit::CompareClipEffects class."""
+    r"""Proxy of C++ openshot::CompareClipEffects class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -2687,16 +2604,16 @@ class CompareClipEffects(object):
 # Register CompareClipEffects in _smartedit:
 _smartedit.CompareClipEffects_swigregister(CompareClipEffects)
 class Clip(ClipBase, ReaderBase):
-    r"""Proxy of C++ smartedit::Clip class."""
+    r"""Proxy of C++ openshot::Clip class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    gravity = property(_smartedit.Clip_gravity_get, _smartedit.Clip_gravity_set, doc=r"""gravity : smartedit::GravityType""")
-    scale = property(_smartedit.Clip_scale_get, _smartedit.Clip_scale_set, doc=r"""scale : smartedit::ScaleType""")
-    anchor = property(_smartedit.Clip_anchor_get, _smartedit.Clip_anchor_set, doc=r"""anchor : smartedit::AnchorType""")
-    display = property(_smartedit.Clip_display_get, _smartedit.Clip_display_set, doc=r"""display : smartedit::FrameDisplayType""")
-    mixing = property(_smartedit.Clip_mixing_get, _smartedit.Clip_mixing_set, doc=r"""mixing : smartedit::VolumeMixType""")
-    composite = property(_smartedit.Clip_composite_get, _smartedit.Clip_composite_set, doc=r"""composite : smartedit::CompositeType""")
+    gravity = property(_smartedit.Clip_gravity_get, _smartedit.Clip_gravity_set, doc=r"""gravity : openshot::GravityType""")
+    scale = property(_smartedit.Clip_scale_get, _smartedit.Clip_scale_set, doc=r"""scale : openshot::ScaleType""")
+    anchor = property(_smartedit.Clip_anchor_get, _smartedit.Clip_anchor_set, doc=r"""anchor : openshot::AnchorType""")
+    display = property(_smartedit.Clip_display_get, _smartedit.Clip_display_set, doc=r"""display : openshot::FrameDisplayType""")
+    mixing = property(_smartedit.Clip_mixing_get, _smartedit.Clip_mixing_set, doc=r"""mixing : openshot::VolumeMixType""")
+    composite = property(_smartedit.Clip_composite_get, _smartedit.Clip_composite_set, doc=r"""composite : openshot::CompositeType""")
     COMPILED_WITH_CV = property(_smartedit.Clip_COMPILED_WITH_CV_get, _smartedit.Clip_COMPILED_WITH_CV_set, doc=r"""COMPILED_WITH_CV : bool""")
 
     @staticmethod
@@ -2734,7 +2651,7 @@ class Clip(ClipBase, ReaderBase):
         return _smartedit.Clip_AttachToObject(self, *args)
 
     def SetAttachedObject(self, *args):
-        r"""SetAttachedObject(Clip self, std::shared_ptr< smartedit::TrackedObjectBase > trackedObject)"""
+        r"""SetAttachedObject(Clip self, std::shared_ptr< openshot::TrackedObjectBase > trackedObject)"""
         return _smartedit.Clip_SetAttachedObject(self, *args)
 
     def SetAttachedClip(self, *args):
@@ -2742,7 +2659,7 @@ class Clip(ClipBase, ReaderBase):
         return _smartedit.Clip_SetAttachedClip(self, *args)
 
     def GetAttachedObject(self, *args):
-        r"""GetAttachedObject(Clip self) -> std::shared_ptr< smartedit::TrackedObjectBase >"""
+        r"""GetAttachedObject(Clip self) -> std::shared_ptr< openshot::TrackedObjectBase >"""
         return _smartedit.Clip_GetAttachedObject(self, *args)
 
     def GetAttachedClip(self, *args):
@@ -2766,7 +2683,7 @@ class Clip(ClipBase, ReaderBase):
         return _smartedit.Clip_GetParentClip(self, *args)
 
     def GetParentTrackedObject(self, *args):
-        r"""GetParentTrackedObject(Clip self) -> std::shared_ptr< smartedit::TrackedObjectBase >"""
+        r"""GetParentTrackedObject(Clip self) -> std::shared_ptr< openshot::TrackedObjectBase >"""
         return _smartedit.Clip_GetParentTrackedObject(self, *args)
 
     def Effects(self, *args):
@@ -2779,9 +2696,9 @@ class Clip(ClipBase, ReaderBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(Clip self, int64_t clip_frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(Clip self, std::shared_ptr< smartedit::Frame > background_frame, int64_t clip_frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(Clip self, std::shared_ptr< smartedit::Frame > background_frame, int64_t clip_frame_number, TimelineInfoStruct options) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(Clip self, int64_t clip_frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(Clip self, std::shared_ptr< openshot::Frame > background_frame, int64_t clip_frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(Clip self, std::shared_ptr< openshot::Frame > background_frame, int64_t clip_frame_number, TimelineInfoStruct options) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.Clip_GetFrame(self, *args)
 
@@ -2847,38 +2764,38 @@ class Clip(ClipBase, ReaderBase):
         WaveformMode(Clip self, int value)
         """
         return _smartedit.Clip_WaveformMode(self, *args)
-    scale_x = property(_smartedit.Clip_scale_x_get, _smartedit.Clip_scale_x_set, doc=r"""scale_x : smartedit::Keyframe""")
-    scale_y = property(_smartedit.Clip_scale_y_get, _smartedit.Clip_scale_y_set, doc=r"""scale_y : smartedit::Keyframe""")
-    location_x = property(_smartedit.Clip_location_x_get, _smartedit.Clip_location_x_set, doc=r"""location_x : smartedit::Keyframe""")
-    location_y = property(_smartedit.Clip_location_y_get, _smartedit.Clip_location_y_set, doc=r"""location_y : smartedit::Keyframe""")
-    alpha = property(_smartedit.Clip_alpha_get, _smartedit.Clip_alpha_set, doc=r"""alpha : smartedit::Keyframe""")
-    margin = property(_smartedit.Clip_margin_get, _smartedit.Clip_margin_set, doc=r"""margin : smartedit::Keyframe""")
-    corner_radius = property(_smartedit.Clip_corner_radius_get, _smartedit.Clip_corner_radius_set, doc=r"""corner_radius : smartedit::Keyframe""")
-    rotation = property(_smartedit.Clip_rotation_get, _smartedit.Clip_rotation_set, doc=r"""rotation : smartedit::Keyframe""")
-    shear_x = property(_smartedit.Clip_shear_x_get, _smartedit.Clip_shear_x_set, doc=r"""shear_x : smartedit::Keyframe""")
-    shear_y = property(_smartedit.Clip_shear_y_get, _smartedit.Clip_shear_y_set, doc=r"""shear_y : smartedit::Keyframe""")
-    origin_x = property(_smartedit.Clip_origin_x_get, _smartedit.Clip_origin_x_set, doc=r"""origin_x : smartedit::Keyframe""")
-    origin_y = property(_smartedit.Clip_origin_y_get, _smartedit.Clip_origin_y_set, doc=r"""origin_y : smartedit::Keyframe""")
-    time = property(_smartedit.Clip_time_get, _smartedit.Clip_time_set, doc=r"""time : smartedit::Keyframe""")
-    volume = property(_smartedit.Clip_volume_get, _smartedit.Clip_volume_set, doc=r"""volume : smartedit::Keyframe""")
-    wave_color = property(_smartedit.Clip_wave_color_get, _smartedit.Clip_wave_color_set, doc=r"""wave_color : smartedit::Color""")
-    perspective_c1_x = property(_smartedit.Clip_perspective_c1_x_get, _smartedit.Clip_perspective_c1_x_set, doc=r"""perspective_c1_x : smartedit::Keyframe""")
-    perspective_c1_y = property(_smartedit.Clip_perspective_c1_y_get, _smartedit.Clip_perspective_c1_y_set, doc=r"""perspective_c1_y : smartedit::Keyframe""")
-    perspective_c2_x = property(_smartedit.Clip_perspective_c2_x_get, _smartedit.Clip_perspective_c2_x_set, doc=r"""perspective_c2_x : smartedit::Keyframe""")
-    perspective_c2_y = property(_smartedit.Clip_perspective_c2_y_get, _smartedit.Clip_perspective_c2_y_set, doc=r"""perspective_c2_y : smartedit::Keyframe""")
-    perspective_c3_x = property(_smartedit.Clip_perspective_c3_x_get, _smartedit.Clip_perspective_c3_x_set, doc=r"""perspective_c3_x : smartedit::Keyframe""")
-    perspective_c3_y = property(_smartedit.Clip_perspective_c3_y_get, _smartedit.Clip_perspective_c3_y_set, doc=r"""perspective_c3_y : smartedit::Keyframe""")
-    perspective_c4_x = property(_smartedit.Clip_perspective_c4_x_get, _smartedit.Clip_perspective_c4_x_set, doc=r"""perspective_c4_x : smartedit::Keyframe""")
-    perspective_c4_y = property(_smartedit.Clip_perspective_c4_y_get, _smartedit.Clip_perspective_c4_y_set, doc=r"""perspective_c4_y : smartedit::Keyframe""")
-    channel_filter = property(_smartedit.Clip_channel_filter_get, _smartedit.Clip_channel_filter_set, doc=r"""channel_filter : smartedit::Keyframe""")
-    channel_mapping = property(_smartedit.Clip_channel_mapping_get, _smartedit.Clip_channel_mapping_set, doc=r"""channel_mapping : smartedit::Keyframe""")
-    has_audio = property(_smartedit.Clip_has_audio_get, _smartedit.Clip_has_audio_set, doc=r"""has_audio : smartedit::Keyframe""")
-    has_video = property(_smartedit.Clip_has_video_get, _smartedit.Clip_has_video_set, doc=r"""has_video : smartedit::Keyframe""")
+    scale_x = property(_smartedit.Clip_scale_x_get, _smartedit.Clip_scale_x_set, doc=r"""scale_x : openshot::Keyframe""")
+    scale_y = property(_smartedit.Clip_scale_y_get, _smartedit.Clip_scale_y_set, doc=r"""scale_y : openshot::Keyframe""")
+    location_x = property(_smartedit.Clip_location_x_get, _smartedit.Clip_location_x_set, doc=r"""location_x : openshot::Keyframe""")
+    location_y = property(_smartedit.Clip_location_y_get, _smartedit.Clip_location_y_set, doc=r"""location_y : openshot::Keyframe""")
+    alpha = property(_smartedit.Clip_alpha_get, _smartedit.Clip_alpha_set, doc=r"""alpha : openshot::Keyframe""")
+    margin = property(_smartedit.Clip_margin_get, _smartedit.Clip_margin_set, doc=r"""margin : openshot::Keyframe""")
+    corner_radius = property(_smartedit.Clip_corner_radius_get, _smartedit.Clip_corner_radius_set, doc=r"""corner_radius : openshot::Keyframe""")
+    rotation = property(_smartedit.Clip_rotation_get, _smartedit.Clip_rotation_set, doc=r"""rotation : openshot::Keyframe""")
+    shear_x = property(_smartedit.Clip_shear_x_get, _smartedit.Clip_shear_x_set, doc=r"""shear_x : openshot::Keyframe""")
+    shear_y = property(_smartedit.Clip_shear_y_get, _smartedit.Clip_shear_y_set, doc=r"""shear_y : openshot::Keyframe""")
+    origin_x = property(_smartedit.Clip_origin_x_get, _smartedit.Clip_origin_x_set, doc=r"""origin_x : openshot::Keyframe""")
+    origin_y = property(_smartedit.Clip_origin_y_get, _smartedit.Clip_origin_y_set, doc=r"""origin_y : openshot::Keyframe""")
+    time = property(_smartedit.Clip_time_get, _smartedit.Clip_time_set, doc=r"""time : openshot::Keyframe""")
+    volume = property(_smartedit.Clip_volume_get, _smartedit.Clip_volume_set, doc=r"""volume : openshot::Keyframe""")
+    wave_color = property(_smartedit.Clip_wave_color_get, _smartedit.Clip_wave_color_set, doc=r"""wave_color : openshot::Color""")
+    perspective_c1_x = property(_smartedit.Clip_perspective_c1_x_get, _smartedit.Clip_perspective_c1_x_set, doc=r"""perspective_c1_x : openshot::Keyframe""")
+    perspective_c1_y = property(_smartedit.Clip_perspective_c1_y_get, _smartedit.Clip_perspective_c1_y_set, doc=r"""perspective_c1_y : openshot::Keyframe""")
+    perspective_c2_x = property(_smartedit.Clip_perspective_c2_x_get, _smartedit.Clip_perspective_c2_x_set, doc=r"""perspective_c2_x : openshot::Keyframe""")
+    perspective_c2_y = property(_smartedit.Clip_perspective_c2_y_get, _smartedit.Clip_perspective_c2_y_set, doc=r"""perspective_c2_y : openshot::Keyframe""")
+    perspective_c3_x = property(_smartedit.Clip_perspective_c3_x_get, _smartedit.Clip_perspective_c3_x_set, doc=r"""perspective_c3_x : openshot::Keyframe""")
+    perspective_c3_y = property(_smartedit.Clip_perspective_c3_y_get, _smartedit.Clip_perspective_c3_y_set, doc=r"""perspective_c3_y : openshot::Keyframe""")
+    perspective_c4_x = property(_smartedit.Clip_perspective_c4_x_get, _smartedit.Clip_perspective_c4_x_set, doc=r"""perspective_c4_x : openshot::Keyframe""")
+    perspective_c4_y = property(_smartedit.Clip_perspective_c4_y_get, _smartedit.Clip_perspective_c4_y_set, doc=r"""perspective_c4_y : openshot::Keyframe""")
+    channel_filter = property(_smartedit.Clip_channel_filter_get, _smartedit.Clip_channel_filter_set, doc=r"""channel_filter : openshot::Keyframe""")
+    channel_mapping = property(_smartedit.Clip_channel_mapping_get, _smartedit.Clip_channel_mapping_set, doc=r"""channel_mapping : openshot::Keyframe""")
+    has_audio = property(_smartedit.Clip_has_audio_get, _smartedit.Clip_has_audio_set, doc=r"""has_audio : openshot::Keyframe""")
+    has_video = property(_smartedit.Clip_has_video_get, _smartedit.Clip_has_video_set, doc=r"""has_video : openshot::Keyframe""")
 
 # Register Clip in _smartedit:
 _smartedit.Clip_swigregister(Clip)
 class Coordinate(object):
-    r"""Proxy of C++ smartedit::Coordinate class."""
+    r"""Proxy of C++ openshot::Coordinate class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -2913,14 +2830,14 @@ class Coordinate(object):
 # Register Coordinate in _smartedit:
 _smartedit.Coordinate_swigregister(Coordinate)
 class Color(object):
-    r"""Proxy of C++ smartedit::Color class."""
+    r"""Proxy of C++ openshot::Color class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    red = property(_smartedit.Color_red_get, _smartedit.Color_red_set, doc=r"""red : smartedit::Keyframe""")
-    green = property(_smartedit.Color_green_get, _smartedit.Color_green_set, doc=r"""green : smartedit::Keyframe""")
-    blue = property(_smartedit.Color_blue_get, _smartedit.Color_blue_set, doc=r"""blue : smartedit::Keyframe""")
-    alpha = property(_smartedit.Color_alpha_get, _smartedit.Color_alpha_set, doc=r"""alpha : smartedit::Keyframe""")
+    red = property(_smartedit.Color_red_get, _smartedit.Color_red_set, doc=r"""red : openshot::Keyframe""")
+    green = property(_smartedit.Color_green_get, _smartedit.Color_green_set, doc=r"""green : openshot::Keyframe""")
+    blue = property(_smartedit.Color_blue_get, _smartedit.Color_blue_set, doc=r"""blue : openshot::Keyframe""")
+    alpha = property(_smartedit.Color_alpha_get, _smartedit.Color_alpha_set, doc=r"""alpha : openshot::Keyframe""")
 
     def __init__(self, *args):
         r"""
@@ -2966,7 +2883,7 @@ class Color(object):
 # Register Color in _smartedit:
 _smartedit.Color_swigregister(Color)
 class DummyReader(ReaderBase):
-    r"""Proxy of C++ smartedit::DummyReader class."""
+    r"""Proxy of C++ openshot::DummyReader class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -2989,7 +2906,7 @@ class DummyReader(ReaderBase):
         return _smartedit.DummyReader_GetCache(self, *args)
 
     def GetFrame(self, *args):
-        r"""GetFrame(DummyReader self, int64_t requested_frame) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetFrame(DummyReader self, int64_t requested_frame) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.DummyReader_GetFrame(self, *args)
 
     def IsOpen(self, *args):
@@ -3023,7 +2940,7 @@ class DummyReader(ReaderBase):
 # Register DummyReader in _smartedit:
 _smartedit.DummyReader_swigregister(DummyReader)
 class EffectInfoStruct(object):
-    r"""Proxy of C++ smartedit::EffectInfoStruct class."""
+    r"""Proxy of C++ openshot::EffectInfoStruct class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3044,16 +2961,16 @@ class EffectInfoStruct(object):
 # Register EffectInfoStruct in _smartedit:
 _smartedit.EffectInfoStruct_swigregister(EffectInfoStruct)
 class EffectBase(ClipBase):
-    r"""Proxy of C++ smartedit::EffectBase class."""
+    r"""Proxy of C++ openshot::EffectBase class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
 
     def __init__(self, *args, **kwargs):
         raise AttributeError("No constructor defined - class is abstract")
     __repr__ = _swig_repr
-    parentEffect = property(_smartedit.EffectBase_parentEffect_get, _smartedit.EffectBase_parentEffect_set, doc=r"""parentEffect : p.smartedit::EffectBase""")
-    trackedObjects = property(_smartedit.EffectBase_trackedObjects_get, _smartedit.EffectBase_trackedObjects_set, doc=r"""trackedObjects : std::map<(int,std::shared_ptr<(smartedit::TrackedObjectBase)>,std::less<(int)>,std::allocator<(std::pair<(q(const).int,std::shared_ptr<(smartedit::TrackedObjectBase)>)>)>)>""")
-    info = property(_smartedit.EffectBase_info_get, _smartedit.EffectBase_info_set, doc=r"""info : smartedit::EffectInfoStruct""")
+    parentEffect = property(_smartedit.EffectBase_parentEffect_get, _smartedit.EffectBase_parentEffect_set, doc=r"""parentEffect : p.openshot::EffectBase""")
+    trackedObjects = property(_smartedit.EffectBase_trackedObjects_get, _smartedit.EffectBase_trackedObjects_set, doc=r"""trackedObjects : std::map<(int,std::shared_ptr<(openshot::TrackedObjectBase)>,std::less<(int)>,std::allocator<(std::pair<(q(const).int,std::shared_ptr<(openshot::TrackedObjectBase)>)>)>)>""")
+    info = property(_smartedit.EffectBase_info_get, _smartedit.EffectBase_info_set, doc=r"""info : openshot::EffectInfoStruct""")
     mask_invert = property(_smartedit.EffectBase_mask_invert_get, _smartedit.EffectBase_mask_invert_set, doc=r"""mask_invert : bool""")
     MASK_TIME_TIMELINE = _smartedit.EffectBase_MASK_TIME_TIMELINE
     
@@ -3134,7 +3051,7 @@ class EffectBase(ClipBase):
         return _smartedit.EffectBase_BasePropertiesJSON(self, *args)
 
     def ProcessFrame(self, *args):
-        r"""ProcessFrame(EffectBase self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >"""
+        r"""ProcessFrame(EffectBase self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.EffectBase_ProcessFrame(self, *args)
 
     def MaskReader(self, *args):
@@ -3163,7 +3080,7 @@ class EffectBase(ClipBase):
 # Register EffectBase in _smartedit:
 _smartedit.EffectBase_swigregister(EffectBase)
 class EffectInfo(object):
-    r"""Proxy of C++ smartedit::EffectInfo class."""
+    r"""Proxy of C++ openshot::EffectInfo class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3372,7 +3289,7 @@ CHROMAKEY_BASIC_SOFT = _smartedit.CHROMAKEY_BASIC_SOFT
 CHROMAKEY_LAST_METHOD = _smartedit.CHROMAKEY_LAST_METHOD
 
 class ExceptionBase(object):
-    r"""Proxy of C++ smartedit::ExceptionBase class."""
+    r"""Proxy of C++ openshot::ExceptionBase class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3393,7 +3310,7 @@ class ExceptionBase(object):
 # Register ExceptionBase in _smartedit:
 _smartedit.ExceptionBase_swigregister(ExceptionBase)
 class FrameExceptionBase(ExceptionBase):
-    r"""Proxy of C++ smartedit::FrameExceptionBase class."""
+    r"""Proxy of C++ openshot::FrameExceptionBase class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3411,7 +3328,7 @@ class FrameExceptionBase(ExceptionBase):
 # Register FrameExceptionBase in _smartedit:
 _smartedit.FrameExceptionBase_swigregister(FrameExceptionBase)
 class FileExceptionBase(ExceptionBase):
-    r"""Proxy of C++ smartedit::FileExceptionBase class."""
+    r"""Proxy of C++ openshot::FileExceptionBase class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3434,7 +3351,7 @@ class FileExceptionBase(ExceptionBase):
 # Register FileExceptionBase in _smartedit:
 _smartedit.FileExceptionBase_swigregister(FileExceptionBase)
 class ChunkNotFound(FrameExceptionBase):
-    r"""Proxy of C++ smartedit::ChunkNotFound class."""
+    r"""Proxy of C++ openshot::ChunkNotFound class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3449,7 +3366,7 @@ class ChunkNotFound(FrameExceptionBase):
 # Register ChunkNotFound in _smartedit:
 _smartedit.ChunkNotFound_swigregister(ChunkNotFound)
 class DecklinkError(ExceptionBase):
-    r"""Proxy of C++ smartedit::DecklinkError class."""
+    r"""Proxy of C++ openshot::DecklinkError class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3462,7 +3379,7 @@ class DecklinkError(ExceptionBase):
 # Register DecklinkError in _smartedit:
 _smartedit.DecklinkError_swigregister(DecklinkError)
 class ErrorDecodingAudio(FrameExceptionBase):
-    r"""Proxy of C++ smartedit::ErrorDecodingAudio class."""
+    r"""Proxy of C++ openshot::ErrorDecodingAudio class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3475,7 +3392,7 @@ class ErrorDecodingAudio(FrameExceptionBase):
 # Register ErrorDecodingAudio in _smartedit:
 _smartedit.ErrorDecodingAudio_swigregister(ErrorDecodingAudio)
 class ErrorEncodingAudio(FrameExceptionBase):
-    r"""Proxy of C++ smartedit::ErrorEncodingAudio class."""
+    r"""Proxy of C++ openshot::ErrorEncodingAudio class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3488,7 +3405,7 @@ class ErrorEncodingAudio(FrameExceptionBase):
 # Register ErrorEncodingAudio in _smartedit:
 _smartedit.ErrorEncodingAudio_swigregister(ErrorEncodingAudio)
 class ErrorEncodingVideo(FrameExceptionBase):
-    r"""Proxy of C++ smartedit::ErrorEncodingVideo class."""
+    r"""Proxy of C++ openshot::ErrorEncodingVideo class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3501,7 +3418,7 @@ class ErrorEncodingVideo(FrameExceptionBase):
 # Register ErrorEncodingVideo in _smartedit:
 _smartedit.ErrorEncodingVideo_swigregister(ErrorEncodingVideo)
 class InvalidChannels(FileExceptionBase):
-    r"""Proxy of C++ smartedit::InvalidChannels class."""
+    r"""Proxy of C++ openshot::InvalidChannels class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3514,7 +3431,7 @@ class InvalidChannels(FileExceptionBase):
 # Register InvalidChannels in _smartedit:
 _smartedit.InvalidChannels_swigregister(InvalidChannels)
 class InvalidCodec(FileExceptionBase):
-    r"""Proxy of C++ smartedit::InvalidCodec class."""
+    r"""Proxy of C++ openshot::InvalidCodec class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3527,7 +3444,7 @@ class InvalidCodec(FileExceptionBase):
 # Register InvalidCodec in _smartedit:
 _smartedit.InvalidCodec_swigregister(InvalidCodec)
 class InvalidFile(FileExceptionBase):
-    r"""Proxy of C++ smartedit::InvalidFile class."""
+    r"""Proxy of C++ openshot::InvalidFile class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3540,7 +3457,7 @@ class InvalidFile(FileExceptionBase):
 # Register InvalidFile in _smartedit:
 _smartedit.InvalidFile_swigregister(InvalidFile)
 class InvalidFormat(FileExceptionBase):
-    r"""Proxy of C++ smartedit::InvalidFormat class."""
+    r"""Proxy of C++ openshot::InvalidFormat class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3553,7 +3470,7 @@ class InvalidFormat(FileExceptionBase):
 # Register InvalidFormat in _smartedit:
 _smartedit.InvalidFormat_swigregister(InvalidFormat)
 class InvalidJSON(FileExceptionBase):
-    r"""Proxy of C++ smartedit::InvalidJSON class."""
+    r"""Proxy of C++ openshot::InvalidJSON class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3566,7 +3483,7 @@ class InvalidJSON(FileExceptionBase):
 # Register InvalidJSON in _smartedit:
 _smartedit.InvalidJSON_swigregister(InvalidJSON)
 class InvalidOptions(FileExceptionBase):
-    r"""Proxy of C++ smartedit::InvalidOptions class."""
+    r"""Proxy of C++ openshot::InvalidOptions class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3579,7 +3496,7 @@ class InvalidOptions(FileExceptionBase):
 # Register InvalidOptions in _smartedit:
 _smartedit.InvalidOptions_swigregister(InvalidOptions)
 class InvalidSampleRate(FileExceptionBase):
-    r"""Proxy of C++ smartedit::InvalidSampleRate class."""
+    r"""Proxy of C++ openshot::InvalidSampleRate class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3592,7 +3509,7 @@ class InvalidSampleRate(FileExceptionBase):
 # Register InvalidSampleRate in _smartedit:
 _smartedit.InvalidSampleRate_swigregister(InvalidSampleRate)
 class InvalidJSONKey(ExceptionBase):
-    r"""Proxy of C++ smartedit::InvalidJSONKey class."""
+    r"""Proxy of C++ openshot::InvalidJSONKey class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3610,7 +3527,7 @@ class InvalidJSONKey(ExceptionBase):
 # Register InvalidJSONKey in _smartedit:
 _smartedit.InvalidJSONKey_swigregister(InvalidJSONKey)
 class NoStreamsFound(FileExceptionBase):
-    r"""Proxy of C++ smartedit::NoStreamsFound class."""
+    r"""Proxy of C++ openshot::NoStreamsFound class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3623,7 +3540,7 @@ class NoStreamsFound(FileExceptionBase):
 # Register NoStreamsFound in _smartedit:
 _smartedit.NoStreamsFound_swigregister(NoStreamsFound)
 class OutOfBoundsFrame(ExceptionBase):
-    r"""Proxy of C++ smartedit::OutOfBoundsFrame class."""
+    r"""Proxy of C++ openshot::OutOfBoundsFrame class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3642,7 +3559,7 @@ class OutOfBoundsFrame(ExceptionBase):
 # Register OutOfBoundsFrame in _smartedit:
 _smartedit.OutOfBoundsFrame_swigregister(OutOfBoundsFrame)
 class OutOfBoundsPoint(ExceptionBase):
-    r"""Proxy of C++ smartedit::OutOfBoundsPoint class."""
+    r"""Proxy of C++ openshot::OutOfBoundsPoint class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3661,7 +3578,7 @@ class OutOfBoundsPoint(ExceptionBase):
 # Register OutOfBoundsPoint in _smartedit:
 _smartedit.OutOfBoundsPoint_swigregister(OutOfBoundsPoint)
 class OutOfMemory(FileExceptionBase):
-    r"""Proxy of C++ smartedit::OutOfMemory class."""
+    r"""Proxy of C++ openshot::OutOfMemory class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3674,7 +3591,7 @@ class OutOfMemory(FileExceptionBase):
 # Register OutOfMemory in _smartedit:
 _smartedit.OutOfMemory_swigregister(OutOfMemory)
 class ReaderClosed(FileExceptionBase):
-    r"""Proxy of C++ smartedit::ReaderClosed class."""
+    r"""Proxy of C++ openshot::ReaderClosed class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3687,7 +3604,7 @@ class ReaderClosed(FileExceptionBase):
 # Register ReaderClosed in _smartedit:
 _smartedit.ReaderClosed_swigregister(ReaderClosed)
 class ResampleError(FileExceptionBase):
-    r"""Proxy of C++ smartedit::ResampleError class."""
+    r"""Proxy of C++ openshot::ResampleError class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3702,7 +3619,7 @@ _smartedit.ResampleError_swigregister(ResampleError)
 TMS_DEP_MSG = _smartedit.TMS_DEP_MSG
 
 class WriterClosed(FileExceptionBase):
-    r"""Proxy of C++ smartedit::WriterClosed class."""
+    r"""Proxy of C++ openshot::WriterClosed class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3715,7 +3632,7 @@ class WriterClosed(FileExceptionBase):
 # Register WriterClosed in _smartedit:
 _smartedit.WriterClosed_swigregister(WriterClosed)
 class PacketStatus(object):
-    r"""Proxy of C++ smartedit::PacketStatus class."""
+    r"""Proxy of C++ openshot::PacketStatus class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3748,17 +3665,17 @@ class PacketStatus(object):
 # Register PacketStatus in _smartedit:
 _smartedit.PacketStatus_swigregister(PacketStatus)
 class FFmpegReader(ReaderBase):
-    r"""Proxy of C++ smartedit::FFmpegReader class."""
+    r"""Proxy of C++ openshot::FFmpegReader class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    final_cache = property(_smartedit.FFmpegReader_final_cache_get, _smartedit.FFmpegReader_final_cache_set, doc=r"""final_cache : smartedit::CacheMemory""")
+    final_cache = property(_smartedit.FFmpegReader_final_cache_get, _smartedit.FFmpegReader_final_cache_set, doc=r"""final_cache : openshot::CacheMemory""")
     enable_seek = property(_smartedit.FFmpegReader_enable_seek_get, _smartedit.FFmpegReader_enable_seek_set, doc=r"""enable_seek : bool""")
 
     def __init__(self, *args):
         r"""
         __init__(FFmpegReader self, std::string const & path, bool inspect_reader=True) -> FFmpegReader
-        __init__(FFmpegReader self, std::string const & path, smartedit::DurationStrategy duration_strategy, bool inspect_reader=True) -> FFmpegReader
+        __init__(FFmpegReader self, std::string const & path, openshot::DurationStrategy duration_strategy, bool inspect_reader=True) -> FFmpegReader
         """
         _smartedit.FFmpegReader_swiginit(self, _smartedit.new_FFmpegReader(*args))
     __swig_destroy__ = _smartedit.delete_FFmpegReader
@@ -3772,7 +3689,7 @@ class FFmpegReader(ReaderBase):
         return _smartedit.FFmpegReader_GetCache(self, *args)
 
     def GetFrame(self, *args):
-        r"""GetFrame(FFmpegReader self, int64_t requested_frame) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetFrame(FFmpegReader self, int64_t requested_frame) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.FFmpegReader_GetFrame(self, *args)
 
     def IsOpen(self, *args):
@@ -3818,7 +3735,7 @@ VIDEO_STREAM = _smartedit.VIDEO_STREAM
 AUDIO_STREAM = _smartedit.AUDIO_STREAM
 
 class FFmpegWriter(WriterBase):
-    r"""Proxy of C++ smartedit::FFmpegWriter class."""
+    r"""Proxy of C++ openshot::FFmpegWriter class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -3858,7 +3775,7 @@ class FFmpegWriter(WriterBase):
 
     def SetAudioOptions(self, *args):
         r"""
-        SetAudioOptions(FFmpegWriter self, bool has_audio, std::string codec, int sample_rate, int channels, smartedit::ChannelLayout channel_layout, int bit_rate)
+        SetAudioOptions(FFmpegWriter self, bool has_audio, std::string codec, int sample_rate, int channels, openshot::ChannelLayout channel_layout, int bit_rate)
         SetAudioOptions(FFmpegWriter self, std::string codec, int sample_rate, int bit_rate)
         """
         return _smartedit.FFmpegWriter_SetAudioOptions(self, *args)
@@ -3871,7 +3788,7 @@ class FFmpegWriter(WriterBase):
         return _smartedit.FFmpegWriter_SetVideoOptions(self, *args)
 
     def SetOption(self, *args):
-        r"""SetOption(FFmpegWriter self, smartedit::StreamType stream, std::string name, std::string value)"""
+        r"""SetOption(FFmpegWriter self, openshot::StreamType stream, std::string name, std::string value)"""
         return _smartedit.FFmpegWriter_SetOption(self, *args)
 
     def WriteHeader(self, *args):
@@ -3879,12 +3796,12 @@ class FFmpegWriter(WriterBase):
         return _smartedit.FFmpegWriter_WriteHeader(self, *args)
 
     def WriteFrameAt(self, *args):
-        r"""WriteFrameAt(FFmpegWriter self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number)"""
+        r"""WriteFrameAt(FFmpegWriter self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number)"""
         return _smartedit.FFmpegWriter_WriteFrameAt(self, *args)
 
     def WriteFrame(self, *args):
         r"""
-        WriteFrame(FFmpegWriter self, std::shared_ptr< smartedit::Frame > frame)
+        WriteFrame(FFmpegWriter self, std::shared_ptr< openshot::Frame > frame)
         WriteFrame(FFmpegWriter self, ReaderBase reader, int64_t start, int64_t length)
         """
         return _smartedit.FFmpegWriter_WriteFrame(self, *args)
@@ -3901,7 +3818,7 @@ class FFmpegWriter(WriterBase):
 # Register FFmpegWriter in _smartedit:
 _smartedit.FFmpegWriter_swigregister(FFmpegWriter)
 class Fraction(object):
-    r"""Proxy of C++ smartedit::Fraction class."""
+    r"""Proxy of C++ openshot::Fraction class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     num = property(_smartedit.Fraction_num_get, _smartedit.Fraction_num_set, doc=r"""num : int""")
@@ -4027,7 +3944,7 @@ class Fraction(object):
 # Register Fraction in _smartedit:
 _smartedit.Fraction_swigregister(Fraction)
 class Frame(object):
-    r"""Proxy of C++ smartedit::Frame class."""
+    r"""Proxy of C++ openshot::Frame class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -4077,8 +3994,8 @@ class Frame(object):
 
     def ChannelsLayout(self, *args):
         r"""
-        ChannelsLayout(Frame self) -> smartedit::ChannelLayout
-        ChannelsLayout(Frame self, smartedit::ChannelLayout new_channel_layout)
+        ChannelsLayout(Frame self) -> openshot::ChannelLayout
+        ChannelsLayout(Frame self, openshot::ChannelLayout new_channel_layout)
         """
         return _smartedit.Frame_ChannelsLayout(self, *args)
 
@@ -4170,7 +4087,7 @@ class Frame(object):
         return _smartedit.Frame_GetWidth(self, *args)
 
     def ResizeAudio(self, *args):
-        r"""ResizeAudio(Frame self, int channels, int length, int sample_rate, smartedit::ChannelLayout channel_layout)"""
+        r"""ResizeAudio(Frame self, int channels, int length, int sample_rate, openshot::ChannelLayout channel_layout)"""
         return _smartedit.Frame_ResizeAudio(self, *args)
 
     def SampleRate(self, *args):
@@ -4197,7 +4114,7 @@ class Frame(object):
         return _smartedit.Frame_SetPixelRatio(self, *args)
 
     def Thumbnail(self, *args):
-        r"""Thumbnail(Frame self, std::string path, int new_width, int new_height, std::string mask_path, std::string overlay_path, std::string background_color, bool ignore_aspect, std::string format="png", int quality=100, float rotate=0.0, smartedit::ScaleType scale_mode=SCALE_FIT)"""
+        r"""Thumbnail(Frame self, std::string path, int new_width, int new_height, std::string mask_path, std::string overlay_path, std::string background_color, bool ignore_aspect, std::string format="png", int quality=100, float rotate=0.0, openshot::ScaleType scale_mode=SCALE_FIT)"""
         return _smartedit.Frame_Thumbnail(self, *args)
 
     def Play(self, *args):
@@ -4219,7 +4136,7 @@ class Frame(object):
 # Register Frame in _smartedit:
 _smartedit.Frame_swigregister(Frame)
 class FrameScope(object):
-    r"""Proxy of C++ smartedit::FrameScope class."""
+    r"""Proxy of C++ openshot::FrameScope class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -4227,16 +4144,16 @@ class FrameScope(object):
     def __init__(self, *args):
         r"""
         __init__(FrameScope self) -> FrameScope
-        __init__(FrameScope self, std::shared_ptr< smartedit::Frame > frame, int waveform_columns=256, int audio_buckets=256, int vectorscope_size=256) -> FrameScope
+        __init__(FrameScope self, std::shared_ptr< openshot::Frame > frame, int waveform_columns=256, int audio_buckets=256, int vectorscope_size=256) -> FrameScope
         """
         _smartedit.FrameScope_swiginit(self, _smartedit.new_FrameScope(*args))
 
     def SetFrame(self, *args):
-        r"""SetFrame(FrameScope self, std::shared_ptr< smartedit::Frame > new_frame)"""
+        r"""SetFrame(FrameScope self, std::shared_ptr< openshot::Frame > new_frame)"""
         return _smartedit.FrameScope_SetFrame(self, *args)
 
     def GetFrame(self, *args):
-        r"""GetFrame(FrameScope self) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetFrame(FrameScope self) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.FrameScope_GetFrame(self, *args)
 
     def SetWaveformColumns(self, *args):
@@ -4453,7 +4370,7 @@ PULLDOWN_ADVANCED = _smartedit.PULLDOWN_ADVANCED
 PULLDOWN_NONE = _smartedit.PULLDOWN_NONE
 
 class Field(object):
-    r"""Proxy of C++ smartedit::Field class."""
+    r"""Proxy of C++ openshot::Field class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -4468,7 +4385,7 @@ class Field(object):
 # Register Field in _smartedit:
 _smartedit.Field_swigregister(Field)
 class SampleRange(object):
-    r"""Proxy of C++ smartedit::SampleRange class."""
+    r"""Proxy of C++ openshot::SampleRange class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -4498,13 +4415,13 @@ class SampleRange(object):
 # Register SampleRange in _smartedit:
 _smartedit.SampleRange_swigregister(SampleRange)
 class MappedFrame(object):
-    r"""Proxy of C++ smartedit::MappedFrame class."""
+    r"""Proxy of C++ openshot::MappedFrame class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    Odd = property(_smartedit.MappedFrame_Odd_get, _smartedit.MappedFrame_Odd_set, doc=r"""Odd : smartedit::Field""")
-    Even = property(_smartedit.MappedFrame_Even_get, _smartedit.MappedFrame_Even_set, doc=r"""Even : smartedit::Field""")
-    Samples = property(_smartedit.MappedFrame_Samples_get, _smartedit.MappedFrame_Samples_set, doc=r"""Samples : smartedit::SampleRange""")
+    Odd = property(_smartedit.MappedFrame_Odd_get, _smartedit.MappedFrame_Odd_set, doc=r"""Odd : openshot::Field""")
+    Even = property(_smartedit.MappedFrame_Even_get, _smartedit.MappedFrame_Even_set, doc=r"""Even : openshot::Field""")
+    Samples = property(_smartedit.MappedFrame_Samples_get, _smartedit.MappedFrame_Samples_set, doc=r"""Samples : openshot::SampleRange""")
 
     def __init__(self, *args):
         r"""__init__(MappedFrame self) -> MappedFrame"""
@@ -4514,20 +4431,20 @@ class MappedFrame(object):
 # Register MappedFrame in _smartedit:
 _smartedit.MappedFrame_swigregister(MappedFrame)
 class FrameMapper(ReaderBase):
-    r"""Proxy of C++ smartedit::FrameMapper class."""
+    r"""Proxy of C++ openshot::FrameMapper class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    fields = property(_smartedit.FrameMapper_fields_get, _smartedit.FrameMapper_fields_set, doc=r"""fields : std::vector<(smartedit::Field,std::allocator<(smartedit::Field)>)>""")
-    frames = property(_smartedit.FrameMapper_frames_get, _smartedit.FrameMapper_frames_set, doc=r"""frames : std::vector<(smartedit::MappedFrame,std::allocator<(smartedit::MappedFrame)>)>""")
+    fields = property(_smartedit.FrameMapper_fields_get, _smartedit.FrameMapper_fields_set, doc=r"""fields : std::vector<(openshot::Field,std::allocator<(openshot::Field)>)>""")
+    frames = property(_smartedit.FrameMapper_frames_get, _smartedit.FrameMapper_frames_set, doc=r"""frames : std::vector<(openshot::MappedFrame,std::allocator<(openshot::MappedFrame)>)>""")
 
     def __init__(self, *args):
-        r"""__init__(FrameMapper self, ReaderBase reader, Fraction target_fps, smartedit::PulldownType target_pulldown, int target_sample_rate, int target_channels, smartedit::ChannelLayout target_channel_layout) -> FrameMapper"""
+        r"""__init__(FrameMapper self, ReaderBase reader, Fraction target_fps, openshot::PulldownType target_pulldown, int target_sample_rate, int target_channels, openshot::ChannelLayout target_channel_layout) -> FrameMapper"""
         _smartedit.FrameMapper_swiginit(self, _smartedit.new_FrameMapper(*args))
     __swig_destroy__ = _smartedit.delete_FrameMapper
 
     def ChangeMapping(self, *args):
-        r"""ChangeMapping(FrameMapper self, Fraction target_fps, smartedit::PulldownType pulldown, int target_sample_rate, int target_channels, smartedit::ChannelLayout target_channel_layout)"""
+        r"""ChangeMapping(FrameMapper self, Fraction target_fps, openshot::PulldownType pulldown, int target_sample_rate, int target_channels, openshot::ChannelLayout target_channel_layout)"""
         return _smartedit.FrameMapper_ChangeMapping(self, *args)
 
     def Close(self, *args):
@@ -4543,7 +4460,7 @@ class FrameMapper(ReaderBase):
         return _smartedit.FrameMapper_GetCache(self, *args)
 
     def GetFrame(self, *args):
-        r"""GetFrame(FrameMapper self, int64_t requested_frame) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetFrame(FrameMapper self, int64_t requested_frame) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.FrameMapper_GetFrame(self, *args)
 
     def IsOpen(self, *args):
@@ -4590,7 +4507,7 @@ class FrameMapper(ReaderBase):
         return _smartedit.FrameMapper_Reader(self, *args)
 
     def ResampleMappedAudio(self, *args):
-        r"""ResampleMappedAudio(FrameMapper self, std::shared_ptr< smartedit::Frame > frame, int64_t original_frame_number)"""
+        r"""ResampleMappedAudio(FrameMapper self, std::shared_ptr< openshot::Frame > frame, int64_t original_frame_number)"""
         return _smartedit.FrameMapper_ResampleMappedAudio(self, *args)
 
 # Register FrameMapper in _smartedit:
@@ -4604,7 +4521,7 @@ PLAYBACK_LOADING = _smartedit.PLAYBACK_LOADING
 PLAYBACK_STOPPED = _smartedit.PLAYBACK_STOPPED
 
 class PlayerBase(object):
-    r"""Proxy of C++ smartedit::PlayerBase class."""
+    r"""Proxy of C++ openshot::PlayerBase class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
 
@@ -4617,7 +4534,7 @@ class PlayerBase(object):
         return _smartedit.PlayerBase_Loading(self, *args)
 
     def Mode(self, *args):
-        r"""Mode(PlayerBase self) -> smartedit::PlaybackMode"""
+        r"""Mode(PlayerBase self) -> openshot::PlaybackMode"""
         return _smartedit.PlayerBase_Mode(self, *args)
 
     def Play(self, *args):
@@ -4675,25 +4592,25 @@ AUTO = _smartedit.AUTO
 MANUAL = _smartedit.MANUAL
 
 class Point(object):
-    r"""Proxy of C++ smartedit::Point class."""
+    r"""Proxy of C++ openshot::Point class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    co = property(_smartedit.Point_co_get, _smartedit.Point_co_set, doc=r"""co : smartedit::Coordinate""")
-    handle_left = property(_smartedit.Point_handle_left_get, _smartedit.Point_handle_left_set, doc=r"""handle_left : smartedit::Coordinate""")
-    handle_right = property(_smartedit.Point_handle_right_get, _smartedit.Point_handle_right_set, doc=r"""handle_right : smartedit::Coordinate""")
-    interpolation = property(_smartedit.Point_interpolation_get, _smartedit.Point_interpolation_set, doc=r"""interpolation : smartedit::InterpolationType""")
-    handle_type = property(_smartedit.Point_handle_type_get, _smartedit.Point_handle_type_set, doc=r"""handle_type : smartedit::HandleType""")
+    co = property(_smartedit.Point_co_get, _smartedit.Point_co_set, doc=r"""co : openshot::Coordinate""")
+    handle_left = property(_smartedit.Point_handle_left_get, _smartedit.Point_handle_left_set, doc=r"""handle_left : openshot::Coordinate""")
+    handle_right = property(_smartedit.Point_handle_right_get, _smartedit.Point_handle_right_set, doc=r"""handle_right : openshot::Coordinate""")
+    interpolation = property(_smartedit.Point_interpolation_get, _smartedit.Point_interpolation_set, doc=r"""interpolation : openshot::InterpolationType""")
+    handle_type = property(_smartedit.Point_handle_type_get, _smartedit.Point_handle_type_set, doc=r"""handle_type : openshot::HandleType""")
 
     def __init__(self, *args):
         r"""
         __init__(Point self) -> Point
         __init__(Point self, float y) -> Point
         __init__(Point self, float x, float y) -> Point
-        __init__(Point self, float x, float y, smartedit::InterpolationType interpolation) -> Point
+        __init__(Point self, float x, float y, openshot::InterpolationType interpolation) -> Point
         __init__(Point self, Coordinate co) -> Point
-        __init__(Point self, Coordinate co, smartedit::InterpolationType interpolation) -> Point
-        __init__(Point self, Coordinate co, smartedit::InterpolationType interpolation, smartedit::HandleType handle_type) -> Point
+        __init__(Point self, Coordinate co, openshot::InterpolationType interpolation) -> Point
+        __init__(Point self, Coordinate co, openshot::InterpolationType interpolation, openshot::HandleType handle_type) -> Point
         """
         _smartedit.Point_swiginit(self, _smartedit.new_Point(*args))
 
@@ -4729,7 +4646,7 @@ class Point(object):
 # Register Point in _smartedit:
 _smartedit.Point_swigregister(Point)
 class ProfileInfo(object):
-    r"""Proxy of C++ smartedit::ProfileInfo class."""
+    r"""Proxy of C++ openshot::ProfileInfo class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -4737,9 +4654,9 @@ class ProfileInfo(object):
     height = property(_smartedit.ProfileInfo_height_get, _smartedit.ProfileInfo_height_set, doc=r"""height : int""")
     width = property(_smartedit.ProfileInfo_width_get, _smartedit.ProfileInfo_width_set, doc=r"""width : int""")
     pixel_format = property(_smartedit.ProfileInfo_pixel_format_get, _smartedit.ProfileInfo_pixel_format_set, doc=r"""pixel_format : int""")
-    fps = property(_smartedit.ProfileInfo_fps_get, _smartedit.ProfileInfo_fps_set, doc=r"""fps : smartedit::Fraction""")
-    pixel_ratio = property(_smartedit.ProfileInfo_pixel_ratio_get, _smartedit.ProfileInfo_pixel_ratio_set, doc=r"""pixel_ratio : smartedit::Fraction""")
-    display_ratio = property(_smartedit.ProfileInfo_display_ratio_get, _smartedit.ProfileInfo_display_ratio_set, doc=r"""display_ratio : smartedit::Fraction""")
+    fps = property(_smartedit.ProfileInfo_fps_get, _smartedit.ProfileInfo_fps_set, doc=r"""fps : openshot::Fraction""")
+    pixel_ratio = property(_smartedit.ProfileInfo_pixel_ratio_get, _smartedit.ProfileInfo_pixel_ratio_set, doc=r"""pixel_ratio : openshot::Fraction""")
+    display_ratio = property(_smartedit.ProfileInfo_display_ratio_get, _smartedit.ProfileInfo_display_ratio_set, doc=r"""display_ratio : openshot::Fraction""")
     interlaced_frame = property(_smartedit.ProfileInfo_interlaced_frame_get, _smartedit.ProfileInfo_interlaced_frame_set, doc=r"""interlaced_frame : bool""")
     spherical = property(_smartedit.ProfileInfo_spherical_get, _smartedit.ProfileInfo_spherical_set, doc=r"""spherical : bool""")
 
@@ -4751,11 +4668,11 @@ class ProfileInfo(object):
 # Register ProfileInfo in _smartedit:
 _smartedit.ProfileInfo_swigregister(ProfileInfo)
 class Profile(object):
-    r"""Proxy of C++ smartedit::Profile class."""
+    r"""Proxy of C++ openshot::Profile class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    info = property(_smartedit.Profile_info_get, _smartedit.Profile_info_set, doc=r"""info : smartedit::ProfileInfo""")
+    info = property(_smartedit.Profile_info_get, _smartedit.Profile_info_set, doc=r"""info : openshot::ProfileInfo""")
 
     def __init__(self, *args):
         r"""
@@ -4839,17 +4756,17 @@ SCREEN_CAPTURE_WINDOWS_GDI = _smartedit.SCREEN_CAPTURE_WINDOWS_GDI
 SCREEN_CAPTURE_MAC_AVFOUNDATION = _smartedit.SCREEN_CAPTURE_MAC_AVFOUNDATION
 
 class ScreenCaptureSettings(object):
-    r"""Proxy of C++ smartedit::ScreenCaptureSettings class."""
+    r"""Proxy of C++ openshot::ScreenCaptureSettings class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    backend = property(_smartedit.ScreenCaptureSettings_backend_get, _smartedit.ScreenCaptureSettings_backend_set, doc=r"""backend : smartedit::ScreenCaptureBackend""")
+    backend = property(_smartedit.ScreenCaptureSettings_backend_get, _smartedit.ScreenCaptureSettings_backend_set, doc=r"""backend : openshot::ScreenCaptureBackend""")
     display = property(_smartedit.ScreenCaptureSettings_display_get, _smartedit.ScreenCaptureSettings_display_set, doc=r"""display : std::string""")
     x = property(_smartedit.ScreenCaptureSettings_x_get, _smartedit.ScreenCaptureSettings_x_set, doc=r"""x : int""")
     y = property(_smartedit.ScreenCaptureSettings_y_get, _smartedit.ScreenCaptureSettings_y_set, doc=r"""y : int""")
     width = property(_smartedit.ScreenCaptureSettings_width_get, _smartedit.ScreenCaptureSettings_width_set, doc=r"""width : int""")
     height = property(_smartedit.ScreenCaptureSettings_height_get, _smartedit.ScreenCaptureSettings_height_set, doc=r"""height : int""")
-    fps = property(_smartedit.ScreenCaptureSettings_fps_get, _smartedit.ScreenCaptureSettings_fps_set, doc=r"""fps : smartedit::Fraction""")
+    fps = property(_smartedit.ScreenCaptureSettings_fps_get, _smartedit.ScreenCaptureSettings_fps_set, doc=r"""fps : openshot::Fraction""")
     include_cursor = property(_smartedit.ScreenCaptureSettings_include_cursor_get, _smartedit.ScreenCaptureSettings_include_cursor_set, doc=r"""include_cursor : bool""")
     show_region = property(_smartedit.ScreenCaptureSettings_show_region_get, _smartedit.ScreenCaptureSettings_show_region_set, doc=r"""show_region : bool""")
     capture_audio = property(_smartedit.ScreenCaptureSettings_capture_audio_get, _smartedit.ScreenCaptureSettings_capture_audio_set, doc=r"""capture_audio : bool""")
@@ -4866,7 +4783,7 @@ class ScreenCaptureSettings(object):
 # Register ScreenCaptureSettings in _smartedit:
 _smartedit.ScreenCaptureSettings_swigregister(ScreenCaptureSettings)
 class CaptureReaderStats(object):
-    r"""Proxy of C++ smartedit::CaptureReaderStats class."""
+    r"""Proxy of C++ openshot::CaptureReaderStats class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -4883,7 +4800,7 @@ class CaptureReaderStats(object):
 # Register CaptureReaderStats in _smartedit:
 _smartedit.CaptureReaderStats_swigregister(CaptureReaderStats)
 class ScreenCaptureReader(ReaderBase):
-    r"""Proxy of C++ smartedit::ScreenCaptureReader class."""
+    r"""Proxy of C++ openshot::ScreenCaptureReader class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -4902,7 +4819,7 @@ class ScreenCaptureReader(ReaderBase):
         return _smartedit.ScreenCaptureReader_GetCache(self, *args)
 
     def GetFrame(self, *args):
-        r"""GetFrame(ScreenCaptureReader self, int64_t number) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetFrame(ScreenCaptureReader self, int64_t number) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.ScreenCaptureReader_GetFrame(self, *args)
 
     def IsOpen(self, *args):
@@ -4938,7 +4855,7 @@ class ScreenCaptureReader(ReaderBase):
         return _smartedit.ScreenCaptureReader_GetStats(self, *args)
 
     def AddSystemAudio(self, *args):
-        r"""AddSystemAudio(ScreenCaptureReader self, std::shared_ptr< smartedit::Frame > frame, int64_t output_frame_number)"""
+        r"""AddSystemAudio(ScreenCaptureReader self, std::shared_ptr< openshot::Frame > frame, int64_t output_frame_number)"""
         return _smartedit.ScreenCaptureReader_AddSystemAudio(self, *args)
 
     def ResetSystemAudio(self, *args):
@@ -4951,23 +4868,23 @@ class ScreenCaptureReader(ReaderBase):
 
     @staticmethod
     def IsBackendSupported(*args):
-        r"""IsBackendSupported(smartedit::ScreenCaptureBackend backend) -> bool"""
+        r"""IsBackendSupported(openshot::ScreenCaptureBackend backend) -> bool"""
         return _smartedit.ScreenCaptureReader_IsBackendSupported(*args)
 
     @staticmethod
     def IsSystemAudioSupported(*args):
-        r"""IsSystemAudioSupported(smartedit::ScreenCaptureBackend backend) -> bool"""
+        r"""IsSystemAudioSupported(openshot::ScreenCaptureBackend backend) -> bool"""
         return _smartedit.ScreenCaptureReader_IsSystemAudioSupported(*args)
 
     @staticmethod
     def DefaultBackend(*args):
-        r"""DefaultBackend() -> smartedit::ScreenCaptureBackend"""
+        r"""DefaultBackend() -> openshot::ScreenCaptureBackend"""
         return _smartedit.ScreenCaptureReader_DefaultBackend(*args)
 
 # Register ScreenCaptureReader in _smartedit:
 _smartedit.ScreenCaptureReader_swigregister(ScreenCaptureReader)
 class QtHtmlReader(ReaderBase):
-    r"""Proxy of C++ smartedit::QtHtmlReader class."""
+    r"""Proxy of C++ openshot::QtHtmlReader class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -4975,7 +4892,7 @@ class QtHtmlReader(ReaderBase):
     def __init__(self, *args):
         r"""
         __init__(QtHtmlReader self) -> QtHtmlReader
-        __init__(QtHtmlReader self, int width, int height, int x_offset, int y_offset, smartedit::GravityType gravity, std::string html, std::string css, std::string background_color) -> QtHtmlReader
+        __init__(QtHtmlReader self, int width, int height, int x_offset, int y_offset, openshot::GravityType gravity, std::string html, std::string css, std::string background_color) -> QtHtmlReader
         """
         _smartedit.QtHtmlReader_swiginit(self, _smartedit.new_QtHtmlReader(*args))
 
@@ -4988,7 +4905,7 @@ class QtHtmlReader(ReaderBase):
         return _smartedit.QtHtmlReader_GetCache(self, *args)
 
     def GetFrame(self, *args):
-        r"""GetFrame(QtHtmlReader self, int64_t requested_frame) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetFrame(QtHtmlReader self, int64_t requested_frame) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.QtHtmlReader_GetFrame(self, *args)
 
     def IsOpen(self, *args):
@@ -5023,7 +4940,7 @@ class QtHtmlReader(ReaderBase):
 # Register QtHtmlReader in _smartedit:
 _smartedit.QtHtmlReader_swigregister(QtHtmlReader)
 class QtImageReader(ReaderBase):
-    r"""Proxy of C++ smartedit::QtImageReader class."""
+    r"""Proxy of C++ openshot::QtImageReader class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -5042,7 +4959,7 @@ class QtImageReader(ReaderBase):
         return _smartedit.QtImageReader_GetCache(self, *args)
 
     def GetFrame(self, *args):
-        r"""GetFrame(QtImageReader self, int64_t requested_frame) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetFrame(QtImageReader self, int64_t requested_frame) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.QtImageReader_GetFrame(self, *args)
 
     def IsOpen(self, *args):
@@ -5076,7 +4993,7 @@ class QtImageReader(ReaderBase):
 # Register QtImageReader in _smartedit:
 _smartedit.QtImageReader_swigregister(QtImageReader)
 class QtPlayer(PlayerBase):
-    r"""Proxy of C++ smartedit::QtPlayer class."""
+    r"""Proxy of C++ openshot::QtPlayer class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -5102,7 +5019,7 @@ class QtPlayer(PlayerBase):
         return _smartedit.QtPlayer_GetDefaultSampleRate(self, *args)
 
     def GetAudioDeviceNames(self, *args):
-        r"""GetAudioDeviceNames(QtPlayer self) -> smartedit::AudioDeviceList"""
+        r"""GetAudioDeviceNames(QtPlayer self) -> openshot::AudioDeviceList"""
         return _smartedit.QtPlayer_GetAudioDeviceNames(self, *args)
 
     def GetCurrentAudioDevice(self, *args):
@@ -5118,7 +5035,7 @@ class QtPlayer(PlayerBase):
         return _smartedit.QtPlayer_Loading(self, *args)
 
     def Mode(self, *args):
-        r"""Mode(QtPlayer self) -> smartedit::PlaybackMode"""
+        r"""Mode(QtPlayer self) -> openshot::PlaybackMode"""
         return _smartedit.QtPlayer_Mode(self, *args)
 
     def Pause(self, *args):
@@ -5150,10 +5067,6 @@ class QtPlayer(PlayerBase):
         SetQWidget(QtPlayer self, QWidget * widget)
         """
         return _smartedit.QtPlayer_SetQWidget(self, *args)
-
-    def SetFrameCallback(self, *args):
-        r"""SetFrameCallback(QtPlayer self, uintptr_t callback_func, uintptr_t user_data)"""
-        return _smartedit.QtPlayer_SetFrameCallback(self, *args)
 
     def GetRendererQObject(self, *args):
         r"""GetRendererQObject(QtPlayer self) -> uintptr_t"""
@@ -5187,7 +5100,7 @@ class QtPlayer(PlayerBase):
 # Register QtPlayer in _smartedit:
 _smartedit.QtPlayer_swigregister(QtPlayer)
 class QtTextReader(ReaderBase):
-    r"""Proxy of C++ smartedit::QtTextReader class."""
+    r"""Proxy of C++ openshot::QtTextReader class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -5195,7 +5108,7 @@ class QtTextReader(ReaderBase):
     def __init__(self, *args):
         r"""
         __init__(QtTextReader self) -> QtTextReader
-        __init__(QtTextReader self, int width, int height, int x_offset, int y_offset, smartedit::GravityType gravity, std::string text, QFont font, std::string text_color, std::string background_color) -> QtTextReader
+        __init__(QtTextReader self, int width, int height, int x_offset, int y_offset, openshot::GravityType gravity, std::string text, QFont font, std::string text_color, std::string background_color) -> QtTextReader
         """
         _smartedit.QtTextReader_swiginit(self, _smartedit.new_QtTextReader(*args))
 
@@ -5212,7 +5125,7 @@ class QtTextReader(ReaderBase):
         return _smartedit.QtTextReader_GetCache(self, *args)
 
     def GetFrame(self, *args):
-        r"""GetFrame(QtTextReader self, int64_t requested_frame) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetFrame(QtTextReader self, int64_t requested_frame) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.QtTextReader_GetFrame(self, *args)
 
     def IsOpen(self, *args):
@@ -5263,7 +5176,7 @@ def InterpolateBetween(*args):
     r"""InterpolateBetween(Point left, Point right, double target, double allowed_error) -> double"""
     return _smartedit.InterpolateBetween(*args)
 class Keyframe(object):
-    r"""Proxy of C++ smartedit::Keyframe class."""
+    r"""Proxy of C++ openshot::Keyframe class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -5280,7 +5193,7 @@ class Keyframe(object):
     def AddPoint(self, *args):
         r"""
         AddPoint(Keyframe self, Point p)
-        AddPoint(Keyframe self, double x, double y, smartedit::InterpolationType interpolate=BEZIER)
+        AddPoint(Keyframe self, double x, double y, openshot::InterpolationType interpolate=BEZIER)
         """
         return _smartedit.Keyframe_AddPoint(self, *args)
 
@@ -5385,24 +5298,24 @@ class Keyframe(object):
 # Register Keyframe in _smartedit:
 _smartedit.Keyframe_swigregister(Keyframe)
 class AnimatedCurveNode(object):
-    r"""Proxy of C++ smartedit::AnimatedCurveNode class."""
+    r"""Proxy of C++ openshot::AnimatedCurveNode class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
     id = property(_smartedit.AnimatedCurveNode_id_get, _smartedit.AnimatedCurveNode_id_set, doc=r"""id : int""")
-    x = property(_smartedit.AnimatedCurveNode_x_get, _smartedit.AnimatedCurveNode_x_set, doc=r"""x : smartedit::Keyframe""")
-    y = property(_smartedit.AnimatedCurveNode_y_get, _smartedit.AnimatedCurveNode_y_set, doc=r"""y : smartedit::Keyframe""")
-    left_handle_x = property(_smartedit.AnimatedCurveNode_left_handle_x_get, _smartedit.AnimatedCurveNode_left_handle_x_set, doc=r"""left_handle_x : smartedit::Keyframe""")
-    left_handle_y = property(_smartedit.AnimatedCurveNode_left_handle_y_get, _smartedit.AnimatedCurveNode_left_handle_y_set, doc=r"""left_handle_y : smartedit::Keyframe""")
-    right_handle_x = property(_smartedit.AnimatedCurveNode_right_handle_x_get, _smartedit.AnimatedCurveNode_right_handle_x_set, doc=r"""right_handle_x : smartedit::Keyframe""")
-    right_handle_y = property(_smartedit.AnimatedCurveNode_right_handle_y_get, _smartedit.AnimatedCurveNode_right_handle_y_set, doc=r"""right_handle_y : smartedit::Keyframe""")
-    interpolation = property(_smartedit.AnimatedCurveNode_interpolation_get, _smartedit.AnimatedCurveNode_interpolation_set, doc=r"""interpolation : smartedit::InterpolationType""")
-    handle_type = property(_smartedit.AnimatedCurveNode_handle_type_get, _smartedit.AnimatedCurveNode_handle_type_set, doc=r"""handle_type : smartedit::HandleType""")
+    x = property(_smartedit.AnimatedCurveNode_x_get, _smartedit.AnimatedCurveNode_x_set, doc=r"""x : openshot::Keyframe""")
+    y = property(_smartedit.AnimatedCurveNode_y_get, _smartedit.AnimatedCurveNode_y_set, doc=r"""y : openshot::Keyframe""")
+    left_handle_x = property(_smartedit.AnimatedCurveNode_left_handle_x_get, _smartedit.AnimatedCurveNode_left_handle_x_set, doc=r"""left_handle_x : openshot::Keyframe""")
+    left_handle_y = property(_smartedit.AnimatedCurveNode_left_handle_y_get, _smartedit.AnimatedCurveNode_left_handle_y_set, doc=r"""left_handle_y : openshot::Keyframe""")
+    right_handle_x = property(_smartedit.AnimatedCurveNode_right_handle_x_get, _smartedit.AnimatedCurveNode_right_handle_x_set, doc=r"""right_handle_x : openshot::Keyframe""")
+    right_handle_y = property(_smartedit.AnimatedCurveNode_right_handle_y_get, _smartedit.AnimatedCurveNode_right_handle_y_set, doc=r"""right_handle_y : openshot::Keyframe""")
+    interpolation = property(_smartedit.AnimatedCurveNode_interpolation_get, _smartedit.AnimatedCurveNode_interpolation_set, doc=r"""interpolation : openshot::InterpolationType""")
+    handle_type = property(_smartedit.AnimatedCurveNode_handle_type_get, _smartedit.AnimatedCurveNode_handle_type_set, doc=r"""handle_type : openshot::HandleType""")
 
     def __init__(self, *args):
         r"""
         __init__(AnimatedCurveNode self) -> AnimatedCurveNode
-        __init__(AnimatedCurveNode self, int node_id, double node_x, double node_y, smartedit::InterpolationType node_interpolation=LINEAR) -> AnimatedCurveNode
+        __init__(AnimatedCurveNode self, int node_id, double node_x, double node_y, openshot::InterpolationType node_interpolation=LINEAR) -> AnimatedCurveNode
         """
         _smartedit.AnimatedCurveNode_swiginit(self, _smartedit.new_AnimatedCurveNode(*args))
 
@@ -5430,11 +5343,11 @@ class AnimatedCurveNode(object):
 # Register AnimatedCurveNode in _smartedit:
 _smartedit.AnimatedCurveNode_swigregister(AnimatedCurveNode)
 class AnimatedCurve(object):
-    r"""Proxy of C++ smartedit::AnimatedCurve class."""
+    r"""Proxy of C++ openshot::AnimatedCurve class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    enabled = property(_smartedit.AnimatedCurve_enabled_get, _smartedit.AnimatedCurve_enabled_set, doc=r"""enabled : smartedit::Keyframe""")
+    enabled = property(_smartedit.AnimatedCurve_enabled_get, _smartedit.AnimatedCurve_enabled_set, doc=r"""enabled : openshot::Keyframe""")
 
     def __init__(self, *args):
         r"""__init__(AnimatedCurve self) -> AnimatedCurve"""
@@ -5442,8 +5355,8 @@ class AnimatedCurve(object):
 
     def Nodes(self, *args):
         r"""
-        Nodes(AnimatedCurve self) -> std::vector< smartedit::AnimatedCurveNode,std::allocator< smartedit::AnimatedCurveNode > > const
-        Nodes(AnimatedCurve self) -> std::vector< smartedit::AnimatedCurveNode,std::allocator< smartedit::AnimatedCurveNode > > &
+        Nodes(AnimatedCurve self) -> std::vector< openshot::AnimatedCurveNode,std::allocator< openshot::AnimatedCurveNode > > const
+        Nodes(AnimatedCurve self) -> std::vector< openshot::AnimatedCurveNode,std::allocator< openshot::AnimatedCurveNode > > &
         """
         return _smartedit.AnimatedCurve_Nodes(self, *args)
 
@@ -5479,7 +5392,7 @@ class AnimatedCurve(object):
 # Register AnimatedCurve in _smartedit:
 _smartedit.AnimatedCurve_swigregister(AnimatedCurve)
 class RendererBase(object):
-    r"""Proxy of C++ smartedit::RendererBase class."""
+    r"""Proxy of C++ openshot::RendererBase class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
 
@@ -5488,7 +5401,7 @@ class RendererBase(object):
     __repr__ = _swig_repr
 
     def paint(self, *args):
-        r"""paint(RendererBase self, std::shared_ptr< smartedit::Frame > const & frame)"""
+        r"""paint(RendererBase self, std::shared_ptr< openshot::Frame > const & frame)"""
         return _smartedit.RendererBase_paint(self, *args)
 
     def OverrideWidget(self, *args):
@@ -5498,7 +5411,7 @@ class RendererBase(object):
 # Register RendererBase in _smartedit:
 _smartedit.RendererBase_swigregister(RendererBase)
 class Settings(object):
-    r"""Proxy of C++ smartedit::Settings class."""
+    r"""Proxy of C++ openshot::Settings class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
 
@@ -5522,7 +5435,7 @@ class Settings(object):
     PLAYBACK_AUDIO_DEVICE_NAME = property(_smartedit.Settings_PLAYBACK_AUDIO_DEVICE_NAME_get, _smartedit.Settings_PLAYBACK_AUDIO_DEVICE_NAME_set, doc=r"""PLAYBACK_AUDIO_DEVICE_NAME : std::string""")
     PLAYBACK_AUDIO_DEVICE_TYPE = property(_smartedit.Settings_PLAYBACK_AUDIO_DEVICE_TYPE_get, _smartedit.Settings_PLAYBACK_AUDIO_DEVICE_TYPE_set, doc=r"""PLAYBACK_AUDIO_DEVICE_TYPE : std::string""")
     PLAYBACK_AUDIO_BUFFER_SIZE = property(_smartedit.Settings_PLAYBACK_AUDIO_BUFFER_SIZE_get, _smartedit.Settings_PLAYBACK_AUDIO_BUFFER_SIZE_set, doc=r"""PLAYBACK_AUDIO_BUFFER_SIZE : int""")
-    PATH_SMARTEDIT_INSTALL = property(_smartedit.Settings_PATH_SMARTEDIT_INSTALL_get, _smartedit.Settings_PATH_SMARTEDIT_INSTALL_set, doc=r"""PATH_SMARTEDIT_INSTALL : std::string""")
+    PATH_OPENSHOT_INSTALL = property(_smartedit.Settings_PATH_OPENSHOT_INSTALL_get, _smartedit.Settings_PATH_OPENSHOT_INSTALL_set, doc=r"""PATH_OPENSHOT_INSTALL : std::string""")
     DEBUG_TO_STDERR = property(_smartedit.Settings_DEBUG_TO_STDERR_get, _smartedit.Settings_DEBUG_TO_STDERR_set, doc=r"""DEBUG_TO_STDERR : bool""")
 
     def EffectiveOMPThreads(self, *args):
@@ -5554,7 +5467,7 @@ class Settings(object):
 # Register Settings in _smartedit:
 _smartedit.Settings_swigregister(Settings)
 class TimelineInfoStruct(object):
-    r"""Proxy of C++ smartedit::TimelineInfoStruct class."""
+    r"""Proxy of C++ openshot::TimelineInfoStruct class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -5569,7 +5482,7 @@ class TimelineInfoStruct(object):
 # Register TimelineInfoStruct in _smartedit:
 _smartedit.TimelineInfoStruct_swigregister(TimelineInfoStruct)
 class TimelineBase(object):
-    r"""Proxy of C++ smartedit::TimelineBase class."""
+    r"""Proxy of C++ openshot::TimelineBase class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
 
@@ -5587,7 +5500,7 @@ class TimelineBase(object):
 # Register TimelineBase in _smartedit:
 _smartedit.TimelineBase_swigregister(TimelineBase)
 class VideoCacheThread(object):
-    r"""Proxy of C++ smartedit::VideoCacheThread class."""
+    r"""Proxy of C++ openshot::VideoCacheThread class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -5643,7 +5556,7 @@ class VideoCacheThread(object):
 # Register VideoCacheThread in _smartedit:
 _smartedit.VideoCacheThread_swigregister(VideoCacheThread)
 class CompareClips(object):
-    r"""Proxy of C++ smartedit::CompareClips class."""
+    r"""Proxy of C++ openshot::CompareClips class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -5660,7 +5573,7 @@ class CompareClips(object):
 # Register CompareClips in _smartedit:
 _smartedit.CompareClips_swigregister(CompareClips)
 class CompareEffects(object):
-    r"""Proxy of C++ smartedit::CompareEffects class."""
+    r"""Proxy of C++ openshot::CompareEffects class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -5677,7 +5590,7 @@ class CompareEffects(object):
 # Register CompareEffects in _smartedit:
 _smartedit.CompareEffects_swigregister(CompareEffects)
 class CompareClipEndFrames(object):
-    r"""Proxy of C++ smartedit::CompareClipEndFrames class."""
+    r"""Proxy of C++ openshot::CompareClipEndFrames class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -5694,7 +5607,7 @@ class CompareClipEndFrames(object):
 # Register CompareClipEndFrames in _smartedit:
 _smartedit.CompareClipEndFrames_swigregister(CompareClipEndFrames)
 class CompareEffectEndFrames(object):
-    r"""Proxy of C++ smartedit::CompareEffectEndFrames class."""
+    r"""Proxy of C++ openshot::CompareEffectEndFrames class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -5711,14 +5624,14 @@ class CompareEffectEndFrames(object):
 # Register CompareEffectEndFrames in _smartedit:
 _smartedit.CompareEffectEndFrames_swigregister(CompareEffectEndFrames)
 class Timeline(TimelineBase, ReaderBase):
-    r"""Proxy of C++ smartedit::Timeline class."""
+    r"""Proxy of C++ openshot::Timeline class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
 
     def __init__(self, *args):
         r"""
-        __init__(Timeline self, int width, int height, Fraction fps, int sample_rate, int channels, smartedit::ChannelLayout channel_layout) -> Timeline
+        __init__(Timeline self, int width, int height, Fraction fps, int sample_rate, int channels, openshot::ChannelLayout channel_layout) -> Timeline
         __init__(Timeline self, ReaderInfo info) -> Timeline
         __init__(Timeline self, std::string const & projectPath, bool convert_absolute_paths) -> Timeline
         """
@@ -5726,11 +5639,11 @@ class Timeline(TimelineBase, ReaderBase):
     __swig_destroy__ = _smartedit.delete_Timeline
 
     def AddTrackedObject(self, *args):
-        r"""AddTrackedObject(Timeline self, std::shared_ptr< smartedit::TrackedObjectBase > trackedObject)"""
+        r"""AddTrackedObject(Timeline self, std::shared_ptr< openshot::TrackedObjectBase > trackedObject)"""
         return _smartedit.Timeline_AddTrackedObject(self, *args)
 
     def GetTrackedObject(self, *args):
-        r"""GetTrackedObject(Timeline self, std::string id) -> std::shared_ptr< smartedit::TrackedObjectBase >"""
+        r"""GetTrackedObject(Timeline self, std::string id) -> std::shared_ptr< openshot::TrackedObjectBase >"""
         return _smartedit.Timeline_GetTrackedObject(self, *args)
 
     def GetTrackedObjectsIds(self, *args):
@@ -5746,7 +5659,7 @@ class Timeline(TimelineBase, ReaderBase):
         return _smartedit.Timeline_AddEffect(self, *args)
 
     def apply_effects(self, *args):
-        r"""apply_effects(Timeline self, std::shared_ptr< smartedit::Frame > frame, int64_t timeline_frame_number, int layer, TimelineInfoStruct options) -> std::shared_ptr< smartedit::Frame >"""
+        r"""apply_effects(Timeline self, std::shared_ptr< openshot::Frame > frame, int64_t timeline_frame_number, int layer, TimelineInfoStruct options) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.Timeline_apply_effects(self, *args)
 
     def ApplyMapperToClips(self, *args):
@@ -5825,12 +5738,12 @@ class Timeline(TimelineBase, ReaderBase):
         return _smartedit.Timeline_CacheEpoch(self, *args)
 
     def GetFrame(self, *args):
-        r"""GetFrame(Timeline self, int64_t requested_frame) -> std::shared_ptr< smartedit::Frame >"""
+        r"""GetFrame(Timeline self, int64_t requested_frame) -> std::shared_ptr< openshot::Frame >"""
         return _smartedit.Timeline_GetFrame(self, *args)
-    viewport_scale = property(_smartedit.Timeline_viewport_scale_get, _smartedit.Timeline_viewport_scale_set, doc=r"""viewport_scale : smartedit::Keyframe""")
-    viewport_x = property(_smartedit.Timeline_viewport_x_get, _smartedit.Timeline_viewport_x_set, doc=r"""viewport_x : smartedit::Keyframe""")
-    viewport_y = property(_smartedit.Timeline_viewport_y_get, _smartedit.Timeline_viewport_y_set, doc=r"""viewport_y : smartedit::Keyframe""")
-    color = property(_smartedit.Timeline_color_get, _smartedit.Timeline_color_set, doc=r"""color : smartedit::Color""")
+    viewport_scale = property(_smartedit.Timeline_viewport_scale_get, _smartedit.Timeline_viewport_scale_set, doc=r"""viewport_scale : openshot::Keyframe""")
+    viewport_x = property(_smartedit.Timeline_viewport_x_get, _smartedit.Timeline_viewport_x_set, doc=r"""viewport_x : openshot::Keyframe""")
+    viewport_y = property(_smartedit.Timeline_viewport_y_get, _smartedit.Timeline_viewport_y_set, doc=r"""viewport_y : openshot::Keyframe""")
+    color = property(_smartedit.Timeline_color_get, _smartedit.Timeline_color_set, doc=r"""color : openshot::Color""")
 
     def IsOpen(self, *args):
         r"""IsOpen(Timeline self) -> bool"""
@@ -5883,7 +5796,7 @@ class Timeline(TimelineBase, ReaderBase):
 # Register Timeline in _smartedit:
 _smartedit.Timeline_swigregister(Timeline)
 class ZmqLogger(object):
-    r"""Proxy of C++ smartedit::ZmqLogger class."""
+    r"""Proxy of C++ openshot::ZmqLogger class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
 
@@ -5928,15 +5841,15 @@ class ZmqLogger(object):
 # Register ZmqLogger in _smartedit:
 _smartedit.ZmqLogger_swigregister(ZmqLogger)
 class Bars(EffectBase):
-    r"""Proxy of C++ smartedit::Bars class."""
+    r"""Proxy of C++ openshot::Bars class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    color = property(_smartedit.Bars_color_get, _smartedit.Bars_color_set, doc=r"""color : smartedit::Color""")
-    left = property(_smartedit.Bars_left_get, _smartedit.Bars_left_set, doc=r"""left : smartedit::Keyframe""")
-    top = property(_smartedit.Bars_top_get, _smartedit.Bars_top_set, doc=r"""top : smartedit::Keyframe""")
-    right = property(_smartedit.Bars_right_get, _smartedit.Bars_right_set, doc=r"""right : smartedit::Keyframe""")
-    bottom = property(_smartedit.Bars_bottom_get, _smartedit.Bars_bottom_set, doc=r"""bottom : smartedit::Keyframe""")
+    color = property(_smartedit.Bars_color_get, _smartedit.Bars_color_set, doc=r"""color : openshot::Color""")
+    left = property(_smartedit.Bars_left_get, _smartedit.Bars_left_set, doc=r"""left : openshot::Keyframe""")
+    top = property(_smartedit.Bars_top_get, _smartedit.Bars_top_set, doc=r"""top : openshot::Keyframe""")
+    right = property(_smartedit.Bars_right_get, _smartedit.Bars_right_set, doc=r"""right : openshot::Keyframe""")
+    bottom = property(_smartedit.Bars_bottom_get, _smartedit.Bars_bottom_set, doc=r"""bottom : openshot::Keyframe""")
 
     def __init__(self, *args):
         r"""
@@ -5947,8 +5860,8 @@ class Bars(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(Bars self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(Bars self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(Bars self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(Bars self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.Bars_GetFrame(self, *args)
 
@@ -5980,18 +5893,18 @@ BLUR_MASK_POST_BLEND = _smartedit.BLUR_MASK_POST_BLEND
 BLUR_MASK_DRIVE_AMOUNT = _smartedit.BLUR_MASK_DRIVE_AMOUNT
 
 class Blur(EffectBase):
-    r"""Proxy of C++ smartedit::Blur class."""
+    r"""Proxy of C++ openshot::Blur class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    horizontal_radius = property(_smartedit.Blur_horizontal_radius_get, _smartedit.Blur_horizontal_radius_set, doc=r"""horizontal_radius : smartedit::Keyframe""")
-    vertical_radius = property(_smartedit.Blur_vertical_radius_get, _smartedit.Blur_vertical_radius_set, doc=r"""vertical_radius : smartedit::Keyframe""")
-    sigma = property(_smartedit.Blur_sigma_get, _smartedit.Blur_sigma_set, doc=r"""sigma : smartedit::Keyframe""")
-    iterations = property(_smartedit.Blur_iterations_get, _smartedit.Blur_iterations_set, doc=r"""iterations : smartedit::Keyframe""")
-    left = property(_smartedit.Blur_left_get, _smartedit.Blur_left_set, doc=r"""left : smartedit::Keyframe""")
-    top = property(_smartedit.Blur_top_get, _smartedit.Blur_top_set, doc=r"""top : smartedit::Keyframe""")
-    right = property(_smartedit.Blur_right_get, _smartedit.Blur_right_set, doc=r"""right : smartedit::Keyframe""")
-    bottom = property(_smartedit.Blur_bottom_get, _smartedit.Blur_bottom_set, doc=r"""bottom : smartedit::Keyframe""")
+    horizontal_radius = property(_smartedit.Blur_horizontal_radius_get, _smartedit.Blur_horizontal_radius_set, doc=r"""horizontal_radius : openshot::Keyframe""")
+    vertical_radius = property(_smartedit.Blur_vertical_radius_get, _smartedit.Blur_vertical_radius_set, doc=r"""vertical_radius : openshot::Keyframe""")
+    sigma = property(_smartedit.Blur_sigma_get, _smartedit.Blur_sigma_set, doc=r"""sigma : openshot::Keyframe""")
+    iterations = property(_smartedit.Blur_iterations_get, _smartedit.Blur_iterations_set, doc=r"""iterations : openshot::Keyframe""")
+    left = property(_smartedit.Blur_left_get, _smartedit.Blur_left_set, doc=r"""left : openshot::Keyframe""")
+    top = property(_smartedit.Blur_top_get, _smartedit.Blur_top_set, doc=r"""top : openshot::Keyframe""")
+    right = property(_smartedit.Blur_right_get, _smartedit.Blur_right_set, doc=r"""right : openshot::Keyframe""")
+    bottom = property(_smartedit.Blur_bottom_get, _smartedit.Blur_bottom_set, doc=r"""bottom : openshot::Keyframe""")
     mask_mode = property(_smartedit.Blur_mask_mode_get, _smartedit.Blur_mask_mode_set, doc=r"""mask_mode : int""")
 
     def __init__(self, *args):
@@ -6004,8 +5917,8 @@ class Blur(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(Blur self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(Blur self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(Blur self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(Blur self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.Blur_GetFrame(self, *args)
 
@@ -6037,12 +5950,12 @@ BRIGHTNESS_MASK_LIMIT_TO_AREA = _smartedit.BRIGHTNESS_MASK_LIMIT_TO_AREA
 BRIGHTNESS_MASK_VARY_STRENGTH = _smartedit.BRIGHTNESS_MASK_VARY_STRENGTH
 
 class Brightness(EffectBase):
-    r"""Proxy of C++ smartedit::Brightness class."""
+    r"""Proxy of C++ openshot::Brightness class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    brightness = property(_smartedit.Brightness_brightness_get, _smartedit.Brightness_brightness_set, doc=r"""brightness : smartedit::Keyframe""")
-    contrast = property(_smartedit.Brightness_contrast_get, _smartedit.Brightness_contrast_set, doc=r"""contrast : smartedit::Keyframe""")
+    brightness = property(_smartedit.Brightness_brightness_get, _smartedit.Brightness_brightness_set, doc=r"""brightness : openshot::Keyframe""")
+    contrast = property(_smartedit.Brightness_contrast_get, _smartedit.Brightness_contrast_set, doc=r"""contrast : openshot::Keyframe""")
     mask_mode = property(_smartedit.Brightness_mask_mode_get, _smartedit.Brightness_mask_mode_set, doc=r"""mask_mode : int""")
 
     def __init__(self, *args):
@@ -6054,8 +5967,8 @@ class Brightness(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(Brightness self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(Brightness self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(Brightness self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(Brightness self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.Brightness_GetFrame(self, *args)
 
@@ -6083,26 +5996,26 @@ class Brightness(EffectBase):
 # Register Brightness in _smartedit:
 _smartedit.Brightness_swigregister(Brightness)
 class Caption(EffectBase):
-    r"""Proxy of C++ smartedit::Caption class."""
+    r"""Proxy of C++ openshot::Caption class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    color = property(_smartedit.Caption_color_get, _smartedit.Caption_color_set, doc=r"""color : smartedit::Color""")
-    stroke = property(_smartedit.Caption_stroke_get, _smartedit.Caption_stroke_set, doc=r"""stroke : smartedit::Color""")
-    background = property(_smartedit.Caption_background_get, _smartedit.Caption_background_set, doc=r"""background : smartedit::Color""")
-    background_alpha = property(_smartedit.Caption_background_alpha_get, _smartedit.Caption_background_alpha_set, doc=r"""background_alpha : smartedit::Keyframe""")
-    background_corner = property(_smartedit.Caption_background_corner_get, _smartedit.Caption_background_corner_set, doc=r"""background_corner : smartedit::Keyframe""")
-    background_padding = property(_smartedit.Caption_background_padding_get, _smartedit.Caption_background_padding_set, doc=r"""background_padding : smartedit::Keyframe""")
-    stroke_width = property(_smartedit.Caption_stroke_width_get, _smartedit.Caption_stroke_width_set, doc=r"""stroke_width : smartedit::Keyframe""")
-    font_size = property(_smartedit.Caption_font_size_get, _smartedit.Caption_font_size_set, doc=r"""font_size : smartedit::Keyframe""")
-    font_alpha = property(_smartedit.Caption_font_alpha_get, _smartedit.Caption_font_alpha_set, doc=r"""font_alpha : smartedit::Keyframe""")
-    line_spacing = property(_smartedit.Caption_line_spacing_get, _smartedit.Caption_line_spacing_set, doc=r"""line_spacing : smartedit::Keyframe""")
-    left = property(_smartedit.Caption_left_get, _smartedit.Caption_left_set, doc=r"""left : smartedit::Keyframe""")
-    top = property(_smartedit.Caption_top_get, _smartedit.Caption_top_set, doc=r"""top : smartedit::Keyframe""")
-    right = property(_smartedit.Caption_right_get, _smartedit.Caption_right_set, doc=r"""right : smartedit::Keyframe""")
-    bottom = property(_smartedit.Caption_bottom_get, _smartedit.Caption_bottom_set, doc=r"""bottom : smartedit::Keyframe""")
-    fade_in = property(_smartedit.Caption_fade_in_get, _smartedit.Caption_fade_in_set, doc=r"""fade_in : smartedit::Keyframe""")
-    fade_out = property(_smartedit.Caption_fade_out_get, _smartedit.Caption_fade_out_set, doc=r"""fade_out : smartedit::Keyframe""")
+    color = property(_smartedit.Caption_color_get, _smartedit.Caption_color_set, doc=r"""color : openshot::Color""")
+    stroke = property(_smartedit.Caption_stroke_get, _smartedit.Caption_stroke_set, doc=r"""stroke : openshot::Color""")
+    background = property(_smartedit.Caption_background_get, _smartedit.Caption_background_set, doc=r"""background : openshot::Color""")
+    background_alpha = property(_smartedit.Caption_background_alpha_get, _smartedit.Caption_background_alpha_set, doc=r"""background_alpha : openshot::Keyframe""")
+    background_corner = property(_smartedit.Caption_background_corner_get, _smartedit.Caption_background_corner_set, doc=r"""background_corner : openshot::Keyframe""")
+    background_padding = property(_smartedit.Caption_background_padding_get, _smartedit.Caption_background_padding_set, doc=r"""background_padding : openshot::Keyframe""")
+    stroke_width = property(_smartedit.Caption_stroke_width_get, _smartedit.Caption_stroke_width_set, doc=r"""stroke_width : openshot::Keyframe""")
+    font_size = property(_smartedit.Caption_font_size_get, _smartedit.Caption_font_size_set, doc=r"""font_size : openshot::Keyframe""")
+    font_alpha = property(_smartedit.Caption_font_alpha_get, _smartedit.Caption_font_alpha_set, doc=r"""font_alpha : openshot::Keyframe""")
+    line_spacing = property(_smartedit.Caption_line_spacing_get, _smartedit.Caption_line_spacing_set, doc=r"""line_spacing : openshot::Keyframe""")
+    left = property(_smartedit.Caption_left_get, _smartedit.Caption_left_set, doc=r"""left : openshot::Keyframe""")
+    top = property(_smartedit.Caption_top_get, _smartedit.Caption_top_set, doc=r"""top : openshot::Keyframe""")
+    right = property(_smartedit.Caption_right_get, _smartedit.Caption_right_set, doc=r"""right : openshot::Keyframe""")
+    bottom = property(_smartedit.Caption_bottom_get, _smartedit.Caption_bottom_set, doc=r"""bottom : openshot::Keyframe""")
+    fade_in = property(_smartedit.Caption_fade_in_get, _smartedit.Caption_fade_in_set, doc=r"""fade_in : openshot::Keyframe""")
+    fade_out = property(_smartedit.Caption_fade_out_get, _smartedit.Caption_fade_out_set, doc=r"""fade_out : openshot::Keyframe""")
     font_name = property(_smartedit.Caption_font_name_get, _smartedit.Caption_font_name_set, doc=r"""font_name : std::string""")
 
     def __init__(self, *args):
@@ -6114,8 +6027,8 @@ class Caption(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(Caption self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(Caption self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(Caption self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(Caption self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.Caption_GetFrame(self, *args)
 
@@ -6150,7 +6063,7 @@ class Caption(EffectBase):
 # Register Caption in _smartedit:
 _smartedit.Caption_swigregister(Caption)
 class ChromaKey(EffectBase):
-    r"""Proxy of C++ smartedit::ChromaKey class."""
+    r"""Proxy of C++ openshot::ChromaKey class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -6158,14 +6071,14 @@ class ChromaKey(EffectBase):
     def __init__(self, *args):
         r"""
         __init__(ChromaKey self) -> ChromaKey
-        __init__(ChromaKey self, Color color, Keyframe fuzz, Keyframe halo=0.0, smartedit::ChromaKeyMethod method=CHROMAKEY_BASIC_SOFT) -> ChromaKey
+        __init__(ChromaKey self, Color color, Keyframe fuzz, Keyframe halo=0.0, openshot::ChromaKeyMethod method=CHROMAKEY_BASIC_SOFT) -> ChromaKey
         """
         _smartedit.ChromaKey_swiginit(self, _smartedit.new_ChromaKey(*args))
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(ChromaKey self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(ChromaKey self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(ChromaKey self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(ChromaKey self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.ChromaKey_GetFrame(self, *args)
 
@@ -6193,26 +6106,26 @@ class ChromaKey(EffectBase):
 # Register ChromaKey in _smartedit:
 _smartedit.ChromaKey_swigregister(ChromaKey)
 class ColorMap(EffectBase):
-    r"""Proxy of C++ smartedit::ColorMap class."""
+    r"""Proxy of C++ openshot::ColorMap class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    intensity = property(_smartedit.ColorMap_intensity_get, _smartedit.ColorMap_intensity_set, doc=r"""intensity : smartedit::Keyframe""")
-    intensity_r = property(_smartedit.ColorMap_intensity_r_get, _smartedit.ColorMap_intensity_r_set, doc=r"""intensity_r : smartedit::Keyframe""")
-    intensity_g = property(_smartedit.ColorMap_intensity_g_get, _smartedit.ColorMap_intensity_g_set, doc=r"""intensity_g : smartedit::Keyframe""")
-    intensity_b = property(_smartedit.ColorMap_intensity_b_get, _smartedit.ColorMap_intensity_b_set, doc=r"""intensity_b : smartedit::Keyframe""")
+    intensity = property(_smartedit.ColorMap_intensity_get, _smartedit.ColorMap_intensity_set, doc=r"""intensity : openshot::Keyframe""")
+    intensity_r = property(_smartedit.ColorMap_intensity_r_get, _smartedit.ColorMap_intensity_r_set, doc=r"""intensity_r : openshot::Keyframe""")
+    intensity_g = property(_smartedit.ColorMap_intensity_g_get, _smartedit.ColorMap_intensity_g_set, doc=r"""intensity_g : openshot::Keyframe""")
+    intensity_b = property(_smartedit.ColorMap_intensity_b_get, _smartedit.ColorMap_intensity_b_set, doc=r"""intensity_b : openshot::Keyframe""")
 
     def __init__(self, *args):
         r"""
         __init__(ColorMap self) -> ColorMap
-        __init__(ColorMap self, std::string const & path, Keyframe i=smartedit::Keyframe(1.0), Keyframe iR=smartedit::Keyframe(1.0), Keyframe iG=smartedit::Keyframe(1.0), Keyframe iB=smartedit::Keyframe(1.0)) -> ColorMap
+        __init__(ColorMap self, std::string const & path, Keyframe i=openshot::Keyframe(1.0), Keyframe iR=openshot::Keyframe(1.0), Keyframe iG=openshot::Keyframe(1.0), Keyframe iB=openshot::Keyframe(1.0)) -> ColorMap
         """
         _smartedit.ColorMap_swiginit(self, _smartedit.new_ColorMap(*args))
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(ColorMap self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(ColorMap self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(ColorMap self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(ColorMap self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.ColorMap_GetFrame(self, *args)
 
@@ -6240,18 +6153,18 @@ class ColorMap(EffectBase):
 # Register ColorMap in _smartedit:
 _smartedit.ColorMap_swigregister(ColorMap)
 class ColorShift(EffectBase):
-    r"""Proxy of C++ smartedit::ColorShift class."""
+    r"""Proxy of C++ openshot::ColorShift class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    red_x = property(_smartedit.ColorShift_red_x_get, _smartedit.ColorShift_red_x_set, doc=r"""red_x : smartedit::Keyframe""")
-    red_y = property(_smartedit.ColorShift_red_y_get, _smartedit.ColorShift_red_y_set, doc=r"""red_y : smartedit::Keyframe""")
-    green_x = property(_smartedit.ColorShift_green_x_get, _smartedit.ColorShift_green_x_set, doc=r"""green_x : smartedit::Keyframe""")
-    green_y = property(_smartedit.ColorShift_green_y_get, _smartedit.ColorShift_green_y_set, doc=r"""green_y : smartedit::Keyframe""")
-    blue_x = property(_smartedit.ColorShift_blue_x_get, _smartedit.ColorShift_blue_x_set, doc=r"""blue_x : smartedit::Keyframe""")
-    blue_y = property(_smartedit.ColorShift_blue_y_get, _smartedit.ColorShift_blue_y_set, doc=r"""blue_y : smartedit::Keyframe""")
-    alpha_x = property(_smartedit.ColorShift_alpha_x_get, _smartedit.ColorShift_alpha_x_set, doc=r"""alpha_x : smartedit::Keyframe""")
-    alpha_y = property(_smartedit.ColorShift_alpha_y_get, _smartedit.ColorShift_alpha_y_set, doc=r"""alpha_y : smartedit::Keyframe""")
+    red_x = property(_smartedit.ColorShift_red_x_get, _smartedit.ColorShift_red_x_set, doc=r"""red_x : openshot::Keyframe""")
+    red_y = property(_smartedit.ColorShift_red_y_get, _smartedit.ColorShift_red_y_set, doc=r"""red_y : openshot::Keyframe""")
+    green_x = property(_smartedit.ColorShift_green_x_get, _smartedit.ColorShift_green_x_set, doc=r"""green_x : openshot::Keyframe""")
+    green_y = property(_smartedit.ColorShift_green_y_get, _smartedit.ColorShift_green_y_set, doc=r"""green_y : openshot::Keyframe""")
+    blue_x = property(_smartedit.ColorShift_blue_x_get, _smartedit.ColorShift_blue_x_set, doc=r"""blue_x : openshot::Keyframe""")
+    blue_y = property(_smartedit.ColorShift_blue_y_get, _smartedit.ColorShift_blue_y_set, doc=r"""blue_y : openshot::Keyframe""")
+    alpha_x = property(_smartedit.ColorShift_alpha_x_get, _smartedit.ColorShift_alpha_x_set, doc=r"""alpha_x : openshot::Keyframe""")
+    alpha_y = property(_smartedit.ColorShift_alpha_y_get, _smartedit.ColorShift_alpha_y_set, doc=r"""alpha_y : openshot::Keyframe""")
 
     def __init__(self, *args):
         r"""
@@ -6262,8 +6175,8 @@ class ColorShift(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(ColorShift self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(ColorShift self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(ColorShift self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(ColorShift self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.ColorShift_GetFrame(self, *args)
 
@@ -6291,16 +6204,16 @@ class ColorShift(EffectBase):
 # Register ColorShift in _smartedit:
 _smartedit.ColorShift_swigregister(ColorShift)
 class Crop(EffectBase):
-    r"""Proxy of C++ smartedit::Crop class."""
+    r"""Proxy of C++ openshot::Crop class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    left = property(_smartedit.Crop_left_get, _smartedit.Crop_left_set, doc=r"""left : smartedit::Keyframe""")
-    top = property(_smartedit.Crop_top_get, _smartedit.Crop_top_set, doc=r"""top : smartedit::Keyframe""")
-    right = property(_smartedit.Crop_right_get, _smartedit.Crop_right_set, doc=r"""right : smartedit::Keyframe""")
-    bottom = property(_smartedit.Crop_bottom_get, _smartedit.Crop_bottom_set, doc=r"""bottom : smartedit::Keyframe""")
-    x = property(_smartedit.Crop_x_get, _smartedit.Crop_x_set, doc=r"""x : smartedit::Keyframe""")
-    y = property(_smartedit.Crop_y_get, _smartedit.Crop_y_set, doc=r"""y : smartedit::Keyframe""")
+    left = property(_smartedit.Crop_left_get, _smartedit.Crop_left_set, doc=r"""left : openshot::Keyframe""")
+    top = property(_smartedit.Crop_top_get, _smartedit.Crop_top_set, doc=r"""top : openshot::Keyframe""")
+    right = property(_smartedit.Crop_right_get, _smartedit.Crop_right_set, doc=r"""right : openshot::Keyframe""")
+    bottom = property(_smartedit.Crop_bottom_get, _smartedit.Crop_bottom_set, doc=r"""bottom : openshot::Keyframe""")
+    x = property(_smartedit.Crop_x_get, _smartedit.Crop_x_set, doc=r"""x : openshot::Keyframe""")
+    y = property(_smartedit.Crop_y_get, _smartedit.Crop_y_set, doc=r"""y : openshot::Keyframe""")
     resize = property(_smartedit.Crop_resize_get, _smartedit.Crop_resize_set, doc=r"""resize : bool""")
 
     def __init__(self, *args):
@@ -6312,8 +6225,8 @@ class Crop(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(Crop self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(Crop self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(Crop self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(Crop self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.Crop_GetFrame(self, *args)
 
@@ -6341,7 +6254,7 @@ class Crop(EffectBase):
 # Register Crop in _smartedit:
 _smartedit.Crop_swigregister(Crop)
 class Deinterlace(EffectBase):
-    r"""Proxy of C++ smartedit::Deinterlace class."""
+    r"""Proxy of C++ openshot::Deinterlace class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -6355,8 +6268,8 @@ class Deinterlace(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(Deinterlace self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(Deinterlace self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(Deinterlace self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(Deinterlace self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.Deinterlace_GetFrame(self, *args)
 
@@ -6384,21 +6297,21 @@ class Deinterlace(EffectBase):
 # Register Deinterlace in _smartedit:
 _smartedit.Deinterlace_swigregister(Deinterlace)
 class FilmGrain(EffectBase):
-    r"""Proxy of C++ smartedit::FilmGrain class."""
+    r"""Proxy of C++ openshot::FilmGrain class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    amount = property(_smartedit.FilmGrain_amount_get, _smartedit.FilmGrain_amount_set, doc=r"""amount : smartedit::Keyframe""")
-    size = property(_smartedit.FilmGrain_size_get, _smartedit.FilmGrain_size_set, doc=r"""size : smartedit::Keyframe""")
-    softness = property(_smartedit.FilmGrain_softness_get, _smartedit.FilmGrain_softness_set, doc=r"""softness : smartedit::Keyframe""")
-    clump = property(_smartedit.FilmGrain_clump_get, _smartedit.FilmGrain_clump_set, doc=r"""clump : smartedit::Keyframe""")
-    shadows = property(_smartedit.FilmGrain_shadows_get, _smartedit.FilmGrain_shadows_set, doc=r"""shadows : smartedit::Keyframe""")
-    midtones = property(_smartedit.FilmGrain_midtones_get, _smartedit.FilmGrain_midtones_set, doc=r"""midtones : smartedit::Keyframe""")
-    highlights = property(_smartedit.FilmGrain_highlights_get, _smartedit.FilmGrain_highlights_set, doc=r"""highlights : smartedit::Keyframe""")
-    color_amount = property(_smartedit.FilmGrain_color_amount_get, _smartedit.FilmGrain_color_amount_set, doc=r"""color_amount : smartedit::Keyframe""")
-    color_variation = property(_smartedit.FilmGrain_color_variation_get, _smartedit.FilmGrain_color_variation_set, doc=r"""color_variation : smartedit::Keyframe""")
-    evolution = property(_smartedit.FilmGrain_evolution_get, _smartedit.FilmGrain_evolution_set, doc=r"""evolution : smartedit::Keyframe""")
-    coherence = property(_smartedit.FilmGrain_coherence_get, _smartedit.FilmGrain_coherence_set, doc=r"""coherence : smartedit::Keyframe""")
+    amount = property(_smartedit.FilmGrain_amount_get, _smartedit.FilmGrain_amount_set, doc=r"""amount : openshot::Keyframe""")
+    size = property(_smartedit.FilmGrain_size_get, _smartedit.FilmGrain_size_set, doc=r"""size : openshot::Keyframe""")
+    softness = property(_smartedit.FilmGrain_softness_get, _smartedit.FilmGrain_softness_set, doc=r"""softness : openshot::Keyframe""")
+    clump = property(_smartedit.FilmGrain_clump_get, _smartedit.FilmGrain_clump_set, doc=r"""clump : openshot::Keyframe""")
+    shadows = property(_smartedit.FilmGrain_shadows_get, _smartedit.FilmGrain_shadows_set, doc=r"""shadows : openshot::Keyframe""")
+    midtones = property(_smartedit.FilmGrain_midtones_get, _smartedit.FilmGrain_midtones_set, doc=r"""midtones : openshot::Keyframe""")
+    highlights = property(_smartedit.FilmGrain_highlights_get, _smartedit.FilmGrain_highlights_set, doc=r"""highlights : openshot::Keyframe""")
+    color_amount = property(_smartedit.FilmGrain_color_amount_get, _smartedit.FilmGrain_color_amount_set, doc=r"""color_amount : openshot::Keyframe""")
+    color_variation = property(_smartedit.FilmGrain_color_variation_get, _smartedit.FilmGrain_color_variation_set, doc=r"""color_variation : openshot::Keyframe""")
+    evolution = property(_smartedit.FilmGrain_evolution_get, _smartedit.FilmGrain_evolution_set, doc=r"""evolution : openshot::Keyframe""")
+    coherence = property(_smartedit.FilmGrain_coherence_get, _smartedit.FilmGrain_coherence_set, doc=r"""coherence : openshot::Keyframe""")
     seed = property(_smartedit.FilmGrain_seed_get, _smartedit.FilmGrain_seed_set, doc=r"""seed : int""")
 
     def __init__(self, *args):
@@ -6407,8 +6320,8 @@ class FilmGrain(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(FilmGrain self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(FilmGrain self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(FilmGrain self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(FilmGrain self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.FilmGrain_GetFrame(self, *args)
 
@@ -6440,11 +6353,11 @@ HUE_MASK_LIMIT_TO_AREA = _smartedit.HUE_MASK_LIMIT_TO_AREA
 HUE_MASK_VARY_STRENGTH = _smartedit.HUE_MASK_VARY_STRENGTH
 
 class Hue(EffectBase):
-    r"""Proxy of C++ smartedit::Hue class."""
+    r"""Proxy of C++ openshot::Hue class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    hue = property(_smartedit.Hue_hue_get, _smartedit.Hue_hue_set, doc=r"""hue : smartedit::Keyframe""")
+    hue = property(_smartedit.Hue_hue_get, _smartedit.Hue_hue_set, doc=r"""hue : openshot::Keyframe""")
     mask_mode = property(_smartedit.Hue_mask_mode_get, _smartedit.Hue_mask_mode_set, doc=r"""mask_mode : int""")
 
     def __init__(self, *args):
@@ -6456,8 +6369,8 @@ class Hue(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(Hue self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(Hue self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(Hue self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(Hue self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.Hue_GetFrame(self, *args)
 
@@ -6485,29 +6398,29 @@ class Hue(EffectBase):
 # Register Hue in _smartedit:
 _smartedit.Hue_swigregister(Hue)
 class LensFlare(EffectBase):
-    r"""Proxy of C++ smartedit::LensFlare class."""
+    r"""Proxy of C++ openshot::LensFlare class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    x = property(_smartedit.LensFlare_x_get, _smartedit.LensFlare_x_set, doc=r"""x : smartedit::Keyframe""")
-    y = property(_smartedit.LensFlare_y_get, _smartedit.LensFlare_y_set, doc=r"""y : smartedit::Keyframe""")
-    brightness = property(_smartedit.LensFlare_brightness_get, _smartedit.LensFlare_brightness_set, doc=r"""brightness : smartedit::Keyframe""")
-    size = property(_smartedit.LensFlare_size_get, _smartedit.LensFlare_size_set, doc=r"""size : smartedit::Keyframe""")
-    spread = property(_smartedit.LensFlare_spread_get, _smartedit.LensFlare_spread_set, doc=r"""spread : smartedit::Keyframe""")
-    color = property(_smartedit.LensFlare_color_get, _smartedit.LensFlare_color_set, doc=r"""color : smartedit::Color""")
+    x = property(_smartedit.LensFlare_x_get, _smartedit.LensFlare_x_set, doc=r"""x : openshot::Keyframe""")
+    y = property(_smartedit.LensFlare_y_get, _smartedit.LensFlare_y_set, doc=r"""y : openshot::Keyframe""")
+    brightness = property(_smartedit.LensFlare_brightness_get, _smartedit.LensFlare_brightness_set, doc=r"""brightness : openshot::Keyframe""")
+    size = property(_smartedit.LensFlare_size_get, _smartedit.LensFlare_size_set, doc=r"""size : openshot::Keyframe""")
+    spread = property(_smartedit.LensFlare_spread_get, _smartedit.LensFlare_spread_set, doc=r"""spread : openshot::Keyframe""")
+    color = property(_smartedit.LensFlare_color_get, _smartedit.LensFlare_color_set, doc=r"""color : openshot::Color""")
     __swig_destroy__ = _smartedit.delete_LensFlare
 
     def __init__(self, *args):
         r"""
         __init__(LensFlare self) -> LensFlare
-        __init__(LensFlare self, Keyframe xPos, Keyframe yPos, Keyframe intensity, Keyframe scale, Keyframe spreadVal, Keyframe bladeCount, Keyframe shapeType, Color tint=smartedit::Color("#ffffff")) -> LensFlare
+        __init__(LensFlare self, Keyframe xPos, Keyframe yPos, Keyframe intensity, Keyframe scale, Keyframe spreadVal, Keyframe bladeCount, Keyframe shapeType, Color tint=openshot::Color("#ffffff")) -> LensFlare
         """
         _smartedit.LensFlare_swiginit(self, _smartedit.new_LensFlare(*args))
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(LensFlare self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(LensFlare self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(LensFlare self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(LensFlare self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.LensFlare_GetFrame(self, *args)
 
@@ -6534,14 +6447,14 @@ class LensFlare(EffectBase):
 # Register LensFlare in _smartedit:
 _smartedit.LensFlare_swigregister(LensFlare)
 class Mask(EffectBase):
-    r"""Proxy of C++ smartedit::Mask class."""
+    r"""Proxy of C++ openshot::Mask class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
     replace_image = property(_smartedit.Mask_replace_image_get, _smartedit.Mask_replace_image_set, doc=r"""replace_image : bool""")
     fade_audio_hint = property(_smartedit.Mask_fade_audio_hint_get, _smartedit.Mask_fade_audio_hint_set, doc=r"""fade_audio_hint : bool""")
-    brightness = property(_smartedit.Mask_brightness_get, _smartedit.Mask_brightness_set, doc=r"""brightness : smartedit::Keyframe""")
-    contrast = property(_smartedit.Mask_contrast_get, _smartedit.Mask_contrast_set, doc=r"""contrast : smartedit::Keyframe""")
+    brightness = property(_smartedit.Mask_brightness_get, _smartedit.Mask_brightness_set, doc=r"""brightness : openshot::Keyframe""")
+    contrast = property(_smartedit.Mask_contrast_get, _smartedit.Mask_contrast_set, doc=r"""contrast : openshot::Keyframe""")
 
     def __init__(self, *args):
         r"""
@@ -6552,8 +6465,8 @@ class Mask(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(Mask self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(Mask self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(Mask self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(Mask self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.Mask_GetFrame(self, *args)
 
@@ -6588,7 +6501,7 @@ class Mask(EffectBase):
 # Register Mask in _smartedit:
 _smartedit.Mask_swigregister(Mask)
 class Negate(EffectBase):
-    r"""Proxy of C++ smartedit::Negate class."""
+    r"""Proxy of C++ openshot::Negate class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -6599,8 +6512,8 @@ class Negate(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(Negate self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(Negate self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(Negate self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(Negate self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.Negate_GetFrame(self, *args)
 
@@ -6632,15 +6545,15 @@ PIXELATE_MASK_LIMIT_TO_AREA = _smartedit.PIXELATE_MASK_LIMIT_TO_AREA
 PIXELATE_MASK_VARY_STRENGTH = _smartedit.PIXELATE_MASK_VARY_STRENGTH
 
 class Pixelate(EffectBase):
-    r"""Proxy of C++ smartedit::Pixelate class."""
+    r"""Proxy of C++ openshot::Pixelate class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    pixelization = property(_smartedit.Pixelate_pixelization_get, _smartedit.Pixelate_pixelization_set, doc=r"""pixelization : smartedit::Keyframe""")
-    left = property(_smartedit.Pixelate_left_get, _smartedit.Pixelate_left_set, doc=r"""left : smartedit::Keyframe""")
-    top = property(_smartedit.Pixelate_top_get, _smartedit.Pixelate_top_set, doc=r"""top : smartedit::Keyframe""")
-    right = property(_smartedit.Pixelate_right_get, _smartedit.Pixelate_right_set, doc=r"""right : smartedit::Keyframe""")
-    bottom = property(_smartedit.Pixelate_bottom_get, _smartedit.Pixelate_bottom_set, doc=r"""bottom : smartedit::Keyframe""")
+    pixelization = property(_smartedit.Pixelate_pixelization_get, _smartedit.Pixelate_pixelization_set, doc=r"""pixelization : openshot::Keyframe""")
+    left = property(_smartedit.Pixelate_left_get, _smartedit.Pixelate_left_set, doc=r"""left : openshot::Keyframe""")
+    top = property(_smartedit.Pixelate_top_get, _smartedit.Pixelate_top_set, doc=r"""top : openshot::Keyframe""")
+    right = property(_smartedit.Pixelate_right_get, _smartedit.Pixelate_right_set, doc=r"""right : openshot::Keyframe""")
+    bottom = property(_smartedit.Pixelate_bottom_get, _smartedit.Pixelate_bottom_set, doc=r"""bottom : openshot::Keyframe""")
     mask_mode = property(_smartedit.Pixelate_mask_mode_get, _smartedit.Pixelate_mask_mode_set, doc=r"""mask_mode : int""")
 
     def __init__(self, *args):
@@ -6652,8 +6565,8 @@ class Pixelate(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(Pixelate self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(Pixelate self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(Pixelate self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(Pixelate self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.Pixelate_GetFrame(self, *args)
 
@@ -6685,14 +6598,14 @@ SATURATION_MASK_POST_BLEND = _smartedit.SATURATION_MASK_POST_BLEND
 SATURATION_MASK_DRIVE_AMOUNT = _smartedit.SATURATION_MASK_DRIVE_AMOUNT
 
 class Saturation(EffectBase):
-    r"""Proxy of C++ smartedit::Saturation class."""
+    r"""Proxy of C++ openshot::Saturation class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    saturation = property(_smartedit.Saturation_saturation_get, _smartedit.Saturation_saturation_set, doc=r"""saturation : smartedit::Keyframe""")
-    saturation_R = property(_smartedit.Saturation_saturation_R_get, _smartedit.Saturation_saturation_R_set, doc=r"""saturation_R : smartedit::Keyframe""")
-    saturation_G = property(_smartedit.Saturation_saturation_G_get, _smartedit.Saturation_saturation_G_set, doc=r"""saturation_G : smartedit::Keyframe""")
-    saturation_B = property(_smartedit.Saturation_saturation_B_get, _smartedit.Saturation_saturation_B_set, doc=r"""saturation_B : smartedit::Keyframe""")
+    saturation = property(_smartedit.Saturation_saturation_get, _smartedit.Saturation_saturation_set, doc=r"""saturation : openshot::Keyframe""")
+    saturation_R = property(_smartedit.Saturation_saturation_R_get, _smartedit.Saturation_saturation_R_set, doc=r"""saturation_R : openshot::Keyframe""")
+    saturation_G = property(_smartedit.Saturation_saturation_G_get, _smartedit.Saturation_saturation_G_set, doc=r"""saturation_G : openshot::Keyframe""")
+    saturation_B = property(_smartedit.Saturation_saturation_B_get, _smartedit.Saturation_saturation_B_set, doc=r"""saturation_B : openshot::Keyframe""")
     mask_mode = property(_smartedit.Saturation_mask_mode_get, _smartedit.Saturation_mask_mode_set, doc=r"""mask_mode : int""")
 
     def __init__(self, *args):
@@ -6704,8 +6617,8 @@ class Saturation(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(Saturation self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(Saturation self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(Saturation self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(Saturation self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.Saturation_GetFrame(self, *args)
 
@@ -6737,13 +6650,13 @@ SHARPEN_MASK_LIMIT_TO_AREA = _smartedit.SHARPEN_MASK_LIMIT_TO_AREA
 SHARPEN_MASK_VARY_STRENGTH = _smartedit.SHARPEN_MASK_VARY_STRENGTH
 
 class Sharpen(EffectBase):
-    r"""Proxy of C++ smartedit::Sharpen class."""
+    r"""Proxy of C++ openshot::Sharpen class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    amount = property(_smartedit.Sharpen_amount_get, _smartedit.Sharpen_amount_set, doc=r"""amount : smartedit::Keyframe""")
-    radius = property(_smartedit.Sharpen_radius_get, _smartedit.Sharpen_radius_set, doc=r"""radius : smartedit::Keyframe""")
-    threshold = property(_smartedit.Sharpen_threshold_get, _smartedit.Sharpen_threshold_set, doc=r"""threshold : smartedit::Keyframe""")
+    amount = property(_smartedit.Sharpen_amount_get, _smartedit.Sharpen_amount_set, doc=r"""amount : openshot::Keyframe""")
+    radius = property(_smartedit.Sharpen_radius_get, _smartedit.Sharpen_radius_set, doc=r"""radius : openshot::Keyframe""")
+    threshold = property(_smartedit.Sharpen_threshold_get, _smartedit.Sharpen_threshold_set, doc=r"""threshold : openshot::Keyframe""")
     mode = property(_smartedit.Sharpen_mode_get, _smartedit.Sharpen_mode_set, doc=r"""mode : int""")
     channel = property(_smartedit.Sharpen_channel_get, _smartedit.Sharpen_channel_set, doc=r"""channel : int""")
     mask_mode = property(_smartedit.Sharpen_mask_mode_get, _smartedit.Sharpen_mask_mode_set, doc=r"""mask_mode : int""")
@@ -6757,8 +6670,8 @@ class Sharpen(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(Sharpen self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(Sharpen self, int64_t n) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(Sharpen self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(Sharpen self, int64_t n) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.Sharpen_GetFrame(self, *args)
 
@@ -6786,12 +6699,12 @@ class Sharpen(EffectBase):
 # Register Sharpen in _smartedit:
 _smartedit.Sharpen_swigregister(Sharpen)
 class Shift(EffectBase):
-    r"""Proxy of C++ smartedit::Shift class."""
+    r"""Proxy of C++ openshot::Shift class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    x = property(_smartedit.Shift_x_get, _smartedit.Shift_x_set, doc=r"""x : smartedit::Keyframe""")
-    y = property(_smartedit.Shift_y_get, _smartedit.Shift_y_set, doc=r"""y : smartedit::Keyframe""")
+    x = property(_smartedit.Shift_x_get, _smartedit.Shift_x_set, doc=r"""x : openshot::Keyframe""")
+    y = property(_smartedit.Shift_y_get, _smartedit.Shift_y_set, doc=r"""y : openshot::Keyframe""")
 
     def __init__(self, *args):
         r"""
@@ -6802,8 +6715,8 @@ class Shift(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(Shift self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(Shift self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(Shift self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(Shift self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.Shift_GetFrame(self, *args)
 
@@ -6855,7 +6768,7 @@ TIMER_FORMAT_TIMECODE = _smartedit.TIMER_FORMAT_TIMECODE
 TIMER_FORMAT_FRAMES = _smartedit.TIMER_FORMAT_FRAMES
 
 class Timer(EffectBase):
-    r"""Proxy of C++ smartedit::Timer class."""
+    r"""Proxy of C++ openshot::Timer class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
@@ -6868,19 +6781,19 @@ class Timer(EffectBase):
     font_name = property(_smartedit.Timer_font_name_get, _smartedit.Timer_font_name_set, doc=r"""font_name : std::string""")
     prefix = property(_smartedit.Timer_prefix_get, _smartedit.Timer_prefix_set, doc=r"""prefix : std::string""")
     suffix = property(_smartedit.Timer_suffix_get, _smartedit.Timer_suffix_set, doc=r"""suffix : std::string""")
-    color = property(_smartedit.Timer_color_get, _smartedit.Timer_color_set, doc=r"""color : smartedit::Color""")
-    stroke = property(_smartedit.Timer_stroke_get, _smartedit.Timer_stroke_set, doc=r"""stroke : smartedit::Color""")
-    background = property(_smartedit.Timer_background_get, _smartedit.Timer_background_set, doc=r"""background : smartedit::Color""")
-    start_time = property(_smartedit.Timer_start_time_get, _smartedit.Timer_start_time_set, doc=r"""start_time : smartedit::Keyframe""")
-    end_time = property(_smartedit.Timer_end_time_get, _smartedit.Timer_end_time_set, doc=r"""end_time : smartedit::Keyframe""")
-    font_size = property(_smartedit.Timer_font_size_get, _smartedit.Timer_font_size_set, doc=r"""font_size : smartedit::Keyframe""")
-    font_alpha = property(_smartedit.Timer_font_alpha_get, _smartedit.Timer_font_alpha_set, doc=r"""font_alpha : smartedit::Keyframe""")
-    stroke_width = property(_smartedit.Timer_stroke_width_get, _smartedit.Timer_stroke_width_set, doc=r"""stroke_width : smartedit::Keyframe""")
-    x_offset = property(_smartedit.Timer_x_offset_get, _smartedit.Timer_x_offset_set, doc=r"""x_offset : smartedit::Keyframe""")
-    y_offset = property(_smartedit.Timer_y_offset_get, _smartedit.Timer_y_offset_set, doc=r"""y_offset : smartedit::Keyframe""")
-    background_alpha = property(_smartedit.Timer_background_alpha_get, _smartedit.Timer_background_alpha_set, doc=r"""background_alpha : smartedit::Keyframe""")
-    background_padding = property(_smartedit.Timer_background_padding_get, _smartedit.Timer_background_padding_set, doc=r"""background_padding : smartedit::Keyframe""")
-    background_corner = property(_smartedit.Timer_background_corner_get, _smartedit.Timer_background_corner_set, doc=r"""background_corner : smartedit::Keyframe""")
+    color = property(_smartedit.Timer_color_get, _smartedit.Timer_color_set, doc=r"""color : openshot::Color""")
+    stroke = property(_smartedit.Timer_stroke_get, _smartedit.Timer_stroke_set, doc=r"""stroke : openshot::Color""")
+    background = property(_smartedit.Timer_background_get, _smartedit.Timer_background_set, doc=r"""background : openshot::Color""")
+    start_time = property(_smartedit.Timer_start_time_get, _smartedit.Timer_start_time_set, doc=r"""start_time : openshot::Keyframe""")
+    end_time = property(_smartedit.Timer_end_time_get, _smartedit.Timer_end_time_set, doc=r"""end_time : openshot::Keyframe""")
+    font_size = property(_smartedit.Timer_font_size_get, _smartedit.Timer_font_size_set, doc=r"""font_size : openshot::Keyframe""")
+    font_alpha = property(_smartedit.Timer_font_alpha_get, _smartedit.Timer_font_alpha_set, doc=r"""font_alpha : openshot::Keyframe""")
+    stroke_width = property(_smartedit.Timer_stroke_width_get, _smartedit.Timer_stroke_width_set, doc=r"""stroke_width : openshot::Keyframe""")
+    x_offset = property(_smartedit.Timer_x_offset_get, _smartedit.Timer_x_offset_set, doc=r"""x_offset : openshot::Keyframe""")
+    y_offset = property(_smartedit.Timer_y_offset_get, _smartedit.Timer_y_offset_set, doc=r"""y_offset : openshot::Keyframe""")
+    background_alpha = property(_smartedit.Timer_background_alpha_get, _smartedit.Timer_background_alpha_set, doc=r"""background_alpha : openshot::Keyframe""")
+    background_padding = property(_smartedit.Timer_background_padding_get, _smartedit.Timer_background_padding_set, doc=r"""background_padding : openshot::Keyframe""")
+    background_corner = property(_smartedit.Timer_background_corner_get, _smartedit.Timer_background_corner_set, doc=r"""background_corner : openshot::Keyframe""")
 
     def __init__(self, *args):
         r"""__init__(Timer self) -> Timer"""
@@ -6888,8 +6801,8 @@ class Timer(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(Timer self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(Timer self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(Timer self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(Timer self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.Timer_GetFrame(self, *args)
 
@@ -6925,16 +6838,16 @@ class Timer(EffectBase):
 # Register Timer in _smartedit:
 _smartedit.Timer_swigregister(Timer)
 class DenoiseImage(EffectBase):
-    r"""Proxy of C++ smartedit::DenoiseImage class."""
+    r"""Proxy of C++ openshot::DenoiseImage class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    strength = property(_smartedit.DenoiseImage_strength_get, _smartedit.DenoiseImage_strength_set, doc=r"""strength : smartedit::Keyframe""")
-    detail = property(_smartedit.DenoiseImage_detail_get, _smartedit.DenoiseImage_detail_set, doc=r"""detail : smartedit::Keyframe""")
-    temporal = property(_smartedit.DenoiseImage_temporal_get, _smartedit.DenoiseImage_temporal_set, doc=r"""temporal : smartedit::Keyframe""")
-    motion_safety = property(_smartedit.DenoiseImage_motion_safety_get, _smartedit.DenoiseImage_motion_safety_set, doc=r"""motion_safety : smartedit::Keyframe""")
-    color_noise = property(_smartedit.DenoiseImage_color_noise_get, _smartedit.DenoiseImage_color_noise_set, doc=r"""color_noise : smartedit::Keyframe""")
-    response_curve = property(_smartedit.DenoiseImage_response_curve_get, _smartedit.DenoiseImage_response_curve_set, doc=r"""response_curve : smartedit::AnimatedCurve""")
+    strength = property(_smartedit.DenoiseImage_strength_get, _smartedit.DenoiseImage_strength_set, doc=r"""strength : openshot::Keyframe""")
+    detail = property(_smartedit.DenoiseImage_detail_get, _smartedit.DenoiseImage_detail_set, doc=r"""detail : openshot::Keyframe""")
+    temporal = property(_smartedit.DenoiseImage_temporal_get, _smartedit.DenoiseImage_temporal_set, doc=r"""temporal : openshot::Keyframe""")
+    motion_safety = property(_smartedit.DenoiseImage_motion_safety_get, _smartedit.DenoiseImage_motion_safety_set, doc=r"""motion_safety : openshot::Keyframe""")
+    color_noise = property(_smartedit.DenoiseImage_color_noise_get, _smartedit.DenoiseImage_color_noise_set, doc=r"""color_noise : openshot::Keyframe""")
+    response_curve = property(_smartedit.DenoiseImage_response_curve_get, _smartedit.DenoiseImage_response_curve_set, doc=r"""response_curve : openshot::AnimatedCurve""")
 
     def __init__(self, *args):
         r"""
@@ -6945,8 +6858,8 @@ class DenoiseImage(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(DenoiseImage self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(DenoiseImage self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(DenoiseImage self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(DenoiseImage self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.DenoiseImage_GetFrame(self, *args)
 
@@ -6974,15 +6887,15 @@ class DenoiseImage(EffectBase):
 # Register DenoiseImage in _smartedit:
 _smartedit.DenoiseImage_swigregister(DenoiseImage)
 class Wave(EffectBase):
-    r"""Proxy of C++ smartedit::Wave class."""
+    r"""Proxy of C++ openshot::Wave class."""
 
     thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
     __repr__ = _swig_repr
-    wavelength = property(_smartedit.Wave_wavelength_get, _smartedit.Wave_wavelength_set, doc=r"""wavelength : smartedit::Keyframe""")
-    amplitude = property(_smartedit.Wave_amplitude_get, _smartedit.Wave_amplitude_set, doc=r"""amplitude : smartedit::Keyframe""")
-    multiplier = property(_smartedit.Wave_multiplier_get, _smartedit.Wave_multiplier_set, doc=r"""multiplier : smartedit::Keyframe""")
-    shift_x = property(_smartedit.Wave_shift_x_get, _smartedit.Wave_shift_x_set, doc=r"""shift_x : smartedit::Keyframe""")
-    speed_y = property(_smartedit.Wave_speed_y_get, _smartedit.Wave_speed_y_set, doc=r"""speed_y : smartedit::Keyframe""")
+    wavelength = property(_smartedit.Wave_wavelength_get, _smartedit.Wave_wavelength_set, doc=r"""wavelength : openshot::Keyframe""")
+    amplitude = property(_smartedit.Wave_amplitude_get, _smartedit.Wave_amplitude_set, doc=r"""amplitude : openshot::Keyframe""")
+    multiplier = property(_smartedit.Wave_multiplier_get, _smartedit.Wave_multiplier_set, doc=r"""multiplier : openshot::Keyframe""")
+    shift_x = property(_smartedit.Wave_shift_x_get, _smartedit.Wave_shift_x_set, doc=r"""shift_x : openshot::Keyframe""")
+    speed_y = property(_smartedit.Wave_speed_y_get, _smartedit.Wave_speed_y_set, doc=r"""speed_y : openshot::Keyframe""")
 
     def __init__(self, *args):
         r"""
@@ -6993,8 +6906,8 @@ class Wave(EffectBase):
 
     def GetFrame(self, *args):
         r"""
-        GetFrame(Wave self, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
-        GetFrame(Wave self, std::shared_ptr< smartedit::Frame > frame, int64_t frame_number) -> std::shared_ptr< smartedit::Frame >
+        GetFrame(Wave self, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
+        GetFrame(Wave self, std::shared_ptr< openshot::Frame > frame, int64_t frame_number) -> std::shared_ptr< openshot::Frame >
         """
         return _smartedit.Wave_GetFrame(self, *args)
 

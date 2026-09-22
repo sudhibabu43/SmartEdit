@@ -33,6 +33,23 @@ class ChatController:
             if self.pending_plan:
                 result = self.editor.apply_plan(self.pending_plan)
                 self.pending_plan = None
+                
+                # Clear preview regions
+                from classes.app import get_app
+                app = get_app()
+                if app and hasattr(app, "window") and hasattr(app.window, "timeline"):
+                    if hasattr(app.window.timeline, "_shaky_preview_regions"):
+                        app.window.timeline._shaky_preview_regions = []
+                    if hasattr(app.window.timeline, "_blur_preview_regions"):
+                        app.window.timeline._blur_preview_regions = []
+                    if hasattr(app.window.timeline, "_aroll_preview_regions"):
+                        app.window.timeline._aroll_preview_regions = []
+                    if hasattr(app.window.timeline, "_broll_preview_regions"):
+                        app.window.timeline._broll_preview_regions = []
+                    if hasattr(app.window.timeline, "_pan_preview_regions"):
+                        app.window.timeline._pan_preview_regions = []
+                    app.window.timeline.update()
+
                 msg = "Changes applied successfully." if result.get("success") else f"Failed to apply: {result.get('message')}"
                 return self._create_ai_response(msg)
             else:
@@ -41,6 +58,23 @@ class ChatController:
         if command.has_action(ActionType.REJECT_PLAN):
             if self.pending_plan:
                 self.pending_plan = None
+                
+                # Clear preview regions
+                from classes.app import get_app
+                app = get_app()
+                if app and hasattr(app, "window") and hasattr(app.window, "timeline"):
+                    if hasattr(app.window.timeline, "_shaky_preview_regions"):
+                        app.window.timeline._shaky_preview_regions = []
+                    if hasattr(app.window.timeline, "_blur_preview_regions"):
+                        app.window.timeline._blur_preview_regions = []
+                    if hasattr(app.window.timeline, "_aroll_preview_regions"):
+                        app.window.timeline._aroll_preview_regions = []
+                    if hasattr(app.window.timeline, "_broll_preview_regions"):
+                        app.window.timeline._broll_preview_regions = []
+                    if hasattr(app.window.timeline, "_pan_preview_regions"):
+                        app.window.timeline._pan_preview_regions = []
+                    app.window.timeline.update()
+                        
                 return self._create_ai_response("Okay, I've discarded the proposed changes.")
             else:
                 return self._create_ai_response("There are no pending changes to discard.")

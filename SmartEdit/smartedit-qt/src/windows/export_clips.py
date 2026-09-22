@@ -1,38 +1,3 @@
-﻿"""
- @file export_clips.py
- @brief Behavior for the export clips dialog.
- @details
- Takes an array of file objects
-
- Allow the user to select a directory to export to.
- Then export any clips and files to that directory
-
- To save time, (and preserve video quality)
- Any files should only be copied
- If a clip name already exists, skip that clip.
- @author Jackson Godwin <jackson@smartedit.org>
-
- @section LICENSE
-
- Copyright (c) 2008-2018 SmartEdit Studios, LLC
- (http://www.smarteditstudios.com). This file is part of
- SmartEdit Video Editor (http://www.smartedit.org), an open-source project
- dedicated to delivering high quality video editing and animation solutions
- to the world.
-
- SmartEdit Video Editor is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- SmartEdit Video Editor is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with SmartEdit Library.  If not, see <http://www.gnu.org/licenses/>.
- """
 from qt_api import QPushButton, QDialog, QDialogButtonBox, QLabel, QFileDialog, QMessageBox
 from qt_api import Qt, QTimer
 from classes import ui_util

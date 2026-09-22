@@ -42,6 +42,7 @@ Welcome to the SmartEdit Video Editor 2.0 Qt documentation. SmartEdit was develo
 
 import sys
 import os
+if hasattr(os, "add_dll_directory"): os.add_dll_directory(r"C:\msys64\ucrt64\bin")
 import argparse
 import json
 import logging

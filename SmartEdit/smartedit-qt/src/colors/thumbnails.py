@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 import os
 from smartedit import QtImageReader, ColorMap
 from PIL import Image, ImageDraw, ImageFont, ImageOps

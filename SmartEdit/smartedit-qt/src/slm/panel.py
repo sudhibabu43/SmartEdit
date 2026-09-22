@@ -143,6 +143,8 @@ class ChatBubble(QWidget):
         text_label.setWordWrap(True)
         text_label.setTextFormat(Qt.RichText)
         text_label.setStyleSheet("font-size: 12px;")
+        text_label.setOpenExternalLinks(False)
+        text_label.linkActivated.connect(self.on_link_activated)
         
         if role == "user":
             bubble_frame.setStyleSheet("""
@@ -177,7 +179,7 @@ class ChatBubble(QWidget):
                 btn_layout = QHBoxLayout()
                 btn_layout.setSpacing(8)
                 
-                self.btn_apply = QPushButton("✓ Apply")
+                self.btn_apply = QPushButton("ACCEPT")
                 self.btn_apply.setFixedHeight(28)
                 self.btn_apply.setStyleSheet("""
                     QPushButton { background-color: #1a8745; color: white; border-radius: 4px; padding: 0 10px; }
@@ -185,7 +187,7 @@ class ChatBubble(QWidget):
                 """)
                 self.btn_apply.clicked.connect(self.on_apply)
                 
-                self.btn_reject = QPushButton("✕ Cancel")
+                self.btn_reject = QPushButton("REJECT")
                 self.btn_reject.setFixedHeight(28)
                 self.btn_reject.setStyleSheet("""
                     QPushButton { background-color: #c0392b; color: white; border-radius: 4px; padding: 0 10px; }
@@ -210,6 +212,23 @@ class ChatBubble(QWidget):
     def on_reject(self):
         self.rejectClicked.emit()
         
+    def on_link_activated(self, url):
+        if url.startswith("jump:"):
+            try:
+                time_secs = float(url.split(":")[1])
+                from classes.app import get_app
+                app = get_app()
+                if app and hasattr(app, 'project'):
+                    fps_info = app.project.get("fps")
+                    fps_val = float(fps_info.get("num", 24)) / float(fps_info.get("den", 1))
+                    if fps_val <= 0:
+                        fps_val = 24.0
+                    frame = max(1, int(round(time_secs * fps_val)) + 1)
+                    if hasattr(app.window, 'preview_thread') and hasattr(app.window.preview_thread, 'Seek'):
+                        app.window.preview_thread.Seek(frame)
+            except Exception as e:
+                log.error(f"Failed to jump to time from SLM panel: {e}", exc_info=1)
+
 
 class SLMAssistantPanel(QDockWidget):
     """

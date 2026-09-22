@@ -21,6 +21,15 @@ class ActionType:
     DELETE_SHAKY = "delete_shaky"
     REMOVE_SHAKY = "delete_shaky"  
     TRIM_TO_DURATION = "trim_to_duration"
+    DETECT_BLURRED = "detect_blurred"
+    DELETE_BLURRED = "delete_blurred"
+    
+    DETECT_AROLL = "detect_aroll"
+    DETECT_BROLL = "detect_broll"
+    DETECT_PAN = "detect_pan"
+    
+    DETECT_DUPLICATE = "detect_duplicate"
+    DELETE_DUPLICATE = "delete_duplicate"
     
     # Chat-based actions
     APPLY_PLAN = "apply_plan"
@@ -50,6 +59,13 @@ class ActionType:
         LABEL_SHAKY,
         ROUGH_CUT,
         DELETE_SHAKY,
+        DETECT_BLURRED,
+        DELETE_BLURRED,
+        DETECT_AROLL,
+        DETECT_BROLL,
+        DETECT_PAN,
+        DETECT_DUPLICATE,
+        DELETE_DUPLICATE,
         TRIM_TO_DURATION,
         APPLY_PLAN,
         REJECT_PLAN,
@@ -137,6 +153,20 @@ class CommandSchemaValidator:
                         clean_act = ActionType.DELETE_SHAKY
                     elif clean_act in {"trim_to_duration", "trim_duration", "target_length"}:
                         clean_act = ActionType.TRIM_TO_DURATION
+                    elif clean_act in {"blur", "blurred", "find_blur", "detect_blur", "detect_blurred", "find_blurred", "show_blurred"}:
+                        clean_act = ActionType.DETECT_BLURRED
+                    elif clean_act in {"delete_blur", "remove_blur", "cut_blur", "trim_blur", "remove_blurry", "delete_blurry"}:
+                        clean_act = ActionType.DELETE_BLURRED
+                    elif clean_act in {"a-roll", "aroll", "find_aroll", "detect_aroll", "show_aroll", "main_footage", "main_speaker"}:
+                        clean_act = ActionType.DETECT_AROLL
+                    elif clean_act in {"b-roll", "broll", "find_broll", "detect_broll", "show_broll", "secondary_footage", "supporting_footage"}:
+                        clean_act = ActionType.DETECT_BROLL
+                    elif clean_act in {"pan", "pan_shot", "find_pan", "detect_pan", "show_pan", "panning"}:
+                        clean_act = ActionType.DETECT_PAN
+                    elif clean_act in {"duplicate", "duplicates", "find_duplicate", "find_duplicates", "detect_duplicate", "detect_duplicates", "show_duplicate", "show_duplicates", "repeated_clips", "find_repeated_clips", "duplicate_clips", "duplicate_videos"}:
+                        clean_act = ActionType.DETECT_DUPLICATE
+                    elif clean_act in {"delete_duplicate", "delete_duplicates", "remove_duplicate", "remove_duplicates", "cut_duplicate", "remove_repeated"}:
+                        clean_act = ActionType.DELETE_DUPLICATE
                     elif clean_act in {"rough", "rough_cut", "auto_edit", "generate_rough_cut"}:
                         clean_act = ActionType.ROUGH_CUT
                     elif clean_act in {"yes", "apply", "apply_plan", "do_it", "confirm"}:
@@ -185,6 +215,9 @@ class CommandSchemaValidator:
             actions.insert(actions.index(ActionType.LABEL_SHAKY), ActionType.DETECT_SHAKY)
         if ActionType.DELETE_SHAKY in actions and ActionType.DETECT_SHAKY not in actions:
             actions.insert(actions.index(ActionType.DELETE_SHAKY), ActionType.DETECT_SHAKY)
+
+        if ActionType.DELETE_BLURRED in actions and ActionType.DETECT_BLURRED not in actions:
+            actions.insert(actions.index(ActionType.DELETE_BLURRED), ActionType.DETECT_BLURRED)
 
         params = parsed.get("parameters", {})
         if not isinstance(params, dict):

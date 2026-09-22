@@ -1,32 +1,3 @@
-"""
- @file
- @brief This file listens to changes, and updates the primary project data
- @author Noah Figg <eggmunkee@hotmail.com>
- @author Jonathan Thomas <jonathan@smartedit.org>
- @author Olivier Girard <eolinwen@gmail.com>
-
- @section 
-
- Copyright (c) 2008-2018 SmartEdit Studios, LLC
- (http://www.smarteditstudios.com). This file is part of
- SmartEdit Video Editor (http://www.smartedit.org), an open-source project
- dedicated to delivering high quality video editing and animation solutions
- to the world.
-
- SmartEdit Video Editor is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public  as published by
- the Free Software Foundation, either version 3 of the , or
- (at your option) any later version.
-
- SmartEdit Video Editor is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public  for more details.
-
- You should have received a copy of the GNU General Public 
- along with SmartEdit Library.  If not, see <http://www.gnu.org/s/>.
- """
-
 import copy
 import glob
 import os
@@ -552,7 +523,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
         
         project_data = {}
         project_data["version"] = {"smartedit-qt": info.VERSION,
-                                   "libsmartedit": smartedit.SMARTEDIT_VERSION_FULL}
+                                   "libsmartedit": smartedit.OPENSHOT_VERSION_FULL}
 
         
         fps = get_app().project.get("fps")
@@ -1159,7 +1130,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
 
         
         self._data["version"] = {"smartedit-qt": info.VERSION,
-                                 "libsmartedit": smartedit.SMARTEDIT_VERSION_FULL}
+                                 "libsmartedit": smartedit.OPENSHOT_VERSION_FULL}
 
         
         self.write_to_file(

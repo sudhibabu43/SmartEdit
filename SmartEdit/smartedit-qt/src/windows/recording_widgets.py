@@ -1,14 +1,3 @@
-﻿"""
- @file
- @brief Reusable widgets for the Recording dock.
- @author Jonathan Thomas <jonathan@smartedit.org>
-
- @section LICENSE
-
- Copyright (c) 2008-2026 SmartEdit Studios, LLC
- SPDX-License-Identifier: GPL-3.0-or-later
- """
-
 import ctypes
 import ctypes.util
 import os

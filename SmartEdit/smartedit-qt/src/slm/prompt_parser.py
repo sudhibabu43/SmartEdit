@@ -135,6 +135,68 @@ class PromptParser:
                 "add_marker": False
             }
 
+        # ───────────────────────────────────────────
+        # DETECT BLURRED FOOTAGE
+        detect_blurred = bool(
+            re.search(r"\b(find|detect|identify|spot|show|search|look\s+for|check\s+for|analyze)\s+(any\s+)?(the\s+)?(blur|blurry|blurred|out[- ]of[- ]focus|unfocused)\b", t) or \
+            re.search(r"\b(blur\s*(footage|clips?|detection|analysis))\b", t)
+        )
+
+        # DELETE / REMOVE BLURRED FOOTAGE
+        delete_blurred = bool(
+            re.search(r"\b(delete|remove|drop|cut|trim|eliminate|discard|clear)\s+.*?\b(blur|blurry|blurred|out[- ]of[- ]focus|unfocused)\b", t) or \
+            re.search(r"\b(trim|cut\s*out)\s+(?:the\s+)?(blur|blurry|blurred)\b", t) or \
+            re.search(r"\b(remove|delete|cut)\s+(?:the\s+)?(?:blur|blurry|blurred)\b", t) or \
+            re.search(r"\b(blur|blurry|blurred)\s+(?:footage|clips?|videos?|shots?|parts?|sections?|segments?|portions?)?\s*(?:and|then|,)\s*(?:trim|cut|remove|delete|drop|discard|eliminate)\b", t)
+        )
+
+        if detect_blurred and not delete_blurred:
+            if ActionType.DETECT_BLURRED not in actions:
+                actions.append(ActionType.DETECT_BLURRED)
+
+        if delete_blurred:
+            if ActionType.DETECT_BLURRED not in actions:
+                actions.append(ActionType.DETECT_BLURRED)
+            actions.append(ActionType.DELETE_BLURRED)
+
+        if delete_blurred:
+            parameters["delete_blurred"] = {
+                "blur_threshold": 50.0,
+                "close_gaps": close_gaps
+            }
+
+        if detect_blurred or delete_blurred:
+            parameters["blurred"] = {
+                "blur_threshold": 50.0,
+                "add_marker": False
+            }
+
+        # ───────────────────────────────────────────
+        # DETECT SHOT TYPES (A-ROLL, B-ROLL, PAN)
+        
+        detect_aroll = bool(re.search(r"\b(find|detect|identify|spot|show|look\s+for|check\s+for|analyze)\s+(any\s+)?(the\s+)?(a-roll|aroll|main\s+footage|main\s+speaker)\b", t))
+        if detect_aroll and ActionType.DETECT_AROLL not in actions:
+            actions.append(ActionType.DETECT_AROLL)
+            
+        detect_broll = bool(re.search(r"\b(find|detect|identify|spot|show|look\s+for|check\s+for|analyze)\s+(any\s+)?(the\s+)?(b-roll|broll|b\s*roll|secondary\s+footage|supporting\s+footage)\b", t))
+        if detect_broll and ActionType.DETECT_BROLL not in actions:
+            actions.append(ActionType.DETECT_BROLL)
+            
+        detect_pan = bool(re.search(r"\b(find|detect|identify|spot|show|look\s+for|check\s+for|analyze)\s+(all\s+)?(any\s+)?(the\s+)?(pan\s+shots?|panning\s+shots?|pan)\b", t))
+        if detect_pan and ActionType.DETECT_PAN not in actions:
+            actions.append(ActionType.DETECT_PAN)
+
+        # ───────────────────────────────────────────
+        # DETECT DUPLICATE CLIPS
+        
+        detect_dup = bool(re.search(r"\b(find|detect|identify|show|look\s+for|check\s+for)\s+(any\s+)?(the\s+)?(duplicate|duplicated|repeated)\s+(clips?|videos?|footage)\b", t))
+        delete_dup = bool(re.search(r"\b(delete|remove|cut|trim)\s+(any\s+)?(the\s+)?(duplicate|duplicated|repeated)\s+(clips?|videos?|footage)\b", t))
+        
+        if delete_dup and ActionType.DELETE_DUPLICATE not in actions:
+            actions.append(ActionType.DELETE_DUPLICATE)
+        elif detect_dup and ActionType.DETECT_DUPLICATE not in actions:
+            actions.append(ActionType.DETECT_DUPLICATE)
+
         
         
         if re.search(r"\b(create|make|build|generate|produce)\s+(a\s+)?(rough\s*cut)\b", t) or \

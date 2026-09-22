@@ -1,30 +1,3 @@
-"""
- @file
- @brief Painter for timeline clips.
- @author Jonathan Thomas <jonathan@smartedit.org>
-
- @section 
-
- Copyright (c) 2008-2025 SmartEdit Studios, LLC
- (http://www.smarteditstudios.com). This file is part of
- SmartEdit Video Editor (http://www.smartedit.org), an open-source project
- dedicated to delivering high quality video editing and animation solutions
- to the world.
-
- SmartEdit Video Editor is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public  as published by
- the Free Software Foundation, either version 3 of the , or
- (at your option) any later version.
-
- SmartEdit Video Editor is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public  for more details.
-
- You should have received a copy of the GNU General Public 
- along with SmartEdit Library.  If not, see <http://www.gnu.org/s/>.
- """
-
 from qt_api import QPointF, QRectF, Qt, QTimer
 from qt_api import (
     QBrush,
@@ -2130,6 +2103,169 @@ class ClipPainter(BasePainter):
         includes_end = (full_rect.right() - segment_rect.right()) <= 0.5
 
         border_pen = pen if isinstance(pen, QPen) else (self.sel_pen if selected else self.clip_pen)
+        
+        # Draw temporary shaky region highlights if any exist
+        if hasattr(self.w, "_shaky_preview_regions") and self.w._shaky_preview_regions:
+            clip_id = getattr(clip, "id", None)
+            pixels_per_second = float(getattr(self.w, "pixels_per_second", 0.0) or 0.0)
+            if pixels_per_second > 0.0 and clip_id:
+                painter.save()
+                painter.setRenderHint(QPainter.Antialiasing, True)
+                for region in self.w._shaky_preview_regions:
+                    if str(region.get("clip_id")) == str(clip_id):
+                        start_time = region.get("timeline_start", 0.0)
+                        end_time = region.get("timeline_end", 0.0)
+                        clip_pos = self._clip_timeline_position(clip)
+                        
+                        region_start_px = (start_time - clip_pos) * pixels_per_second
+                        region_width_px = (end_time - start_time) * pixels_per_second
+                        
+                        highlight_rect = QRectF(
+                            full_rect.x() + region_start_px,
+                            segment_rect.y(),
+                            region_width_px,
+                            segment_rect.height()
+                        ).intersected(segment_rect)
+                        
+                        if not highlight_rect.isEmpty():
+                            # Semi-transparent orange fill
+                            painter.fillRect(highlight_rect, QColor(255, 140, 0, 100))
+                            
+                            # Diagonal hatch pattern
+                            from qt_api import QBrush
+                            brush = QBrush(QColor(255, 100, 0, 150), Qt.DiagCrossPattern)
+                            painter.fillRect(highlight_rect, brush)
+                            
+                            # distinct border for the region
+                            pen_highlight = QPen(QColor(255, 100, 0, 255), max(1.5, float(self.border_width or 1.0)))
+                            pen_highlight.setCosmetic(True)
+                            painter.setPen(pen_highlight)
+                            painter.drawRect(highlight_rect)
+                painter.restore()
+
+        # Draw temporary blurred region highlights if any exist
+        if hasattr(self.w, "_blur_preview_regions") and self.w._blur_preview_regions:
+            clip_id = getattr(clip, "id", None)
+            pixels_per_second = float(getattr(self.w, "pixels_per_second", 0.0) or 0.0)
+            if pixels_per_second > 0.0 and clip_id:
+                painter.save()
+                painter.setRenderHint(QPainter.Antialiasing, True)
+                for region in self.w._blur_preview_regions:
+                    if str(region.get("clip_id")) == str(clip_id):
+                        start_time = region.get("timeline_start", 0.0)
+                        end_time = region.get("timeline_end", 0.0)
+                        clip_pos = self._clip_timeline_position(clip)
+                        
+                        region_start_px = (start_time - clip_pos) * pixels_per_second
+                        region_width_px = (end_time - start_time) * pixels_per_second
+                        
+                        highlight_rect = QRectF(
+                            full_rect.x() + region_start_px,
+                            segment_rect.y(),
+                            region_width_px,
+                            segment_rect.height()
+                        ).intersected(segment_rect)
+                        
+                        if not highlight_rect.isEmpty():
+                            # Semi-transparent purple fill
+                            painter.fillRect(highlight_rect, QColor(155, 89, 182, 100))
+                            
+                            # Diagonal hatch pattern
+                            from qt_api import QBrush
+                            brush = QBrush(QColor(142, 68, 173, 150), Qt.DiagCrossPattern)
+                            painter.fillRect(highlight_rect, brush)
+                            
+                            # distinct border for the region
+                            pen_highlight = QPen(QColor(142, 68, 173, 255), max(1.5, float(self.border_width or 1.0)))
+                            pen_highlight.setCosmetic(True)
+                            painter.setPen(pen_highlight)
+                            painter.drawRect(highlight_rect)
+                painter.restore()
+
+        # Draw A-Roll regions (Green)
+        if hasattr(self.w, "_aroll_preview_regions") and self.w._aroll_preview_regions:
+            clip_id = getattr(clip, "id", None)
+            pixels_per_second = float(getattr(self.w, "pixels_per_second", 0.0) or 0.0)
+            if pixels_per_second > 0.0 and clip_id:
+                painter.save()
+                painter.setRenderHint(QPainter.Antialiasing, True)
+                for region in self.w._aroll_preview_regions:
+                    if str(region.get("clip_id")) == str(clip_id):
+                        start_time = region.get("timeline_start", 0.0)
+                        end_time = region.get("timeline_end", 0.0)
+                        clip_pos = self._clip_timeline_position(clip)
+                        region_start_px = (start_time - clip_pos) * pixels_per_second
+                        region_width_px = (end_time - start_time) * pixels_per_second
+                        highlight_rect = QRectF(
+                            full_rect.x() + region_start_px, segment_rect.y(),
+                            region_width_px, segment_rect.height()
+                        ).intersected(segment_rect)
+                        if not highlight_rect.isEmpty():
+                            painter.fillRect(highlight_rect, QColor(46, 204, 113, 100))
+                            from qt_api import QBrush
+                            painter.fillRect(highlight_rect, QBrush(QColor(39, 174, 96, 150), Qt.FDiagPattern))
+                            pen_h = QPen(QColor(39, 174, 96, 255), max(1.5, float(self.border_width or 1.0)))
+                            pen_h.setCosmetic(True)
+                            painter.setPen(pen_h)
+                            painter.drawRect(highlight_rect)
+                painter.restore()
+
+        # Draw B-Roll regions (Cyan)
+        if hasattr(self.w, "_broll_preview_regions") and self.w._broll_preview_regions:
+            clip_id = getattr(clip, "id", None)
+            pixels_per_second = float(getattr(self.w, "pixels_per_second", 0.0) or 0.0)
+            if pixels_per_second > 0.0 and clip_id:
+                painter.save()
+                painter.setRenderHint(QPainter.Antialiasing, True)
+                for region in self.w._broll_preview_regions:
+                    if str(region.get("clip_id")) == str(clip_id):
+                        start_time = region.get("timeline_start", 0.0)
+                        end_time = region.get("timeline_end", 0.0)
+                        clip_pos = self._clip_timeline_position(clip)
+                        region_start_px = (start_time - clip_pos) * pixels_per_second
+                        region_width_px = (end_time - start_time) * pixels_per_second
+                        highlight_rect = QRectF(
+                            full_rect.x() + region_start_px, segment_rect.y(),
+                            region_width_px, segment_rect.height()
+                        ).intersected(segment_rect)
+                        if not highlight_rect.isEmpty():
+                            painter.fillRect(highlight_rect, QColor(0, 188, 212, 100))
+                            from qt_api import QBrush
+                            painter.fillRect(highlight_rect, QBrush(QColor(0, 151, 167, 150), Qt.BDiagPattern))
+                            pen_h = QPen(QColor(0, 151, 167, 255), max(1.5, float(self.border_width or 1.0)))
+                            pen_h.setCosmetic(True)
+                            painter.setPen(pen_h)
+                            painter.drawRect(highlight_rect)
+                painter.restore()
+
+        # Draw Pan Shot regions (Magenta)
+        if hasattr(self.w, "_pan_preview_regions") and self.w._pan_preview_regions:
+            clip_id = getattr(clip, "id", None)
+            pixels_per_second = float(getattr(self.w, "pixels_per_second", 0.0) or 0.0)
+            if pixels_per_second > 0.0 and clip_id:
+                painter.save()
+                painter.setRenderHint(QPainter.Antialiasing, True)
+                for region in self.w._pan_preview_regions:
+                    if str(region.get("clip_id")) == str(clip_id):
+                        start_time = region.get("timeline_start", 0.0)
+                        end_time = region.get("timeline_end", 0.0)
+                        clip_pos = self._clip_timeline_position(clip)
+                        region_start_px = (start_time - clip_pos) * pixels_per_second
+                        region_width_px = (end_time - start_time) * pixels_per_second
+                        highlight_rect = QRectF(
+                            full_rect.x() + region_start_px, segment_rect.y(),
+                            region_width_px, segment_rect.height()
+                        ).intersected(segment_rect)
+                        if not highlight_rect.isEmpty():
+                            painter.fillRect(highlight_rect, QColor(233, 30, 99, 100))
+                            from qt_api import QBrush
+                            painter.fillRect(highlight_rect, QBrush(QColor(194, 24, 91, 150), Qt.CrossPattern))
+                            pen_h = QPen(QColor(194, 24, 91, 255), max(1.5, float(self.border_width or 1.0)))
+                            pen_h.setCosmetic(True)
+                            painter.setPen(pen_h)
+                            painter.drawRect(highlight_rect)
+                painter.restore()
+
         self._stroke_visible_border(
             painter,
             segment_rect,

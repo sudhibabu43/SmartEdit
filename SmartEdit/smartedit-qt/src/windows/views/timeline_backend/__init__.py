@@ -1,4 +1,4 @@
-﻿"""
+"""
 Timeline backend package helpers.
 
 Ensures legacy ``classes`` imports work when SmartEdit is installed under

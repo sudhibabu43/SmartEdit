@@ -1,14 +1,3 @@
-﻿"""
- @file
- @brief Shared system tray status helper for long-running tasks.
- @author SmartEdit Studios
-
- @section 
-
- Copyright (c) 2008-2026 SmartEdit Studios, LLC
- SPDX--Identifier: GPL-3.0-or-later
- """
-
 from qt_api import (
     Qt, QObject, QSystemTrayIcon, QMenu, QAction, QIcon, QPixmap,
     QPainter, QColor, QPen, QBrush,

@@ -1,31 +1,3 @@
-﻿"""
- @file
- @brief This file sends anonymous application metrics and errors over HTTP
- @author Jonathan Thomas <jonathan@smartedit.org>
-
- @section 
-
- Copyright (c) 2008-2018 SmartEdit Studios, LLC
- (http://www.smarteditstudios.com). This file is part of
- SmartEdit Video Editor (http://www.smartedit.org), an open-source project
- dedicated to delivering high quality video editing and animation solutions
- to the world.
-
- SmartEdit Video Editor is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public  as published by
- the Free Software Foundation, either version 3 of the , or
- (at your option) any later version.
-
- SmartEdit Video Editor is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public  for more details.
-
- You should have received a copy of the GNU General Public 
- along with SmartEdit Library.  If not, see <http://www.gnu.org/s/>.
- """
-
-
 import encodings.idna
 import base64
 import platform
@@ -105,7 +77,7 @@ def _base_event_params():
         "session_id": GA4_SESSION_ID,
         "os_app_name": info.PRODUCT_NAME,
         "os_app_version": info.VERSION,
-        "os_libsmartedit_version": smartedit.SMARTEDIT_VERSION_FULL,
+        "os_libsmartedit_version": smartedit.OPENSHOT_VERSION_FULL,
         "os_python_version": platform.python_version(),
         "os_qt_version": QT_VERSION_STR,
         "os_pyqt_version": PYQT_VERSION_STR,

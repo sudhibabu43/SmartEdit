@@ -1,4 +1,4 @@
-﻿#!/usr/bin/python3
+#!/usr/bin/python3
 """
  @file
  @brief Display all available string translations for each translation file

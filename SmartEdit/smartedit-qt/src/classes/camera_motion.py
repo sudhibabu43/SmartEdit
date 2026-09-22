@@ -1,22 +1,3 @@
-﻿"""
- @file
- @brief Camera motion framing helpers for clip motion presets
- @author SmartEdit Studios
-
- @section 
-
- Copyright (c) 2008-2026 SmartEdit Studios, LLC
- (http://www.smarteditstudios.com). This file is part of
- SmartEdit Video Editor (http://www.smartedit.org), an open-source project
- dedicated to delivering high quality video editing and animation solutions
- to the world.
-
- SmartEdit Video Editor is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public  as published by
- the Free Software Foundation, either version 3 of the , or
- (at your option) any later version.
- """
-
 from __future__ import annotations
 
 from dataclasses import dataclass
