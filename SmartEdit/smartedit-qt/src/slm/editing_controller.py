@@ -42,10 +42,13 @@ class AIPlan:
 
     def to_preview_text(self) -> str:
         """Returns a nicely formatted checklist for the UI."""
-        if self.is_empty or not self.items:
+        if not self.items:
             return "No changes proposed for this instruction."
         
-        lines = ["<b>AI Plan:</b><br/>"]
+        lines = []
+        if not self.is_empty:
+            lines.append("<b>AI Plan:</b><br/>")
+        
         for item in self.items:
             lines.append(f"{item.icon} {item.description}")
         return "<br/>".join(lines)
@@ -461,15 +464,62 @@ class EditingController:
                     icon="ℹ️"
                 ))
             else:
-                plan_items.append(PlanItem(
-                    action=ActionType.REMOVE_SILENCE,
-                    description=f"Open the interactive Silence Remover tool for {len(timeline_clips)} selected clip(s) to review and apply cuts.",
-                    icon="✓",
-                ))
-                operations.append({
-                    "type": ActionType.REMOVE_SILENCE,
-                    "clip_ids": [c.id for c in timeline_clips]
-                })
+                try:
+                    from smartedit.audio_analysis import AudioAnalyzer
+                    from classes.models import File
+                    analyzer = AudioAnalyzer()
+                    total_silence_duration = 0.0
+                    total_silence_cuts = 0
+                    all_silence_regions = []
+                    
+                    for c in timeline_clips:
+                        path = c.data.get("reader", {}).get("path") or ""
+                        if not path and c.data.get("file_id"):
+                            f = File.get(id=c.data.get("file_id"))
+                            if f:
+                                path = f.absolute_path()
+                                
+                        if path and os.path.exists(path):
+                            # Ensure we don't block the UI thread completely for very large files,
+                            # but this is a synchronous method so we have to run it here.
+                            result = analyzer.generate_cut_points(
+                                path,
+                                top_db=25.0,
+                                min_silence_duration_sec=0.4,
+                                padding_sec=0.08,
+                                speech_mode=True
+                            )
+                            silents = result.get("silent_segments", [])
+                            # Map silent segments back to timeline space by tracking clip boundaries
+                            # Wait, apply_silence_removal takes raw regions in CLIP TIME.
+                            total_silence_cuts += len(silents)
+                            total_silence_duration += sum(s.get("duration", 0) for s in silents)
+                            all_silence_regions.extend(silents)
+                            
+                    if total_silence_cuts > 0:
+                        plan_items.append(PlanItem(
+                            action=ActionType.REMOVE_SILENCE,
+                            description=f"Detected <b>{total_silence_cuts}</b> non-speaking portion(s) across selected clip(s). Removing them will save <b>{total_silence_duration:.1f}s</b>.",
+                            icon="✂",
+                        ))
+                        operations.append({
+                            "type": ActionType.REMOVE_SILENCE,
+                            "clip_ids": [c.id for c in timeline_clips],
+                            "silence_regions": all_silence_regions
+                        })
+                    else:
+                        plan_items.append(PlanItem(
+                            action=ActionType.REMOVE_SILENCE,
+                            description="Analyzed selected clip(s): <b>No significant non-speaking portions found.</b>",
+                            icon="ℹ️"
+                        ))
+                except Exception as ex:
+                    logger.error(f"Silence analysis failed: {ex}", exc_info=True)
+                    plan_items.append(PlanItem(
+                        action=ActionType.REMOVE_SILENCE,
+                        description="Error analyzing audio for non-speaking portions.",
+                        icon="❌"
+                    ))
 
         
         
@@ -893,19 +943,15 @@ class EditingController:
                 
                 elif op_type == ActionType.REMOVE_SILENCE:
                     clip_ids = op.get("clip_ids", [])
-                    if clip_ids:
-                        from windows.silence_remover_dialog import SilenceRemoverDialog
-                        from classes.models import Clip, File
-                        clip = Clip.get(id=clip_ids[0])
-                        path = clip.data.get("reader", {}).get("path") or ""
-                        if not path and clip.data.get("file_id"):
-                            f = File.get(id=clip.data.get("file_id"))
-                            if f:
-                                path = f.absolute_path()
-                        
-                        dlg = SilenceRemoverDialog(window, initial_media_path=path, clip_ids=clip_ids)
-                        dlg.exec_()
-                    applied_details.append("Opened interactive Silence Remover tool for user review")
+                    silence_regions = op.get("silence_regions", [])
+                    if clip_ids and silence_regions:
+                        if window and hasattr(window, "apply_silence_removal"):
+                            window.apply_silence_removal(clip_ids, silence_regions)
+                            applied_details.append(f"Automatically removed {len(silence_regions)} non-speaking portions and joined remaining segments.")
+                        else:
+                            applied_details.append("Error: Timeline does not support silence removal.")
+                    else:
+                        applied_details.append("No silent portions to remove.")
 
                 elif op_type == ActionType.CUT_SCENES:
                     scene_ops = op.get("scene_ops", [])

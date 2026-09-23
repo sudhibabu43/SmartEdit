@@ -8,8 +8,8 @@ echo ============================================
 echo.
 
 rem ----- Set up tools -----
-set "PYTHON_EXE=C:\msys64\ucrt64\bin\python.exe"
-set "UCRT_BIN=C:\msys64\ucrt64\bin"
+set "PYTHON_EXE=C:\msys64\mingw64\bin\python.exe"
+set "UCRT_BIN=C:\msys64\mingw64\bin"
 
 rem ----- Verify Python exists -----
 if not exist "%PYTHON_EXE%" (
@@ -46,7 +46,7 @@ echo.
 rem ----- Ensure binary compatibility copies exist -----
 if exist "%SRC%\libsmartedit.dll" if not exist "%SRC%\libsmartedit.dll" copy /y "%SRC%\libsmartedit.dll" "%SRC%\libsmartedit.dll" >nul
 if exist "%SRC%\libsmartedit-audio.dll" if not exist "%SRC%\libsmartedit-audio.dll" copy /y "%SRC%\libsmartedit-audio.dll" "%SRC%\libsmartedit-audio.dll" >nul
-if exist "%SRC%\_smartedit.pyd" if not exist "%SRC%\_openshot.pyd" copy /y "%SRC%\_smartedit.pyd" "%SRC%\_openshot.pyd" >nul
+if exist "%SRC%\_smartedit.pyd" if not exist "%SRC%\_smartedit.pyd" copy /y "%SRC%\_smartedit.pyd" "%SRC%\_smartedit.pyd" >nul
 
 echo Starting SmartEdit...
 echo.

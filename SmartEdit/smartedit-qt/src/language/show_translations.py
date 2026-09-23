@@ -2,14 +2,14 @@
 """
  @file
  @brief Display all available string translations for each translation file
- @author Jonathan Thomas <jonathan@smartedit.org>
+ @author Jonathan Thomas <jonathan@github.com>
  @author Frank Dana <ferdnyc AT gmail com>
 
  @section 
 
  Copyright (c) 2008-2018 SmartEdit Studios, LLC
  (http://www.smarteditstudios.com). This file is part of
- SmartEdit Video Editor (http://www.smartedit.org), an open-source project
+ SmartEdit Video Editor (http://www.github.com), an open-source project
  dedicated to delivering high quality video editing and animation solutions
  to the world.
 

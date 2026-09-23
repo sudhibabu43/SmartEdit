@@ -12,7 +12,7 @@ def get_current_Version():
 def get_version_from_http():
     """Get the current version # from smartedit.org"""
 
-    url = "https://www.smartedit.org/version/json/"
+    url = "https://github.com/sudhibabu43/SmartEdit/releases/latest"
 
     try:
         version_info = http_client.get_json(

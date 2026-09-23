@@ -2,13 +2,13 @@
 """
  @file
  @brief This file verifies all translations are correctly formatted and have the correct # of string replacements
- @author Jonathan Thomas <jonathan@smartedit.org>
+ @author Jonathan Thomas <jonathan@github.com>
 
  @section 
 
  Copyright (c) 2008-2018 SmartEdit Studios, LLC
  (http://www.smarteditstudios.com). This file is part of
- SmartEdit Video Editor (http://www.smartedit.org), an open-source project
+ SmartEdit Video Editor (http://www.github.com), an open-source project
  dedicated to delivering high quality video editing and animation solutions
  to the world.
 

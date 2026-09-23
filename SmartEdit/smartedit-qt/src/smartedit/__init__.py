@@ -24,7 +24,7 @@ if _os.name == "nt":
     for _src_name, _dst_name in [
         ("libsmartedit.dll", "libsmartedit.dll"),
         ("libsmartedit-audio.dll", "libsmartedit-audio.dll"),
-        ("_smartedit.pyd", "_openshot.pyd"),
+        ("_smartedit.pyd", "_smartedit.pyd"),
     ]:
         _s = _os.path.join(_SRC_DIR, _src_name)
         _d = _os.path.join(_SRC_DIR, _dst_name)

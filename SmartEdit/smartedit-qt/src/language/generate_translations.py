@@ -2,7 +2,7 @@
 """
  @file
  @brief This file updates the SmartEdit.POT (language translation template) by scanning all source files.
- @author Jonathan Thomas <jonathan@smartedit.org>
+ @author Jonathan Thomas <jonathan@github.com>
 
  This file helps you generate the POT file that contains all of the translatable
  strings / text in SmartEdit.  Because some of our text is in custom XML files,
@@ -31,7 +31,7 @@
 
  Copyright (c) 2008-2018 SmartEdit Studios, LLC
  (http://www.smarteditstudios.com). This file is part of
- SmartEdit Video Editor (http://www.smartedit.org), an open-source project
+ SmartEdit Video Editor (http://www.github.com), an open-source project
  dedicated to delivering high quality video editing and animation solutions
  to the world.
 

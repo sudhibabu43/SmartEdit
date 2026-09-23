@@ -1036,7 +1036,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
 
 
     def actionHelpContents_trigger(self, checked=True):
-        url = "https://www.smartedit.org/%suser-guide/?app-menu" % info.website_language()
+        url = "https://github.com/sudhibabu43/SmartEdit"
         try:
             webbrowser.open(url, new=1)
         except Exception:
@@ -1045,7 +1045,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
             log.error(error_msg, exc_info=1)
 
     def actionReportBug_trigger(self, checked=True):
-        url = "https://www.smartedit.org/%sissues/new/?app-menu" % info.website_language()
+        url = "https://github.com/sudhibabu43/SmartEdit/issues"
         try:
             webbrowser.open(url, new=1)
         except Exception:
@@ -1063,7 +1063,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
             log.error(error_msg, exc_info=1)
 
     def actionDiscord_trigger(self, checked=True):
-        url = "https://www.smartedit.org/discord/?app-menu"
+        url = "https://github.com/sudhibabu43/SmartEdit"
         try:
             webbrowser.open(url, new=1)
         except Exception:
@@ -1081,7 +1081,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
             log.error(error_msg, exc_info=1)
 
     def actionDonate_trigger(self, checked=True):
-        url = "https://www.smartedit.org/%sdonate/?app-menu" % info.website_language()
+        url = "https://github.com/sudhibabu43/SmartEdit"
         try:
             webbrowser.open(url, new=1)
         except Exception:
@@ -1090,7 +1090,7 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
             log.error(error_msg, exc_info=1)
 
     def actionUpdate_trigger(self, checked=True):
-        url = "https://www.smartedit.org/%sdownload/?app-toolbar" % info.website_language()
+        url = "https://github.com/sudhibabu43/SmartEdit"
         try:
             webbrowser.open(url, new=1)
         except Exception:

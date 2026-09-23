@@ -3922,7 +3922,7 @@ class Fraction(object):
     def __truediv__(self, other):
         if isinstance(other, Fraction):
             return Fraction(self.num * other.den, self.den * other.num)
-        return float(self) / other
+        return float(self) / other;
     def __rtruediv__(self, other):
         return other / float(self)
     def __format__(self, format_spec):
@@ -3930,7 +3930,7 @@ class Fraction(object):
         float_fmt = "eEfFgGn%"
         all_fmt = "".join(["s", integer_fmt, float_fmt])
         if not format_spec or format_spec[-1] not in all_fmt:
-            value = str(self)
+          value = str(self)
         elif format_spec[-1] in integer_fmt:
             value = int(self)
         elif format_spec[-1] in float_fmt:

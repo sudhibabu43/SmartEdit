@@ -5,8 +5,8 @@
             "s"
         ],
         "name": "Jonathan Thomas",
-        "email": "jonathan@smartedit.org",
-        "website": "http://smartedit.org/developers/jonathan/"
+        "email": "jonathan@github.com",
+        "website": "http://github.com/developers/jonathan/"
     },
     {
         "icons": [
@@ -14,8 +14,8 @@
             "s"
         ],
         "name": "Andy Finch",
-        "email": "andy@smartedit.org",
-        "website": "http://smartedit.org/developers/andy/"
+        "email": "andy@github.com",
+        "website": "http://github.com/developers/andy/"
     },
     {
         "icons": [
@@ -23,8 +23,8 @@
             "s"
         ],
         "name": "Olivier Girard",
-        "email": "olivier@smartedit.org",
-        "website": "http://smartedit.org/developers/olivier/"
+        "email": "olivier@github.com",
+        "website": "http://github.com/developers/olivier/"
     },
     {
         "icons": [
@@ -42,7 +42,7 @@
         ],
         "name": "Cody Parker",
         "email": "cody@yourcodepro.com",
-        "website": "http://smartedit.org/developers/cody_parker/"
+        "website": "http://github.com/developers/cody_parker/"
     },
     {
         "icons": [
@@ -137,8 +137,8 @@
             "s"
         ],
         "name": "Shawn Conway",
-        "email": "shawn@smartedit.org",
-        "website": "http://smartedit.org/developers/shawn/"
+        "email": "shawn@github.com",
+        "website": "http://github.com/developers/shawn/"
     },
     {
         "icons": [
@@ -146,8 +146,8 @@
             "s"
         ],
         "name": "Jackson Godwin",
-        "email": "jackson@smartedit.org",
-        "website": "http://smartedit.org/developers/jackson/"
+        "email": "jackson@github.com",
+        "website": "http://github.com/developers/jackson/"
     },
     {
         "icons": [
@@ -155,8 +155,8 @@
             "s"
         ],
         "name": "Jesse Molenda",
-        "email": "jesse@smartedit.org",
-        "website": "http://smartedit.org/developers/jesse/"
+        "email": "jesse@github.com",
+        "website": "http://github.com/developers/jesse/"
     },
     {
         "icons": [
@@ -173,7 +173,7 @@
             "s"
         ],
         "name": "Raffi Mesdjian",
-        "email": "raffi@smartedit.org",
-        "website": "http://smartedit.org/developers/raffi/"
+        "email": "raffi@github.com",
+        "website": "http://github.com/developers/raffi/"
     }
 ]

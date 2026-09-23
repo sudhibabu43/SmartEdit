@@ -136,7 +136,7 @@ class SmartEditApp(QApplication):
             log.info("-" * 48)
 
             log.info("smartedit-qt version: %s" % info.VERSION)
-            log.info("libsmartedit version: %s" % smartedit.OPENSHOT_VERSION_FULL)
+            log.info("libsmartedit version: %s" % smartedit.SMARTEDIT_VERSION_FULL)
             log.info("platform: %s" % platform.platform())
             log.info("processor: %s" % platform.processor())
             log.info("machine: %s" % platform.machine())
@@ -157,7 +157,7 @@ class SmartEditApp(QApplication):
     def check_libsmartedit_version(self, info, smartedit):
         """Detect minimum libsmartedit version"""
         _ = self._tr
-        ver = smartedit.OPENSHOT_VERSION_FULL
+        ver = smartedit.SMARTEDIT_VERSION_FULL
         min_ver = info.MINIMUM_LIBSMARTEDIT_VERSION
         if ver >= min_ver:
             return True

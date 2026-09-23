@@ -141,7 +141,7 @@ SETUP = {
     "author_email": JT["email"],
     "maintainer": JT["name"],
     "maintainer_email": JT["email"],
-    "url": "http://www.smartedit.org/",
+    "url": "https://github.com/sudhibabu43/SmartEdit",
     "": "GNU GPL v." + GPL_VERSION,
     "description": DESCRIPTION,
     "long_description": "Create and edit videos and movies\n"

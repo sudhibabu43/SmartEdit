@@ -15,7 +15,7 @@ from classes.app import get_app
 from classes.logger import log
 from classes.query import File
 from classes.qt_types import font_metrics_horizontal_advance
-from .ai_tools_menu import add_ai_tools_menu
+
 from .files_thumbnail_overlay import paint_media_overlay, paint_proxy_badge
 from .menu import StyledContextMenu, add_bound_action
 from .name_search_treeview import NameColumnKeyboardSearchMixin
@@ -173,7 +173,6 @@ class FilesTreeView(NameColumnKeyboardSearchMixin, QTreeView):
             else:
                 active_job = self.win.active_generation_job_for_file(file_id)
                 source_file = File.get(id=file_id)
-        add_ai_tools_menu(self.win, menu, source_file=source_file)
 
         if not active_job:
             self.win.actionGenerate.setEnabled(self.win.can_open_generate_dialog())

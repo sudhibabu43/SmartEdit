@@ -29,11 +29,16 @@ class AudioAnalyzer:
     DEFAULT_FFMPEG_PATH = r"C:\msys64\ucrt64\bin\ffmpeg.exe"
 
     def __init__(self, ffmpeg_path: Optional[str] = None):
-        self.ffmpeg_path = ffmpeg_path or (
-            self.DEFAULT_FFMPEG_PATH
-            if os.path.exists(self.DEFAULT_FFMPEG_PATH)
-            else shutil.which("ffmpeg")
-        )
+        import sys
+        if ffmpeg_path:
+            self.ffmpeg_path = ffmpeg_path
+        else:
+            # Try to find ffmpeg in the same bin directory as python (e.g., msys64/mingw64/bin)
+            env_ffmpeg = os.path.join(os.path.dirname(sys.executable), "ffmpeg.exe")
+            if os.path.exists(env_ffmpeg):
+                self.ffmpeg_path = env_ffmpeg
+            else:
+                self.ffmpeg_path = shutil.which("ffmpeg") or self.DEFAULT_FFMPEG_PATH
 
     def extract_audio_if_needed(self, media_path: str, sample_rate: int = 22050) -> Tuple[str, bool]:
         """
@@ -135,7 +140,8 @@ class AudioAnalyzer:
         audio_path: str,
         top_db: float = 25.0,
         min_silence_duration_sec: float = 0.4,
-        padding_sec: float = 0.08
+        padding_sec: float = 0.08,
+        speech_mode: bool = False
     ) -> Dict[str, Any]:
         """
         Analyzes media for silence and generates precise cut points and highlighted clips.
@@ -145,6 +151,7 @@ class AudioAnalyzer:
             top_db: Silence threshold (dB below reference). Higher = more sensitive to silence.
             min_silence_duration_sec: Minimum duration of silence to trigger a cut.
             padding_sec: Margin added around kept speech to avoid cutting off word edges.
+            speech_mode: If True, uses dynamic RMS and ZCR to detect speech vs stationary background noise.
 
         Returns:
             Structured dictionary with:
@@ -163,13 +170,44 @@ class AudioAnalyzer:
             if len(y) == 0:
                 return self._empty_cut_result(total_duration)
 
-            
-            non_silent_intervals = librosa.effects.split(
-                y,
-                top_db=top_db,
-                frame_length=2048,
-                hop_length=512
-            )
+            if speech_mode:
+                # Compute RMS energy and Zero-Crossing Rate (ZCR)
+                rms = librosa.feature.rms(y=y, frame_length=2048, hop_length=512)[0]
+                zcr = librosa.feature.zero_crossing_rate(y, frame_length=2048, hop_length=512)[0]
+                
+                # Estimate background noise floor (e.g., 10th percentile of RMS)
+                noise_floor = np.percentile(rms, 10)
+                
+                # Dynamic threshold: e.g., 2 times the noise floor or a minimum threshold
+                dynamic_thresh = max(noise_floor * 2.0, 0.005)
+                
+                # Classify a frame as speech if:
+                # 1. Energy is significantly above noise floor (voiced speech)
+                # 2. OR Energy is moderately above noise floor AND ZCR is high (unvoiced consonants)
+                is_speech = (rms > dynamic_thresh) | ((rms > noise_floor * 1.5) & (zcr > 0.1))
+                
+                # Convert frame-level boolean array to intervals
+                non_silent_intervals = []
+                in_speech = False
+                start_frame = 0
+                for i, val in enumerate(is_speech):
+                    if val and not in_speech:
+                        start_frame = i
+                        in_speech = True
+                    elif not val and in_speech:
+                        non_silent_intervals.append([start_frame * 512, i * 512])
+                        in_speech = False
+                if in_speech:
+                    non_silent_intervals.append([start_frame * 512, len(y)])
+                non_silent_intervals = np.array(non_silent_intervals)
+            else:
+                # Original silence detection
+                non_silent_intervals = librosa.effects.split(
+                    y,
+                    top_db=top_db,
+                    frame_length=2048,
+                    hop_length=512
+                )
 
             
             raw_kept = [

@@ -1,7 +1,7 @@
 import re
 
 
-RELEASE_DETAILS_URL = "https://www.smartedit.org/releases/%s/"
+RELEASE_DETAILS_URL = "https://github.com/sudhibabu43/SmartEdit/releases/tag/%s"
 RELEASE_VERSION_RE = re.compile(r"^\d+\.\d+(?:\.\d+)?$")
 
 

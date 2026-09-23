@@ -13,21 +13,21 @@ The following components are **100% original code** written specifically for the
 
 ## 2. Modified Third-Party Core Frameworks
 
-The core media-processing engine (which handles decoding, encoding, timeline playback, and memory caching) was forked and heavily adapted from the upstream **libopenshot** repository.
+The core media-processing engine (which handles decoding, encoding, timeline playback, and memory caching) was forked and heavily adapted from the upstream **libsmartedit** repository.
 
 ### libsmartedit (Core Video Engine)
-- **Original Project**: [OpenShot Video Editor (libopenshot)](https://github.com/OpenShot/libopenshot)
+- **Original Project**: [smartedit Video Editor (libsmartedit)](https://github.com/smartedit/libsmartedit)
 - **License**: LGPL 3.0 (or later)
 - **Purpose**: Powers the C++ timeline processing, video decoding (via FFmpeg), video encoding, and image manipulation (via Qt).
 - **Modifications Made**: 
   - Integrated into the SmartEdit architecture.
-  - Python bindings adapted via SWIG to output a `smartedit` module module instead of `openshot`.
+  - Python bindings adapted via SWIG to output a `smartedit` module module instead of `smartedit`.
   - Upstream demonstration and UI-specific configuration logic disabled.
   - Build targets renamed to `libsmartedit.dll`.
 - **Where it is used**: Automatically loaded by the SmartEdit Python UI via `_smartedit.pyd`.
 
 ### libsmartedit-audio (Audio Engine)
-- **Original Project**: [OpenShot Audio Library (libopenshot-audio)](https://github.com/OpenShot/libopenshot-audio)
+- **Original Project**: [smartedit Audio Library (libsmartedit-audio)](https://github.com/smartedit/libsmartedit-audio)
 - **License**: GPL 3.0 / LGPL
 - **Purpose**: Audio resampling, buffering, and device output.
 - **Modifications Made**:
@@ -49,5 +49,5 @@ The following external dependencies are utilized verbatim during compilation or 
 ## 4. Architectural Separation
 
 To respect upstream design patterns while embedding them smoothly into SmartEdit:
-1. **Namespaces**: The `openshot::` C++ namespace has been rigorously preserved throughout the core engine to prevent ABI breakage and maintain compatibility with upstream updates.
+1. **Namespaces**: The `smartedit::` C++ namespace has been rigorously preserved throughout the core engine to prevent ABI breakage and maintain compatibility with upstream updates.
 2. **Python Mapping**: The SmartEdit Python layer abstracts this dependency by mapping the upstream API safely behind `import smartedit`, ensuring that the top-level Python developer experience remains exclusively SmartEdit-branded.

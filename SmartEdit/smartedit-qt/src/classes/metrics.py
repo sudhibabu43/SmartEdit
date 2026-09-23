@@ -77,7 +77,7 @@ def _base_event_params():
         "session_id": GA4_SESSION_ID,
         "os_app_name": info.PRODUCT_NAME,
         "os_app_version": info.VERSION,
-        "os_libsmartedit_version": smartedit.OPENSHOT_VERSION_FULL,
+        "os_libsmartedit_version": smartedit.SMARTEDIT_VERSION_FULL,
         "os_python_version": platform.python_version(),
         "os_qt_version": QT_VERSION_STR,
         "os_pyqt_version": PYQT_VERSION_STR,

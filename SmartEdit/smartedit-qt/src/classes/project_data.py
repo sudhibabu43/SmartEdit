@@ -523,7 +523,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
         
         project_data = {}
         project_data["version"] = {"smartedit-qt": info.VERSION,
-                                   "libsmartedit": smartedit.OPENSHOT_VERSION_FULL}
+                                   "libsmartedit": smartedit.SMARTEDIT_VERSION_FULL}
 
         
         fps = get_app().project.get("fps")
@@ -1130,7 +1130,7 @@ class ProjectDataStore(JsonDataStore, UpdateInterface):
 
         
         self._data["version"] = {"smartedit-qt": info.VERSION,
-                                 "libsmartedit": smartedit.OPENSHOT_VERSION_FULL}
+                                 "libsmartedit": smartedit.SMARTEDIT_VERSION_FULL}
 
         
         self.write_to_file(
