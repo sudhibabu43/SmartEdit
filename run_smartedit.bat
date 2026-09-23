@@ -22,26 +22,9 @@ if not exist "%PYTHON_EXE%" (
 rem ----- Add ucrt64 bin to PATH (required for DLLs) -----
 if exist "%UCRT_BIN%" set "PATH=%UCRT_BIN%;%PATH%"
 
-rem ----- Auto-detect correct SmartEdit source folder -----
-rem   Works both BEFORE and AFTER top-level folder rename!
-set "BASE=%~dp0"
-set "SRC="
+
 if exist "%BASE%SmartEdit\smartedit-qt\src\launch.py"   set "SRC=%BASE%SmartEdit\smartedit-qt\src"
 
-if "%SRC%"=="" (
-    echo [ERROR] Could not find smartedit-qt\src\launch.py.
-    echo.
-    echo Tried these paths:
-    echo   - %%BASE%%SmartEdit\smartedit-qt\src\launch.py
-    echo.
-    echo BASE = %BASE%
-    pause
-    exit /b 2
-)
-
-echo [OK] Using source folder: %SRC%
-echo [OK] Python: %PYTHON_EXE%
-echo.
 
 rem ----- Ensure binary compatibility copies exist -----
 if exist "%SRC%\libsmartedit.dll" if not exist "%SRC%\libsmartedit.dll" copy /y "%SRC%\libsmartedit.dll" "%SRC%\libsmartedit.dll" >nul

@@ -104,9 +104,6 @@
       </iconset>
      </property>
      <addaction name="actionExportVideo"/>
-     <addaction name="separator"/>
-     <addaction name="actionExportEDL"/>
-     <addaction name="actionExportFCPXML"/>
     </widget>
     <widget class="QMenu" name="menuImport_Project">
      <property name="title">
@@ -1498,30 +1495,6 @@
    </property>
    <property name="toolTip">
     <string>Import XML (Final Cut Pro)</string>
-   </property>
-  </action>
-  <action name="actionExportEDL">
-   <property name="icon">
-    <iconset theme="view-list-details" resource="../../../images/smartedit.qrc">
-     <normaloff>:/icons/Humanity/actions/16/view-list-details.png</normaloff>:/icons/Humanity/actions/16/view-list-details.png</iconset>
-   </property>
-   <property name="text">
-    <string>Export EDL</string>
-   </property>
-   <property name="toolTip">
-    <string>Export Edit Decision List</string>
-   </property>
-  </action>
-  <action name="actionExportFCPXML">
-   <property name="icon">
-    <iconset theme="view-list-details" resource="../../../images/smartedit.qrc">
-     <normaloff>:/icons/Humanity/actions/16/view-list-details.png</normaloff>:/icons/Humanity/actions/16/view-list-details.png</iconset>
-   </property>
-   <property name="text">
-    <string>Export XML (Final Cut Pro)</string>
-   </property>
-   <property name="toolTip">
-    <string>Export XML (Final Cut Pro)</string>
    </property>
   </action>
   <action name="actionClearRecents">

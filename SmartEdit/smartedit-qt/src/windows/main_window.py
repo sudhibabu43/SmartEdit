@@ -30,8 +30,7 @@ from qt_api import (
 
 from classes import exceptions, info, qt_types, sentry, ui_util, updates, tabstops
 from classes.app import get_app
-from classes.exporters.edl import export_edl
-from classes.exporters.final_cut_pro import export_xml
+
 from classes.importers.edl import import_edl
 from classes.importers.final_cut_pro import import_xml
 from classes.logger import log
@@ -950,14 +949,6 @@ class MainWindow(updates.UpdateWatcher, QMainWindow):
             log.info('Export Video add confirmed')
         else:
             log.info('Export Video add cancelled')
-
-    def actionExportEDL_trigger(self, checked=True):
-        """Export EDL File"""
-        export_edl()
-
-    def actionExportFCPXML_trigger(self, checked=True):
-        """Export XML (Final Cut Pro) File"""
-        export_xml()
 
     def actionImportEDL_trigger(self, checked=True):
         """Import EDL File"""
